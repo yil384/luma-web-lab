@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "greeting": "祝集美小喵【zkl】圣诞节快乐",
+  "background": {
+    "src": "generated/background/night-312270173ed55ed27be5.webp",
+    "brightness": 0.94,
+    "focus": [
+      0.25,
+      0.5
+    ],
+    "projection": "equirectangular",
+    "rotation": 0,
+    "panels": [
+      {
+        "src": "generated/background/panel-dc2306938d218d543edd.webp",
+        "compactSrc": "generated/background/panel-small-dc2306938d218d543edd.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 5.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-6195870c375bf56e6ac5.webp",
+        "compactSrc": "generated/background/panel-small-6195870c375bf56e6ac5.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 50.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-304a932c9aa60b3d8d91.webp",
+        "compactSrc": "generated/background/panel-small-304a932c9aa60b3d8d91.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 95.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-51348e123596b06e8cfc.webp",
+        "compactSrc": "generated/background/panel-small-51348e123596b06e8cfc.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 140.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-cbc399adc2abf4975d2d.webp",
+        "compactSrc": "generated/background/panel-small-cbc399adc2abf4975d2d.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 185.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-9ddfdfca5d1d2ec53e9e.webp",
+        "compactSrc": "generated/background/panel-small-9ddfdfca5d1d2ec53e9e.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 230.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-dead16072e4836f7c087.webp",
+        "compactSrc": "generated/background/panel-small-dead16072e4836f7c087.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 275.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      },
+      {
+        "src": "generated/background/panel-8abd4dacef8266785d79.webp",
+        "compactSrc": "generated/background/panel-small-8abd4dacef8266785d79.webp",
+        "width": 1254,
+        "height": 1254,
+        "yaw": 320.4,
+        "pitch": -10,
+        "horizontalFov": 60,
+        "verticalFov": 60
+      }
+    ]
+  },
+  "snow": true,
+  "cat": {
+    "src": "generated/characters/cat-b1a606192b4f83711b9c.webp",
+    "video": "generated/videos/transformation-5c1fe60031a51da6531d.mp4"
+  }
+}
