@@ -1,44 +1,72 @@
-<div align="center">
+![Luma Web Lab — interfaces with a sense of place](.github/readme/cover.svg)
 
-<h1>Luma Web Lab</h1>
+<p align="center">
+  <strong>React · TypeScript · Three.js · Vite</strong><br />
+  <a href="#architecture">Architecture</a> ·
+  <a href="#asset-pipeline">Asset pipeline</a> ·
+  <a href="#run-locally">Run locally</a> ·
+  <a href="#deployment">Deployment</a>
+</p>
 
-<p><strong>Experiments in light, motion, and immersive web interfaces.</strong></p>
+## A website can feel like a place
 
-<p>React · TypeScript · Three.js · Vite</p>
+Luma Web Lab is a frontend design-and-engineering study of spatial scenes, photography, video, and touch interaction. A seasonal WebGL experience and a cinematic narrative share one application entry, while keeping their heavier features separate and loading them on demand.
 
-<p>A frontend design-and-engineering study exploring how spatial scenes,<br />photography, video, and small interactions can share one responsive interface.</p>
-
-</div>
-
----
-
-## The idea
-
-A website can feel like a place, not just a sequence of screens.
-
-Luma Web Lab explores that idea through a seasonal WebGL scene, a photo-led gallery, and a cinematic narrative interface. The emphasis is on the details between them: transitions, loading states, touch targets, playback controls, and the balance between atmosphere and usability.
-
-This is an experimental application, not a production-ready component library or a general-purpose site builder.
+The cover is an original illustration, not a screenshot. Its abstract image tiles contain no personal photographs. This is an experimental application, not a production-ready component library or site builder.
 
 ## Interface studies
 
-| Study | What it explores |
+| Study | Design question | Implementation focus |
+| --- | --- | --- |
+| **Spatial composition** | Can a collection of images become a navigable scene? | Three.js, React Three Fiber, camera interaction and animation. |
+| **Photo browsing** | How does a scene open into a useful gallery? | Texture preparation, thumbnails, selection and larger-image viewing. |
+| **Cinematic UI** | Can controls and interactions coexist with a continuous film? | HLS playback, timeline-driven effects, audio and recovery. |
+| **Touch and gesture** | What changes when the interface is used on a phone? | Portrait layouts, safe areas, touch targets and optional camera input. |
+
+## Architecture
+
+![Runtime architecture: SeasonalEntry lazy-loads the spatial or cinematic experience, with component responsibilities and static resources shown](.github/readme/architecture.svg)
+
+*Figure 1. A simplified dependency view of the `main` source branch. The groups show component responsibilities, not sequential execution stages or a claim that the deployed build matches this source snapshot.*
+
+[`SeasonalEntry`](src/SeasonalEntry.tsx) selects an experience from the URL. [`App`](src/App.tsx) owns the spatial scene and its panels; [`CastleRide`](src/journey/CastleRide.tsx) coordinates the video-led experience. Scene, gallery, film and gesture interfaces are loaded separately rather than treated as one eagerly loaded screen.
+
+The video route uses [`useRidePlayback`](src/journey/useRidePlayback.ts) for native HLS or lazy-loaded `hls.js`, with buffering and recovery state. Its playback clock feeds the narrative sequence. Gesture mode is optional; a visitor does not need to enable the camera to use the scene or gallery.
+
+<details>
+<summary><strong>Follow the implementation</strong></summary>
+
+| Area | Starting point |
 | --- | --- |
-| **Spatial composition** | A photo-based 3D scene, layered environments, animated characters, and camera interaction with Three.js and React Three Fiber. |
-| **Photo browsing** | Generated thumbnails, scene textures, and an on-demand larger-image viewer instead of loading every full-size image at startup. |
-| **Cinematic interfaces** | HLS playback, timeline-driven interactions, audio controls, and a separate narrative route. |
-| **Touch-first design** | Portrait layouts, safe-area spacing, touch interaction, and playback recovery on mobile browsers. |
-| **Optional gesture input** | A camera-based interaction mode that is requested explicitly rather than enabled when the page opens. |
+| Entry and route selection | [`src/SeasonalEntry.tsx`](src/SeasonalEntry.tsx), [`src/lib/experience-route.ts`](src/lib/experience-route.ts) |
+| WebGL scene | [`src/scene/TreeScene.tsx`](src/scene/TreeScene.tsx) |
+| Photo interface | [`src/components/PhotoGallery.tsx`](src/components/PhotoGallery.tsx), [`src/components/PhotoViewer.tsx`](src/components/PhotoViewer.tsx) |
+| Optional gesture input | [`src/components/HandMagicMode.tsx`](src/components/HandMagicMode.tsx), [`src/hand-tracking/`](src/hand-tracking/) |
+| Video and narrative | [`src/journey/CastleRide.tsx`](src/journey/CastleRide.tsx), [`src/journey/useRidePlayback.ts`](src/journey/useRidePlayback.ts), [`src/journey/useRideSequence.ts`](src/journey/useRideSequence.ts) |
 
-## Design principles
+</details>
 
-**Atmosphere without losing orientation.** Visual effects should support the scene while leaving navigation and playback controls understandable.
+## Asset pipeline
 
-**Progressive loading.** Start with the interface; load heavier scenes and media when they are needed.
+![Asset pipeline: prepare photo, scene and gesture assets; combine with application source and existing media; run TypeScript, Vite and finalization; serve the resulting static files](.github/readme/asset-pipeline.svg)
 
-**Motion with restraint.** Account for reduced-motion preferences, background tabs, and devices that cannot comfortably run the full experience. These are design goals and implementation concerns, not a claim of universal device compatibility.
+*Figure 2. Source media becomes runtime assets before application compilation. Existing films are inputs to this pipeline, not generated by it.*
 
-**Real-device verification.** A passing build does not establish smooth WebGL rendering, correct audio behavior, or comfortable touch interaction on a phone.
+The preparation scripts produce image variants, scene resources and local gesture-recognition assets. Vite bundles the application and copies public resources. [`finalize-build.mjs`](scripts/finalize-build.mjs) removes redundant source copies from the output and writes real `letter/index.html` and `christmas/index.html` entries, so direct links need not depend on a server-side SPA fallback.
+
+<details>
+<summary><strong>Asset preparation scripts</strong></summary>
+
+| Script | Responsibility |
+| --- | --- |
+| [`prepare-photos.mjs`](scripts/prepare-photos.mjs) | Photo variants, atlas and runtime manifest. |
+| [`prepare-scene.mjs`](scripts/prepare-scene.mjs) | Scene configuration and runtime resources. |
+| [`prepare-hand-tracking.mjs`](scripts/prepare-hand-tracking.mjs) | Gesture model, SDK runtime files and worker assets. |
+| [`finalize-build.mjs`](scripts/finalize-build.mjs) | Output cleanup and static route entries. |
+
+The diagrams are editable, self-contained SVG files in [`.github/readme/`](.github/readme/). They require no diagram-rendering service or remote font and can be updated alongside the code.
+
+</details>
 
 ## Run locally
 
@@ -49,7 +77,7 @@ npm ci
 npm run dev
 ```
 
-The preparation scripts generate photo, scene, and gesture-recognition assets. The first asset preparation may need network access to download the gesture model. Generated resources live in `public/generated/`; they are not a replacement for the source assets.
+Asset preparation runs before development and production builds. The first gesture-model preparation may require network access. Generated resources live in `public/generated/`; keep the source assets needed to recreate them.
 
 ```bash
 npm run lint
@@ -58,61 +86,32 @@ npm run build
 npm run preview
 ```
 
-The production build performs TypeScript checks, builds with Vite, and writes static route entry files into `dist/`.
-
-## Explore the application
-
 | Local route | Experience |
 | --- | --- |
-| `/` | Seasonal scene and gallery entry |
-| `/christmas/` | Explicit seasonal-scene route |
-| `/letter/` | Cinematic narrative interface; the established route name is retained for compatibility |
+| `/` | Seasonal scene and gallery entry. |
+| `/christmas/` | Explicit seasonal-scene route. |
+| `/letter/` | Cinematic narrative; the established path is retained for compatibility. |
 
-For project-site hosting, these routes sit beneath the configured deployment base path rather than the domain root.
+For project-site hosting, these routes sit beneath the configured deployment base path.
 
-## Project map
+## Design and validation
 
-```text
-src/
-  main.tsx                 Application bootstrap
-  SeasonalEntry.tsx        Route selection and lazy loading
-  scene/                   WebGL scene and animation
-  components/              Gallery, viewer, and interface components
-  journey/                 Video, timeline, and narrative interactions
-  hand-tracking/           Optional gesture input
-  lib/                     Shared helpers and route logic
-public/
-  photos/                  Source photographs and manifest
-  journey/film/            Existing HLS media and playlists
-  generated/               Build-generated runtime resources
-scripts/                   Asset preparation and build finalization
-tests/                     Automated checks
-```
+**Atmosphere without losing orientation.** Keep navigation and playback controls understandable inside the visual scene.
 
-## Static deployment
+**Progressive loading and restrained motion.** Load heavy features when needed; account for reduced-motion preferences, background tabs and rendering limits.
 
-The application can be served as static files. This repository uses `gh-pages` for a prebuilt GitHub Pages snapshot; `main` contains a separately versioned source snapshot.
+**Real-device evidence.** A passing build does not establish smooth mobile WebGL, reliable audio or comfortable touch interaction. Record the browser, viewport and interaction sequence, and distinguish real-device tests from desktop emulation.
 
-Before replacing a published build, check that the intended source version and generated assets match. Do not assume that rebuilding an older source snapshot reproduces the currently published scene or media.
+## Deployment
 
-A deployment should preserve the root entry, `letter/index.html`, `christmas/index.html`, and all referenced assets. For branch-based GitHub Pages publishing, place `.nojekyll` at the publishing root and select `gh-pages` / `/(root)` in the Pages settings.
+`main` contains a source snapshot; `gh-pages` contains a separately versioned prebuilt GitHub Pages snapshot. **Check that the intended source and generated assets match before replacing a published build.** Rebuilding an older source snapshot is not guaranteed to reproduce the current deployment.
 
-A repository rename also changes the project-site base path. Update HTML, CSS, JavaScript, and route normalization together; renaming the repository alone is not a deployment migration. DNS changes and custom-domain migration are separate operations.
+Publish the complete `dist/` output, preserving the root entry, both route entries and referenced resources. For branch-based Pages publishing, include `.nojekyll` at the root and select `gh-pages` / `/(root)` in the repository settings.
 
-## Working on the project
+A repository rename changes the project-site base path. Migrate HTML, CSS, JavaScript and route normalization together; renaming alone is not a deployment migration. Custom domains and DNS are separate operations.
 
-Small, focused changes are easiest to review. Useful areas include loading behavior, keyboard interaction, touch ergonomics, reduced-motion behavior, rendering cost, and reliable media playback.
+## Contributing and permissions
 
-Run the available checks and describe what was actually tested. For visual or playback changes, include the browser, viewport, interaction sequence, and any real-device observations. Avoid presenting desktop emulation as mobile-device validation.
+Focused improvements to loading, keyboard interaction, touch ergonomics, reduced motion, rendering cost and media playback are welcome. Describe what was actually tested and preserve applicable third-party attribution.
 
-Use your own media when adapting an experiment. Preserve attribution and applicable notices for third-party components and assets.
-
-## Code and media permissions
-
-Public visibility does not make every file a freely reusable asset. This repository does not currently declare a repository-wide open-source license; do not assume MIT or another license applies to the whole tree.
-
-Photographs, video, audio, fonts, character models, and production materials are separate from the interface implementation. Publication here does not grant permission to reuse them. Third-party materials remain subject to their own licenses and attribution requirements.
-
----
-
-<sub>Built to study the craft of interactive websites: composition, motion, media, and the engineering that keeps them usable.</sub>
+This repository does not currently declare a repository-wide open-source license. Public visibility is not a blanket permission to reuse its contents. Photographs, videos, audio, fonts, models and production materials are distinct from the interface code and remain subject to their own permissions and licenses. Use your own appropriately licensed media when adapting an experiment.
