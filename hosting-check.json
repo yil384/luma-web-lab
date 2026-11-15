@@ -1,0 +1,7 @@
+{
+  "hosting": "github-pages",
+  "repository": "yil384/luma-web-lab",
+  "domain": "tanchensiyi.com",
+  "basePath": "/",
+  "migration": "custom-domain-v1"
+}
