@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1160" viewBox="0 0 1600 1160" role="img" aria-labelledby="title desc">
+<title id="title">Luma Web Lab runtime architecture</title>
+<desc id="desc">SeasonalEntry resolves the URL and lazy-loads App for the root and Christmas routes or CastleRide for the letter route. App composes the Three.js scene, gallery, film and optional gesture mode. CastleRide composes HLS playback, sequence logic, effects and audio. Both load static resources. This is a simplified dependency view of the main source branch, not a deployment version assertion.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m0 0 8 4-8 4Z" fill="#60766f"/></marker></defs>
+<rect width="1600" height="1160" rx="20" fill="#f6f5ef"/>
+<g font-family="Inter,Arial,Helvetica,sans-serif" fill="#1b3438">
+ <text x="64" y="64" font-size="18" letter-spacing="3" fill="#61786d">LUMA WEB LAB / ENGINEERING NOTES</text>
+ <text x="64" y="122" font-size="46" font-weight="700" letter-spacing="-1">One entry. Two experiences.</text>
+ <text x="64" y="161" font-size="23" fill="#60766f">A component map of the browser application, with heavy features loaded on demand.</text>
+ <rect x="64" y="205" width="304" height="88" rx="12" fill="#e5ebe2"/>
+ <text x="88" y="241" font-size="25" font-weight="700">Browser URL</text><text x="88" y="273" font-size="21" fill="#60766f">main.tsx mounts the app</text>
+ <path d="M368 249h80" fill="none" stroke="#60766f" stroke-width="2" marker-end="url(#arrow)"/>
+ <rect x="464" y="205" width="1072" height="88" rx="12" fill="#173d42"/>
+ <text x="492" y="242" font-size="28" font-weight="700" fill="#fffdf2">SeasonalEntry.tsx</text><text x="492" y="274" font-size="22" fill="#c4dbd0">resolveExperience(pathname) + React.lazy + Suspense</text>
+ <path d="M998 293v29H416v61M998 322h154v61" fill="none" stroke="#60766f" stroke-width="2" marker-end="url(#arrow)"/>
+ <path d="M416 363v20" fill="none" stroke="#60766f" stroke-width="2" marker-end="url(#arrow)"/>
+ <rect x="64" y="390" width="704" height="606" rx="16" fill="#fffef9" stroke="#ccd8cf" stroke-width="2"/>
+ <rect x="800" y="390" width="736" height="606" rx="16" fill="#fffef9" stroke="#d7d5c9" stroke-width="2"/>
+ <text x="96" y="430" font-size="20" letter-spacing="2" fill="#3e7665">/  +  /christmas/</text>
+ <text x="96" y="475" font-size="34" font-weight="700">Spatial experience</text><text x="96" y="510" font-size="24" fill="#60766f">App.tsx owns scene and panel state</text>
+ <text x="832" y="430" font-size="20" letter-spacing="2" fill="#8b623c">/letter/</text>
+ <text x="832" y="475" font-size="34" font-weight="700">Cinematic experience</text><text x="832" y="510" font-size="24" fill="#60766f">CastleRide.tsx coordinates the narrative</text>
+ <path d="M112 542v367m0-324h28m-28 108h28m-28 108h28" fill="none" stroke="#9db4a5" stroke-width="2"/>
+ <rect x="144" y="546" width="588" height="82" rx="9" fill="#eaf1e9"/>
+ <text x="164" y="578" font-size="25" font-weight="700">TreeScene</text><text x="164" y="608" font-size="22" fill="#536b60">React Three Fiber / Three.js scene + animation</text>
+ <rect x="144" y="654" width="588" height="82" rx="9" fill="#eaf1e9"/>
+ <text x="164" y="686" font-size="25" font-weight="700">PhotoGallery + PhotoViewer</text><text x="164" y="716" font-size="22" fill="#536b60">Selection, thumbnails and larger-image viewing</text>
+ <rect x="144" y="762" width="588" height="82" rx="9" fill="#eaf1e9"/>
+ <text x="164" y="794" font-size="25" font-weight="700">ChristmasFilm / ShareGift</text><text x="164" y="824" font-size="22" fill="#536b60">Separate on-demand interface panels</text>
+ <path d="M112 909h28" stroke="#568775" stroke-width="2" stroke-dasharray="5 5"/>
+ <rect x="144" y="870" width="588" height="88" rx="9" fill="#fffef9" stroke="#568775" stroke-width="2" stroke-dasharray="6 5"/>
+ <text x="164" y="903" font-size="25" font-weight="700">HandMagicMode</text><text x="164" y="934" font-size="22" fill="#536b60">Opt-in camera input → scene / gallery commands</text>
+ <path d="M848 542v367m0-294h28m-28 147h28m-28 147h28" fill="none" stroke="#c1b39e" stroke-width="2"/>
+ <rect x="880" y="546" width="620" height="128" rx="9" fill="#f4eee2"/>
+ <text x="900" y="580" font-size="25" font-weight="700">useRidePlayback</text><text x="900" y="614" font-size="22" fill="#71644e">Native HLS or lazy-loaded hls.js</text><text x="900" y="646" font-size="22" fill="#71644e">Playback clock, buffering and recovery</text>
+ <rect x="880" y="694" width="620" height="128" rx="9" fill="#f4eee2"/>
+ <text x="900" y="728" font-size="25" font-weight="700">useRideSequence + scene layers</text><text x="900" y="762" font-size="22" fill="#71644e">Video time → hotspots, effects and finale</text><text x="900" y="794" font-size="22" fill="#71644e">WebGL layers with fallback components</text>
+ <rect x="880" y="842" width="620" height="116" rx="9" fill="#f4eee2"/>
+ <text x="900" y="876" font-size="25" font-weight="700">Environment + audio hooks</text><text x="900" y="910" font-size="22" fill="#71644e">Visibility, reduced motion and viewport bounds</text><text x="900" y="940" font-size="22" fill="#71644e">Chimes, mute controls and finale sound</text>
+ <rect x="64" y="1024" width="1472" height="68" rx="10" fill="#e5ebe2"/>
+ <text x="88" y="1067" font-size="24" font-weight="700">Static resources</text><text x="326" y="1067" font-size="23" fill="#536b60">Generated images + manifests · models · fonts · HLS playlists / segments</text>
+ <text x="64" y="1126" font-size="20" fill="#60766f">Simplified dependency view of main. Component groupings are not sequential execution stages.</text>
+</g>
+</svg>
