@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="680" viewBox="0 0 1600 680" role="img" aria-labelledby="title desc">
+<title id="title">Luma Web Lab — interfaces with a sense of place</title>
+<desc id="desc">An original editorial illustration of layered scene, gallery and media interfaces. Abstract landscape tiles contain no personal photographs. This is a project cover, not an application screenshot.</desc>
+<defs>
+ <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#25363f" stroke-width="1"/></pattern>
+ <g id="tile"><rect width="90" height="72" rx="6" fill="#f4f0e5"/><rect x="6" y="6" width="78" height="48" rx="2" fill="#193f46"/><circle cx="65" cy="19" r="7" fill="#e9b887"/><path d="m6 47 22-23 17 17 15-11 24 24H6Z" fill="#689c90"/><path d="M13 62h32" stroke="#b3bcb2" stroke-width="2"/></g>
+</defs>
+<rect width="1600" height="680" rx="24" fill="#101e27"/>
+<rect x="656" y="32" width="912" height="616" rx="20" fill="url(#grid)" opacity=".52"/>
+<g font-family="Inter,Arial,Helvetica,sans-serif">
+ <path d="M86 58 92 76 110 82 92 88 86 106 80 88 62 82 80 76Z" fill="#b9dfcb"/>
+ <text x="128" y="90" fill="#b9dfcb" font-size="20" letter-spacing="3">A FRONTEND FIELD STUDY</text>
+ <text x="64" y="248" fill="#f4f0e5" font-size="94" font-weight="700" letter-spacing="-4">Luma</text>
+ <text x="64" y="347" fill="#f4f0e5" font-size="94" font-weight="700" letter-spacing="-4">Web Lab</text>
+ <text x="68" y="409" fill="#cbd5d5" font-size="27">Interfaces with a sense of place.</text>
+ <text x="68" y="454" fill="#90a8af" font-size="23">Spatial scenes. Thoughtful motion.</text>
+ <text x="68" y="488" fill="#90a8af" font-size="23">Media that belongs in the interface.</text>
+ <path d="M68 548h480" stroke="#3c5159"/>
+ <text x="68" y="594" fill="#b9dfcb" font-size="19" letter-spacing="1">REACT  /  TYPESCRIPT  /  THREE.JS  /  VITE</text>
+ <rect x="714" y="87" width="760" height="470" rx="17" fill="#152a33" stroke="#4d6c73" stroke-width="2"/>
+ <path d="M714 134h760" stroke="#4d6c73"/>
+ <g fill="#809c9e"><circle cx="742" cy="111" r="4"/><circle cx="758" cy="111" r="4"/><circle cx="774" cy="111" r="4"/></g>
+ <text x="804" y="118" fill="#a7bec0" font-size="18" letter-spacing="2">SCENE STUDY</text>
+ <text x="1404" y="118" fill="#b9dfcb" font-size="17">01</text>
+ <g fill="none" stroke="#41636a"><ellipse cx="1078" cy="464" rx="268" ry="55"/><ellipse cx="1078" cy="464" rx="188" ry="36"/><path d="m834 488 244-304 234 303M1078 184v335M889 443h378" stroke-dasharray="4 8"/></g>
+ <path d="m1078 164 5 15 16 5-16 5-5 16-5-16-16-5 16-5Z" fill="#e9b887"/>
+ <g stroke="#74998f" fill="none" stroke-width="2"><path d="m1078 219-109 114 87 68 111-95 78 123"/><path d="m970 333-49 117 135-49 81 77"/></g>
+ <use href="#tile" x="1040" y="211" transform="rotate(9 1085 247)"/>
+ <use href="#tile" x="926" y="297" transform="rotate(-12 971 333)"/>
+ <use href="#tile" x="1124" y="276" transform="rotate(14 1169 312)"/>
+ <use href="#tile" x="1010" y="364" transform="rotate(-5 1055 400)"/>
+ <use href="#tile" x="868" y="415" transform="rotate(-17 913 451)"/>
+ <use href="#tile" x="1200" y="394" transform="rotate(10 1245 430)"/>
+ <circle cx="1137" cy="478" r="5" fill="#b9dfcb"/>
+ <g fill="#e9b887"><circle cx="878" cy="227" r="3"/><circle cx="1285" cy="248" r="3"/><circle cx="1327" cy="372" r="2"/></g>
+ <path d="m1308 475 6 30 7-10 12-3Z" fill="#f4f0e5" stroke="#152a33" stroke-width="2"/>
+ <rect x="1185" y="516" width="349" height="100" rx="13" fill="#edf1e7"/>
+ <circle cx="1229" cy="565" r="22" fill="#214b4d"/><path d="m1223 554 17 11-17 11Z" fill="#edf1e7"/>
+ <text x="1270" y="550" fill="#214b4d" font-size="17" font-weight="700" letter-spacing="1">MEDIA / TIMELINE</text>
+ <path d="M1272 578h224" stroke="#bdcfc6" stroke-width="4" stroke-linecap="round"/><path d="M1272 578h108" stroke="#315e58" stroke-width="4" stroke-linecap="round"/><circle cx="1380" cy="578" r="6" fill="#315e58"/>
+ <text x="724" y="608" fill="#90a8af" font-size="17" letter-spacing="2">COMPOSITION + INTERACTION</text>
+</g>
+</svg>
