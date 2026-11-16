@@ -74,6 +74,12 @@ export async function finalizeBuild({ root = projectRoot } = {}) {
       .replace('property="og:url" content="https://tanchensiyi.com/"', `property="og:url" content="https://tanchensiyi.com/${route}/"`);
     await writeFile(join(dist, route, 'index.html'), html);
   }
+  // Browser-native project Pages do not run Jekyll; keep a real static file.
+  await writeFile(join(dist, '.nojekyll'), '');
+  // A stale custom domain must never be shipped to a GitHub project path.
+  if (process.env.SITE_BASE_PATH && process.env.SITE_BASE_PATH !== '/') {
+    await rm(join(dist, 'CNAME'), { force: true });
+  }
   return { removedPhotos, removedStarterIcon };
 }
 
