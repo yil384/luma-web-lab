@@ -1,0 +1,18 @@
+{
+  "room_id": "156324",
+  "anchor": "集美小喵【ZKL】",
+  "room_title": null,
+  "category": "户外",
+  "status": "offline",
+  "display_heat": "43.1万",
+  "followers_display": "3.2万",
+  "last_live_text": "上次开播 今天 00:38",
+  "cover_url": null,
+  "topic_uid": null,
+  "source_url": "https://www.huya.com/156324",
+  "observed_at": "2026-11-16T09:57:16+00:00",
+  "type": "public_page_snapshot",
+  "observation_method": "public web page read, initial verified observation",
+  "display_heat_meaning": "platform_display_heat_not_real_viewers",
+  "status_meaning": "inferred_from_public_page_not_guaranteed_live"
+}
