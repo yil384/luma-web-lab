@@ -38,7 +38,7 @@ export default function SeasonalEntry() {
   }, [experience]);
 
   return <Suspense fallback={<div role="status" aria-label="正在打开这一页" style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', background: '#080e25' }}>
-    <img src={assetUrl('icons/xiaomiao-mark-v2.svg')} width="48" height="48" alt="" />
+    <img src={assetUrl('icons/xiaomiao-mark-v2-192.png')} width="48" height="48" alt="" />
   </div>}>
     {experience === 'letter' ? <CastleRide /> : <ChristmasPage />}
   </Suspense>;
