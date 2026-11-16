@@ -147,18 +147,18 @@
   color: #392532;
   background: linear-gradient(145deg, #fffef9, #f8eedb 60%, #d9c8ab);
   box-shadow: 0 4px 12px #48372949, 0 1px 1px #32241b66, inset 0 0 0 1px #d0b996;
-  transform: rotate(-.6deg);
-  transition: transform 190ms ease, box-shadow 190ms ease;
+  transform: none;
+  transition: none;
   cursor: zoom-in;
 }
-.memory-album-sheet--right .memory-album-photo-mount { transform: rotate(.7deg); }
+.memory-album-sheet--right .memory-album-photo-mount { transform: none; }
 button.memory-album-photo-mount:hover, button.memory-album-photo-mount:focus-visible {
-  transform: translateY(-3px) rotate(0deg);
-  box-shadow: 0 8px 20px #48372955, inset 0 0 0 1px #b38d57;
+  transform: none;
+  box-shadow: 0 4px 12px #48372949, 0 1px 1px #32241b66, inset 0 0 0 1px #d0b996;
 }
 button.memory-album-photo-mount:focus-visible { outline: 2px solid #8b5d45; outline-offset: 3px; }
 .memory-album-print { position: relative; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; background: #e9ddcb; }
-.memory-album-print img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.memory-album-print img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: auto; transform: none; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .memory-album-print-fallback { display: grid; place-items: center; color: #8c7764; }
 .memory-album-photo-corners { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px #ffffff35, inset 0 0 10px #4b352321; }
 .memory-album-binding {
@@ -196,7 +196,7 @@ button.memory-album-photo-mount:focus-visible { outline: 2px solid #8b5d45; outl
 .memory-album-leaf-back { transform: rotateY(180deg); border-radius: 7px 1px 1px 8px; box-shadow: inset -8px 0 22px #59432e33; }
 .memory-album-leaf--backward .memory-album-leaf-front { border-radius: 7px 1px 1px 8px; }
 .memory-album-leaf--backward .memory-album-leaf-back { border-radius: 1px 7px 8px 1px; }
-.memory-album-leaf .memory-album-photo-mount { transform: translateZ(1px); }
+.memory-album-leaf .memory-album-photo-mount { transform: none; }
 .memory-album-corner-foil {
   position: absolute;
   z-index: 6;
@@ -271,3 +271,14 @@ button.memory-album-photo-mount:focus-visible { outline: 2px solid #8b5d45; outl
   .memory-album-book { animation: none; }
   .memory-album-photo-mount, .memory-album-leaf { transition: none !important; }
 }
+
+/* Turning faces move; stationary photo mounts never lift, scale or reflow. */
+.memory-album-reveal { position:absolute; top:0; bottom:0; width:50%; z-index:2; visibility:hidden; opacity:0; pointer-events:none; transition:none; }
+.memory-album-reveal--left { left:0; }
+.memory-album-reveal--right { right:0; }
+.memory-album-reveal.is-revealed { visibility:visible; opacity:1; }
+.memory-album-reveal .memory-album-sheet { width:100%; height:100%; }
+.memory-album-photo-mount,
+.memory-album-sheet--right .memory-album-photo-mount,
+button.memory-album-photo-mount:is(:hover,:focus-visible),
+.memory-album-leaf .memory-album-photo-mount { transform:none !important; transition:none !important; }
