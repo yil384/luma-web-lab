@@ -6,10 +6,21 @@ import sharp from 'sharp';
 // legible silhouette in Safari, browser tabs and home-screen shortcuts.
 const directory = new URL('../public/icons/', import.meta.url);
 const stem = 'xiaomiao-mark-v2';
-const source = await readFile(new URL(`${stem}.svg`, directory));
+// A high-resolution transparent PNG is optional. If installed, use it as the
+// single raster master; otherwise keep the fully vector, offline SVG fallback.
+let source;
+let sourceKind = 'svg';
+try {
+  source = await readFile(new URL('xiaomiao-cat-transparent-512.png', directory));
+  sourceKind = 'png';
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+  source = await readFile(new URL(`${stem}.svg`, directory));
+}
 const icons = new Map();
 for (const size of [16, 32, 48, 180, 192, 512]) {
-  const png = await sharp(source, { density: 384 }).resize(size, size).png().toBuffer();
+  const png = await sharp(source, sourceKind === 'svg' ? { density: 384 } : undefined)
+    .resize(size, size).png().toBuffer();
   icons.set(size, png);
   await writeFile(new URL(`${stem}-${size}.png`, directory), png);
 }
@@ -31,4 +42,4 @@ sizes.forEach((size, i) => {
 const ico = Buffer.concat([header, ...sizes.map(size => icons.get(size))]);
 await writeFile(new URL(`${stem}.ico`, directory), ico);
 await writeFile(new URL('../favicon.ico', directory), ico);
-console.log(`Prepared hand-drawn kitten icons in ${fileURLToPath(directory)}`);
+console.log(`Prepared transparent kitten icons from ${sourceKind} in ${fileURLToPath(directory)}`);
