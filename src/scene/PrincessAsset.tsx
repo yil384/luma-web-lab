@@ -78,6 +78,20 @@ function DetailedPrincess(props: Props & { onUnavailable: () => void }) {
       const scene = asset.scene;
       const head = detachIntoPivot(scene, 'luma-head-', new THREE.Vector3(0, 4.23, 0));
       const arm = detachIntoPivot(scene, 'luma-arm-', new THREE.Vector3(0.64, 3.45, 0));
+      // AI-generated GLBs can have wildly different unit scale, centers and
+      // floor offsets. Normalize by actual geometry, not guessed model height.
+      // Do this after grouping any legacy hand-authored animation pivots.
+      const bounds = new THREE.Box3().setFromObject(scene);
+      const boxSize = bounds.getSize(new THREE.Vector3());
+      if (bounds.isEmpty() || !Number.isFinite(boxSize.y) || boxSize.y < 1e-5) {
+        disposeScene(scene);
+        props.onUnavailable();
+        return;
+      }
+      const scale = 5.12 / boxSize.y;
+      const center = bounds.getCenter(new THREE.Vector3());
+      scene.scale.setScalar(scale);
+      scene.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
       const root = new THREE.Group();
       root.name = 'luma-detailed-princess';
       root.add(scene);
@@ -111,6 +125,7 @@ function DetailedPrincess(props: Props & { onUnavailable: () => void }) {
       group.position.y = 0;
       if (headPivot.current) headPivot.current.rotation.y = 0;
       if (armPivot.current) armPivot.current.rotation.z = 0;
+      group.rotation.z = 0;
       return;
     }
     elapsed.current += Math.min(Math.max(delta, 0), 0.05);
@@ -121,6 +136,11 @@ function DetailedPrincess(props: Props & { onUnavailable: () => void }) {
     const phase = t - waveAt.current;
     if (armPivot.current) armPivot.current.rotation.z =
       phase > 0 && phase < 2.25 ? -0.17 - Math.sin(phase * Math.PI / 2.25) * (0.28 + 0.06 * Math.sin(phase * 11)) : 0;
+    // Unrigged community-generated meshes have no arm joint. A restrained
+    // curtsy keeps tap feedback honest instead of pretending the arm can wave.
+    if (!armPivot.current) {
+      group.rotation.z = phase > 0 && phase < 1.25 ? Math.sin(phase * Math.PI / 1.25) * 0.055 : 0;
+    }
   });
 
   return <group position={[PLACE_X, PLACE_Y, PLACE_Z]} ref={mount}
