@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>公主角色 · 3D 模型验收台</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js"></script>
+  <style>
+    :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#f6ede9;background:#171820;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh}
+    button,input{font:inherit}button,.file-button{cursor:pointer}
+    .wrap{max-width:1400px;margin:auto;padding:clamp(16px,3vw,38px)}
+    header{display:flex;align-items:end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+    .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.25em;color:#c5a7a1}
+    h1{font-size:clamp(26px,3.2vw,43px);font-weight:540;letter-spacing:-.035em;margin:8px 0 10px}
+    p{color:#c4bec4;line-height:1.65;max-width:710px;margin:0}
+    .grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(310px,.85fr);gap:20px}
+    .panel{border:1px solid #42404b;background:#23242e;border-radius:18px;overflow:hidden}
+    .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:16px;border-bottom:1px solid #44404a}
+    .label{font-size:12px;letter-spacing:.08em;color:#bdb0b1;margin-right:auto}
+    button,.file-button{display:inline-flex;gap:8px;align-items:center;justify-content:center;border:1px solid #69616a;background:#34333e;color:#fff3ed;padding:10px 14px;border-radius:10px;font-size:13px;white-space:nowrap}
+    button:hover,.file-button:hover{background:#51434c;border-color:#d4a9a9}
+    button:focus-visible,.file-button:focus-visible{outline:3px solid #edb7ab;outline-offset:2px}
+    button:disabled{opacity:.48;cursor:not-allowed}
+    .file-button input{display:none}.viewport{position:relative;min-height:580px;background:radial-gradient(ellipse at 50% 42%,#40404f,#22232d 72%)}
+    model-viewer{width:100%;height:min(74vh,730px);min-height:580px;display:block;--progress-bar-color:#e9b6ab}
+    .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;pointer-events:none;padding:30px;color:#d2c1bd}
+    .empty strong{font-size:20px;font-weight:500}.empty span{font-size:13px;line-height:1.7;max-width:320px;color:#a9a1ac}
+    .viewport.is-ready .empty{display:none}.viewport.dragging{outline:4px dashed #e6aeaf;outline-offset:-10px}
+    .orbit{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:13px;background:#262730;border-top:1px solid #49434b}
+    .orbit button[aria-pressed="true"]{background:#916777;border-color:#e6b7b3}
+    .orbit button{padding:8px 12px}
+    .side{display:grid;gap:20px;align-content:start}
+    .side h2{font-size:15px;font-weight:600;letter-spacing:.02em;margin:0 0 12px;color:#f4e4de}
+    .inner{padding:18px}.hint{font-size:12px;color:#b8aab0;line-height:1.65}
+    .ref-slot{aspect-ratio:4 / 3;background:#1b1d25;display:flex;align-items:center;justify-content:center;border-radius:10px;overflow:hidden;margin:12px 0;color:#aaa4b0;font-size:12px}
+    .ref-slot img{width:100%;height:100%;object-fit:contain}
+    dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:9px 18px;font-size:13px}
+    dt{color:#bcb3be}dd{margin:0;color:#f2e7e5;font-variant-numeric:tabular-nums}
+    .checks{display:grid;gap:12px}.checks label{display:flex;align-items:flex-start;gap:10px;line-height:1.5;font-size:13px;color:#e2d8d8}
+    .checks input{accent-color:#c998a1;transform:translateY(3px)}
+    .status{padding:14px 18px;font-size:13px;line-height:1.7;border-top:1px solid #49434b;color:#e9c6ad}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.foot{padding:22px 0;color:#a9a1ac;font-size:12px}
+    .mobile-only{display:none}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.viewport,model-viewer{min-height:440px}model-viewer{height:60dvh;max-height:650px}.side{grid-template-columns:repeat(2,minmax(0,1fr))}.side>.panel:last-child{grid-column:1/-1}}
+    @media(max-width:600px){.side{grid-template-columns:1fr}.wrap{padding:14px}header{gap:10px}.bar{padding:12px}.viewport,model-viewer{min-height:380px}model-viewer{height:55dvh}.orbit button{flex:1}.mobile-only{display:inline}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div><div class="eyebrow">Luma web lab / character quality assurance</div><h1>公主角色 · 3D 模型验收台</h1><p>真正旋转模型，检查脸、发型、礼服和背面。GLB 与参考图只在本地浏览器读取，不上传到服务器；本页面不是正式圣诞主页。</p></div>
+    </header>
+    <main class="grid">
+      <section class="panel" aria-label="3D 模型预览">
+        <div class="bar"><span class="label" id="filename">尚未选择 GLB</span><label class="file-button" for="model-file">选择 GLB<input id="model-file" type="file" accept=".glb,model/gltf-binary" /></label><button type="button" id="reset-camera">重置视角</button></div>
+        <div class="viewport" id="dropzone">
+          <model-viewer id="viewer" camera-controls touch-action="pan-y" shadow-intensity="0.6" exposure="1.1" environment-image="neutral" tone-mapping="aces" camera-orbit="0deg 78deg 110%" interaction-prompt="none" alt="可拖动旋转的公主三维模型"></model-viewer>
+          <div class="empty" id="empty"><strong>将 GLB 拖到这里</strong><span>或者使用上方“选择 GLB”。支持手机文件选择，不要求把模型提交到 GitHub。</span></div>
+        </div>
+        <div class="orbit" role="group" aria-label="查看模型角度"><button type="button" data-angle="0" aria-pressed="true">正面 0°</button><button type="button" data-angle="45" aria-pressed="false">斜侧 45°</button><button type="button" data-angle="90" aria-pressed="false">侧面 90°</button><button type="button" data-angle="180" aria-pressed="false">背面 180°</button></div>
+        <div class="status" id="status" role="status" aria-live="polite">请选择实际 .glb 文件；设计参考图不能代替 3D 模型。</div>
+      </section>
+      <div class="side">
+        <section class="panel"><div class="inner"><h2>造型参考</h2><p class="hint">可额外打开本地 PNG，对比发型、表情、袖子、礼裙层次。此处的图片不作为 3D 模型输入。</p><div class="ref-slot" id="reference"><span>尚未加载参考图</span></div><label class="file-button" for="reference-file">选择参考 PNG<input id="reference-file" type="file" accept="image/png,image/jpeg,image/webp" /></label></div></section>
+        <section class="panel"><div class="inner"><h2>文件与拓扑</h2><dl id="metrics"><dt>大小</dt><dd>—</dd><dt>三角面</dt><dd>—</dd><dt>材质 / 贴图</dt><dd>—</dd><dt>骨骼 / 动画</dt><dd>—</dd></dl><p class="hint" style="margin-top:14px" id="warnings">文件结构检测仅用于发现明显风险，不能自动证明脸部或材质美观。</p></div></section>
+        <section class="panel"><div class="inner"><h2>人工视觉验收</h2><div class="checks" id="checks">
+          <label><input type="checkbox" data-check="face" /> 正面及 45° 脸型、鼻梁、眼睛、嘴唇自然</label>
+          <label><input type="checkbox" data-check="profile" /> 90° 侧脸有真实深度，无照片贴片接缝</label>
+          <label><input type="checkbox" data-check="back" /> 180° 发型及礼裙背面没有异常漂浮几何</label>
+          <label><input type="checkbox" data-check="fabric" /> 袖子、手指、裙摆、PBR 材质没有明显穿模</label>
+          <label><input type="checkbox" data-check="mobile" /> 已在真实手机上检查加载、拖动及性能</label>
+        </div><div class="actions"><button type="button" id="export" disabled>下载验收 JSON</button></div><p class="hint" style="margin-top:12px">勾选仅代表检查人自评，不会自动通过发布门槛；没有骨骼的模型不应声称支持自然眨眼和挥手。</p></div></section>
+      </div>
+    </main>
+    <footer class="foot">仅供功能分支预览与人工验收。请保留现有相册、圣诞树、影片、/letter/ 与 /christmas/ 入口，未经确认勿替换正式上线资产。</footer>
+  </div>
+  <script>
+  (() => {
+    'use strict';
+    const viewer = document.getElementById('viewer');
+    const modelInput = document.getElementById('model-file');
+    const referenceInput = document.getElementById('reference-file');
+    const dropzone = document.getElementById('dropzone');
+    const status = document.getElementById('status');
+    const filename = document.getElementById('filename');
+    const metrics = document.getElementById('metrics');
+    const warnings = document.getElementById('warnings');
+    const exportButton = document.getElementById('export');
+    let modelURL = null, referenceURL = null, report = null;
+
+    const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const setStatus = (message) => { status.textContent = message; };
+    function inspectGLB(buffer, name) {
+      const view = new DataView(buffer);
+      if (view.byteLength < 20 || view.getUint32(0,true) !== 0x46546c67 || view.getUint32(4,true) !== 2 || view.getUint32(8,true) !== view.byteLength) throw new Error('无效的 glTF 2.0 GLB 文件头或文件长度');
+      let offset = 12, doc = null;
+      while (offset + 8 <= view.byteLength) {
+        const length = view.getUint32(offset,true), kind = view.getUint32(offset+4,true);
+        offset += 8;
+        if (offset + length > view.byteLength) throw new Error('GLB 分块越界');
+        if (kind === 0x4e4f534a && !doc) doc = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer,offset,length)));
+        offset += length;
+      }
+      if (offset !== view.byteLength || !doc || doc.asset?.version !== '2.0') throw new Error('GLB 分块或 glTF 版本不正确');
+      const accessors = doc.accessors || [], meshes = doc.meshes || [];
+      if (!meshes.length) throw new Error('没有发现 3D 网格');
+      let triangles = 0, primitives = 0, morphTargets = 0;
+      for (const mesh of meshes) for (const primitive of (mesh.primitives || [])) {
+        if ((primitive.mode ?? 4) !== 4) continue;
+        primitives++;
+        const idx = primitive.indices, pos = primitive.attributes?.POSITION;
+        const count = idx != null ? accessors[idx]?.count : accessors[pos]?.count;
+        if (typeof count === 'number') triangles += Math.floor(count / 3);
+        morphTargets += primitive.targets?.length || 0;
+      }
+      const sizes = {meshes:meshes.length, triangles,primitives, materials:doc.materials?.length||0,textures:doc.textures?.length||0, skins:doc.skins?.length||0,animations:doc.animations?.length||0,morphTargets};
+      const issues = [];
+      if (triangles > 300000) issues.push('面数较多，需制作手机 LOD');
+      if (buffer.byteLength > 15*1024*1024) issues.push('GLB 超过 15 MiB，建议压缩');
+      if (!sizes.skins) issues.push('缺少骨骼，不能自然挥手');
+      if (!sizes.animations && !sizes.morphTargets) issues.push('缺少动画与表情变形目标，不能自然眨眼');
+      if (!sizes.textures) issues.push('缺少贴图，衣料与脸部需要重点检查');
+      if ([...(doc.images||[]),...(doc.buffers||[])].some(x => x.uri && !x.uri.startsWith('data:'))) issues.push('GLB 依赖外部纹理或二进制资源，单独上传可能失败');
+      return {file:name,sizeBytes:buffer.byteLength, ...sizes,extensionsUsed:doc.extensionsUsed||[],issues};
+    }
+    function showMetrics(r) {
+      metrics.innerHTML = '<dt>大小</dt><dd>'+escapeHTML((r.sizeBytes/1048576).toFixed(2))+' MiB</dd>' +
+        '<dt>网格 / 三角面</dt><dd>'+r.meshes+' / '+r.triangles.toLocaleString()+'</dd>' +
+        '<dt>材质 / 贴图</dt><dd>'+r.materials+' / '+r.textures+'</dd>' +
+        '<dt>骨骼 / 动画 / 表情</dt><dd>'+r.skins+' / '+r.animations+' / '+r.morphTargets+'</dd>';
+      warnings.textContent = r.issues.length ? '风险提示：'+r.issues.join('；') : '结构检查未发现明显风险；仍需逐角度人工验收。';
+    }
+    async function openModel(file) {
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.glb')) return setStatus('请提供 .glb 二进制模型，不是 PNG、OBJ 或 ZIP。');
+      try {
+        const result = inspectGLB(await file.arrayBuffer(),file.name);
+        if (modelURL) URL.revokeObjectURL(modelURL);
+        modelURL = URL.createObjectURL(file);
+        report = result; viewer.src = modelURL;
+        filename.textContent = file.name;
+        showMetrics(result);
+        dropzone.classList.add('is-ready');
+        document.querySelectorAll('#checks input').forEach(x => x.checked = false);
+        exportButton.disabled = false;
+        setStatus('GLB 结构校验通过，正在渲染。请逐一检查正面、45°、侧面和背面。');
+      } catch(error) {
+        setStatus('文件检查失败：'+(error?.message || String(error)));
+      }
+    }
+    modelInput.addEventListener('change', () => openModel(modelInput.files?.[0]));
+    viewer.addEventListener('load', () => setStatus('模型已加载。请旋转模型，重点检查侧脸、头发背面与衣料连接。'));
+    viewer.addEventListener('error', () => setStatus('3D 渲染加载失败。请确认纹理打包、浏览器 WebGL 与网络可访问 model-viewer 脚本。'));
+    referenceInput.addEventListener('change', () => {
+      const file = referenceInput.files?.[0]; if (!file || !file.type.startsWith('image/')) return;
+      if (referenceURL) URL.revokeObjectURL(referenceURL);
+      referenceURL = URL.createObjectURL(file);
+      const img = document.createElement('img'); img.src = referenceURL; img.alt = '用户本地选择的公主造型参考图';
+      document.getElementById('reference').replaceChildren(img);
+    });
+    document.querySelectorAll('[data-angle]').forEach(button => button.addEventListener('click', () => {
+      viewer.cameraOrbit = button.dataset.angle+'deg 78deg 110%';
+      document.querySelectorAll('[data-angle]').forEach(b => b.setAttribute('aria-pressed',String(b===button)));
+    }));
+    document.getElementById('reset-camera').addEventListener('click', () => {
+      viewer.cameraOrbit='0deg 78deg 110%';
+      viewer.fieldOfView='auto';
+      document.querySelectorAll('[data-angle]').forEach(b => b.setAttribute('aria-pressed',String(b.dataset.angle==='0')));
+    });
+    ['dragenter','dragover'].forEach(type => dropzone.addEventListener(type, e => { e.preventDefault();dropzone.classList.add('dragging'); }));
+    ['dragleave','drop'].forEach(type => dropzone.addEventListener(type, e => { e.preventDefault();dropzone.classList.remove('dragging'); }));
+    dropzone.addEventListener('drop', e => openModel(Array.from(e.dataTransfer?.files||[]).find(f=>f.name.toLowerCase().endsWith('.glb'))));
+    exportButton.addEventListener('click', () => {
+      if (!report) return;
+      const checked = Object.fromEntries(Array.from(document.querySelectorAll('#checks input')).map(x=>[x.dataset.check,x.checked]));
+      const complete = Object.values(checked).every(Boolean);
+      const body = JSON.stringify({...report,visualChecks:checked,manualReviewComplete:complete,approvedForProduction:false,reviewedAt:new Date().toISOString()},null,2);
+      const url=URL.createObjectURL(new Blob([body],{type:'application/json'}));
+      const link=document.createElement('a');link.href=url;link.download=report.file.replace(/\.glb$/i,'')+'-quality-review.json';link.click();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+    });
+    window.addEventListener('pagehide', () => { if(modelURL)URL.revokeObjectURL(modelURL);if(referenceURL)URL.revokeObjectURL(referenceURL); });
+  })();
+  </script>
+</body>
+</html>
