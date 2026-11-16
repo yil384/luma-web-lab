@@ -17,6 +17,13 @@ test('mobile-first visual page uses illustrated Xiaomiao branding and truthful p
   assert.ok(snapshot.observed_at);
   assert.ok(existsSync(new URL('../public/live/assets/xiaomiao-wordmark.webp', import.meta.url)));
 });
+test('header has no surprising navigation back to the unrelated main site', () => {
+  assert.ok(!page.includes('href="/" aria-label="返回小喵主页"'));
+  assert.ok(!page.includes('class="round-link"'));
+  assert.match(page, /class="top-right"/);
+  assert.match(page, /href="https:\/\/www\.huya\.com\/156324"/);
+});
+
 test('live fallback is validated and uses HTTPS-only user-configured API', () => {
   assert.match(page, /knownCover/);
   assert.match(page, /room_id!==['"]156324['"]/);
