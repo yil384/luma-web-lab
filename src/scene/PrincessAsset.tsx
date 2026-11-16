@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
@@ -141,7 +141,8 @@ function DetailedPrincess(props: Props & { onUnavailable: () => void }) {
 export default function PrincessAsset({ active, paused, reducedMotion }: Props) {
   const [unavailable, setUnavailable] = useState(false);
   // A safe fallback means a missing/invalid GLB never hides or breaks the tree.
+  const onUnavailable = useCallback(() => setUnavailable(true), []);
   if (unavailable) return <FairytalePrincess active={active} paused={paused} reducedMotion={reducedMotion} />;
   return <DetailedPrincess active={active} paused={paused} reducedMotion={reducedMotion}
-    onUnavailable={() => setUnavailable(true)} />;
+    onUnavailable={onUnavailable} />;
 }
