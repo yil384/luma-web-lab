@@ -105,5 +105,10 @@ printf 'Installed: %s\n' "$MAIN_PLIST"
 printf 'Local API: http://127.0.0.1:8765/api/health\n'
 printf 'SQLite database: %s/monitor.sqlite3\n' "$DATA_DIR"
 printf 'Backups: %s\n' "$BACKUP_DIR"
+echo 'Verifying HTTP readiness (the collector may need a few seconds after launchd starts)...'
+if ! bash "$SCRIPT_DIR/status.sh"; then
+  echo 'The LaunchAgents were installed, but the collector API is not ready. Inspect the startup error above.' >&2
+  exit 1
+fi
 echo 'Status: bash services/huya-monitor/mac/status.sh'
 echo 'Important: Mac must stay awake, powered, connected and logged into this account.'
