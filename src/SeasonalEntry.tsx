@@ -1,12 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { resolveExperience } from './lib/experience-route';
+import { relativeExperiencePath, resolveExperience } from './lib/experience-route';
 import { assetUrl } from './lib/content';
 
 const CastleRide = lazy(() => import('./journey/CastleRide'));
 const ChristmasPage = lazy(() => import('./App'));
 
 function currentExperience() {
-  return resolveExperience(window.location.pathname);
+  return resolveExperience(relativeExperiencePath(window.location.pathname, import.meta.env.BASE_URL));
 }
 
 export default function SeasonalEntry() {
