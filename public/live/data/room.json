@@ -3,16 +3,16 @@
   "anchor": "集美小喵【ZKL】",
   "room_title": null,
   "category": "户外",
-  "status": "offline",
-  "display_heat": "43.1万",
+  "status": "unknown",
+  "display_heat": "26.6万",
   "followers_display": "3.2万",
-  "last_live_text": "上次开播 今天 00:38",
-  "cover_url": null,
+  "last_live_text": null,
+  "cover_url": "https://live-cover.msstatic.com/huyalive/1199660059462-1199660059462-5859125141740453888-2399320242380-10057-A-0-1/20261116184526.jpg?x-oss-process=image/resize,limit_0,m_fill,w_338,h_190/sharpen,80/format,jpg/interlace,1/quality,q_90",
   "topic_uid": null,
   "source_url": "https://www.huya.com/156324",
-  "observed_at": "2026-11-16T09:57:16+00:00",
+  "observed_at": "2026-11-16T10:53:49+00:00",
   "type": "public_page_snapshot",
-  "observation_method": "public web page read, initial verified observation",
+  "observation_method": "verified rendered public Huya room page",
   "display_heat_meaning": "platform_display_heat_not_real_viewers",
-  "status_meaning": "inferred_from_public_page_not_guaranteed_live"
+  "status_meaning": "not_verified"
 }

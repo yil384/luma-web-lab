@@ -1,0 +1,15 @@
+# Replace the domain with your verified, DNS-resolved API subdomain.
+# Do not expose port 8765 on public network interfaces.
+api.example.com {
+    encode zstd gzip
+    @public {
+        method GET HEAD OPTIONS
+        path /api/health /api/overview /api/events /api/trend /api/ranking /api/sessions /api/sources /api/stream
+    }
+    handle @public {
+        reverse_proxy 127.0.0.1:8765
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

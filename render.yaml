@@ -1,0 +1,21 @@
+# Free trial only: Render sleeps when idle and does not persist SQLite disk.
+# Read services/huya-monitor/cloud/README.md before deployment.
+services:
+  - type: web
+    name: xiaomiao-huya-preview
+    runtime: docker
+    plan: free
+    rootDir: services/huya-monitor
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEMO_MODE
+        value: '0'
+      - key: HUYA_CHAT_ENABLED
+        value: '1'
+      - key: HUYA_CHAT_PROTOCOL
+        value: topic
+      - key: CORS_ORIGINS
+        value: https://tanchensiyi.com
+      - key: DATA_DIR
+        value: /app/data

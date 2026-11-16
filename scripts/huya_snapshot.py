@@ -37,7 +37,23 @@ def build_snapshot(html_text: str, recorded_at: str | None = None) -> dict:
     return snapshot
 
 
-def fetch_snapshot() -> dict:
+def render_snapshot() -> dict:
+    """Optional JS-rendered public-page fallback when the static HTML has no
+    visible heat/follower fields. This is not a login or a bypass for 403s.
+    """
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=['--no-sandbox'])
+        try:
+            page = browser.new_page(viewport={'width': 1280, 'height': 900})
+            page.goto(ROOM_URL, wait_until='domcontentloaded', timeout=25000)
+            page.wait_for_timeout(3000)
+            return build_snapshot(page.content())
+        finally:
+            browser.close()
+
+
+def fetch_snapshot(browser_fallback=False) -> dict:
     with httpx.Client(timeout=httpx.Timeout(18.0, connect=8.0), follow_redirects=True,
                       headers={'User-Agent': UA,
                                'Accept-Language': 'zh-CN,zh;q=0.9',
@@ -49,7 +65,17 @@ def fetch_snapshot() -> dict:
                 response.raise_for_status()
                 if not (20 <= len(response.text) <= 6_000_000):
                     raise ValueError('Unexpected page size')
-                return build_snapshot(response.text)
+                snapshot = build_snapshot(response.text)
+                if browser_fallback and not snapshot.get('display_heat'):
+                    try:
+                        rendered = render_snapshot()
+                        for key in ('display_heat', 'followers_display', 'cover_url', 'status', 'last_live_text', 'topic_uid'):
+                            if rendered.get(key) is not None:
+                                snapshot[key] = rendered[key]
+                        snapshot['observation_method'] = 'public page + JavaScript render'
+                    except Exception as browser_error:
+                        print('Browser fallback did not improve snapshot:', type(browser_error).__name__, file=sys.stderr)
+                return snapshot
             except (httpx.HTTPError, ValueError) as exc:
                 last = exc
                 if attempt < 2:
@@ -60,9 +86,10 @@ def fetch_snapshot() -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--browser-fallback', action='store_true')
     args = parser.parse_args()
     try:
-        snapshot = fetch_snapshot()
+        snapshot = fetch_snapshot(args.browser_fallback)
     except Exception as exc:
         print(f'snapshot failed: {exc}', file=sys.stderr)
         return 1

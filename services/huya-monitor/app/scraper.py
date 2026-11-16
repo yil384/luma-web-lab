@@ -4,6 +4,7 @@ import html
 import re
 import json
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 ROOM_ID = '156324'
@@ -51,12 +52,28 @@ def parse_room_page(html_text: str, room_id: str = ROOM_ID):
     category = _match(title, [r'官方直播间-(.+?)-虎牙']) or _match(keywords, [r'([^,，]+)直播'])
     # Visible count is a platform display metric; never call it real viewers.
     followers = _match(visible, [r'关注\s+([\d.,]+(?:万|亿)?)'])
-    heat = _match(visible, [rf'\b{re.escape(room_id)}\s+([\d.,]+(?:万|亿)?)\s+(?:上次开播|(?:正在|目前)?直播)'])
+    heat = _match(visible, [rf'\b{re.escape(room_id)}\s+([\d.,]+(?:万|亿)?)\s+(?:上次开播|(?:正在|目前)?直播|{re.escape(category or "户外")})'])
     cover = _match(html_text, [r'<meta[^>]+(?:og:image|name="image")[^>]+content="([^"]+)"'])
-    if cover and cover.startswith('//'):
-        cover = 'https:' + cover
-    if cover and not cover.startswith('https://'):
-        cover = None
+    # The page may expose the current official cover via image metadata or
+    # an inline room payload, not only OpenGraph markup. Accept only a known
+    # Huya media host so we never publish arbitrary external image URLs.
+    if not cover:
+        for meta_tag in soup.find_all('meta'):
+            key = (meta_tag.get('name') or meta_tag.get('property') or '').lower()
+            if key in ('image', 'og:image', 'twitter:image'):
+                cover = meta_tag.get('content')
+                if cover:
+                    break
+    if not cover:
+        normalized = html_text.replace(r'\/', '/')
+        cover = _match(normalized, [r'((?:https?:)?//live-cover\.msstatic\.com/[^\s\"\'<>{}]{8,900})'])
+    if cover:
+        cover = html.unescape(str(cover).strip())
+        if cover.startswith('//'):
+            cover = 'https:' + cover
+        parsed_cover = urlsplit(cover)
+        if parsed_cover.scheme != 'https' or parsed_cover.hostname != 'live-cover.msstatic.com' or len(cover) > 1000:
+            cover = None
     topic_uid = (_script_int(html_text, 'lp') or _script_int(html_text, 'ayyuid')
                  or _script_int(html_text, 'lYyid') or _script_int(html_text, 'yyuid'))
     return {
