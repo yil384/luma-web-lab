@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import hashlib
+import time
 import io
 import json
 import logging
@@ -27,7 +29,8 @@ from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 
 from .scraper import ROOM_ID, ROOM_URL, parse_room_page
-from .tars import join_request, parse_push
+from .tars import (HEARTBEAT, HUYA_WS_URL, join_request, topic_join_request,
+                   parse_push_events)
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.getenv('DATA_DIR', str(ROOT / 'data')))
@@ -37,12 +40,16 @@ INGEST_TOKEN = os.getenv('INGEST_TOKEN', '')
 CORS_ORIGINS = [x.strip().rstrip('/') for x in os.getenv('CORS_ORIGINS', 'https://tanchensiyi.com').split(',') if x.strip()]
 POLL_SECONDS = max(20, int(os.getenv('POLL_SECONDS', '45')))
 CHAT_ENABLED = os.getenv('HUYA_CHAT_ENABLED', '1') == '1'
+CHAT_PROTOCOL = os.getenv('HUYA_CHAT_PROTOCOL', 'topic')
+if CHAT_PROTOCOL not in ('topic', 'legacy'):
+    raise ValueError('HUYA_CHAT_PROTOCOL must be topic or legacy')
+RETENTION_DAYS = max(1, min(365, int(os.getenv('RETENTION_DAYS', '90'))))
 LOGGER = logging.getLogger('huya-monitor')
 UTC = timezone.utc
 
 state = {
     'page': {'state': 'starting', 'last_success': None, 'last_attempt': None, 'error': None},
-    'chat': {'state': 'starting' if CHAT_ENABLED else 'disabled', 'last_success': None, 'last_attempt': None, 'error': None},
+    'chat': {'state': 'starting' if CHAT_ENABLED else 'disabled', 'last_success': None, 'last_attempt': None, 'error': None, 'protocol': CHAT_PROTOCOL, 'last_frame': None, 'frames': 0, 'messages': 0},
     'unknown_uris': {},
     'demo': DEMO_MODE,
 }
@@ -50,7 +57,7 @@ latest_room = {
     'room_id': ROOM_ID, 'anchor': '集美小喵【ZKL】', 'room_title': None,
     'category': '户外', 'status': 'unknown', 'display_heat': None,
     'cover_url': None, 'last_live_text': None, 'followers_display': None, 'source_url': ROOM_URL,
-    'observed_at': None, 'yyuid': None, 'channel_id': None, 'sub_channel_id': None,
+    'observed_at': None, 'topic_uid': None, 'yyuid': None, 'channel_id': None, 'sub_channel_id': None,
 }
 clients: set[asyncio.Queue] = set()
 
@@ -86,7 +93,7 @@ def init_db():
           gift_count INTEGER NOT NULL DEFAULT 0,
           noble_level INTEGER, fans_level INTEGER,
           amount_cents INTEGER, source TEXT NOT NULL,
-          raw_json TEXT
+          raw_json TEXT, event_key TEXT UNIQUE
         );
         CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts DESC);
         CREATE INDEX IF NOT EXISTS idx_events_kind ON events(kind, ts DESC);
@@ -107,21 +114,28 @@ def init_db():
         columns = {r[1] for r in db.execute('PRAGMA table_info(snapshots)')}
         if 'followers_display' not in columns:
             db.execute('ALTER TABLE snapshots ADD COLUMN followers_display TEXT')
+        event_columns = {r[1] for r in db.execute('PRAGMA table_info(events)')}
+        if 'event_key' not in event_columns:
+            db.execute('ALTER TABLE events ADD COLUMN event_key TEXT')
+            db.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_events_event_key ON events(event_key)')
 
 
 def add_event(kind, user_name=None, content=None, gift_name=None,
               gift_count=0, noble_level=None, fans_level=None,
-              amount_cents=None, source='huya-websocket', ts=None, raw=None):
+              amount_cents=None, source='huya-websocket', ts=None, raw=None, event_key=None):
     if kind not in ('chat', 'gift', 'entry', 'system', 'follow', 'noble'):
         raise ValueError('Unsupported event kind')
     timestamp = ts or iso_now()
     with sql() as db:
-        cur = db.execute('''INSERT INTO events
-            (ts,kind,user_name,content,gift_name,gift_count,noble_level,fans_level,amount_cents,source,raw_json)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+        cur = db.execute('''INSERT OR IGNORE INTO events
+            (ts,kind,user_name,content,gift_name,gift_count,noble_level,fans_level,amount_cents,source,raw_json,event_key)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
             (timestamp,kind,user_name,content,gift_name,max(0,int(gift_count or 0)),
              noble_level,fans_level,amount_cents,source,
-             json.dumps(raw,ensure_ascii=False)[:20000] if raw is not None else None))
+             json.dumps(raw,ensure_ascii=False)[:20000] if raw is not None else None,
+             event_key[:128] if event_key else None))
+        if cur.rowcount == 0:
+            return None
         event_id = cur.lastrowid
     event = {'id': event_id, 'ts': timestamp, 'kind': kind,
              'user_name': user_name, 'content': content,
@@ -135,7 +149,7 @@ def add_event(kind, user_name=None, content=None, gift_name=None,
 def save_snapshot(room, source='huya-page'):
     ts = room.get('observed_at') or iso_now()
     with sql() as db:
-        prev = db.execute('SELECT status FROM snapshots ORDER BY id DESC LIMIT 1').fetchone()
+        prev = db.execute("SELECT status FROM snapshots WHERE status IN ('live','offline') ORDER BY id DESC LIMIT 1").fetchone()
         db.execute('''INSERT INTO snapshots
           (ts,status,anchor,room_title,category,display_heat,cover_url,last_live_text,followers_display,source)
           VALUES (?,?,?,?,?,?,?,?,?,?)''',
@@ -204,47 +218,88 @@ async def poll_room():
         await asyncio.sleep(POLL_SECONDS)
 
 
-async def collect_chat():
-    """Best-effort anonymous room WebSocket listener for public chat only.
+async def _send_huya_heartbeats(ws):
+    """Application-level heartbeat; WebSocket pings alone are insufficient."""
+    while True:
+        await asyncio.sleep(20)
+        await ws.send(HEARTBEAT)
 
-    Gift data cannot be claimed unless verified or sent via the authenticated
-    integration endpoint. This is not an official / guaranteed public API.
+
+async def collect_chat():
+    """Observe public anonymous messages; no cookies or private endpoints.
+
+    Connection success is not message success: states reflect transport vs
+    actual parsed events. The group subscription is the default protocol;
+    the legacy registration remains available behind an explicit setting.
     """
     backoff = 3
     while True:
         state['chat']['last_attempt'] = iso_now()
-        try:
+        uid = latest_room.get('topic_uid')
+        if CHAT_PROTOCOL == 'legacy':
             ids = [latest_room.get(key) for key in ('yyuid','channel_id','sub_channel_id')]
-            if not all(isinstance(v,int) and v > 0 for v in ids):
-                state['chat'].update(state='waiting',error='等待页面提供可用的连接标识（yyuid/channel/subchannel）')
-                await asyncio.sleep(15)
-                continue
-            state['chat'].update(state='connecting',error=None)
-            async with websockets.connect('wss://cdnws.api.huya.com/',
-                    open_timeout=15, ping_interval=25, ping_timeout=25,
-                    max_size=2_000_000) as ws:
-                await ws.send(join_request(*ids))
+            ready = all(isinstance(v, int) and v > 0 for v in ids)
+            registration = join_request(*ids) if ready else None
+        else:
+            ready = isinstance(uid, int) and uid > 0
+            registration = topic_join_request(uid) if ready else None
+        if not ready:
+            state['chat'].update(state='waiting',error='等待房间页面提供已验证的主播协议 UID')
+            await asyncio.sleep(10)
+            continue
+        state['chat'].update(state='connecting',error=None)
+        heartbeat_task = None
+        try:
+            async with websockets.connect(HUYA_WS_URL, open_timeout=18,
+                     ping_interval=30, ping_timeout=30,
+                     max_size=2_000_000, max_queue=32) as ws:
+                await ws.send(registration)
+                heartbeat_task = asyncio.create_task(_send_huya_heartbeats(ws))
                 state['chat'].update(state='transport_connected',error=None)
+                publish({'type':'sources','data':dict(state)})
                 backoff = 3
-                async for packet in ws:
-                    if not isinstance(packet, bytes): continue
-                    parsed = parse_push(packet)
-                    if not parsed: continue
-                    if parsed.get('kind') == 'chat':
-                        add_event('chat', parsed['user_name'],parsed['content'],source='huya-websocket')
-                        state['chat']['state'] = 'connected'
-                        state['chat']['last_success'] = iso_now()
-                    elif parsed.get('kind') == 'unparsed':
-                        k = str(parsed.get('uri'))[:20]
-                        state['unknown_uris'][k] = state['unknown_uris'].get(k,0)+1
-                state['chat'].update(state='disconnected',error='WebSocket closed; reconnecting')
-                await asyncio.sleep(backoff)
-        except asyncio.CancelledError: raise
+                async for frame in ws:
+                    if not isinstance(frame, bytes):
+                        continue
+                    state['chat']['frames'] += 1
+                    state['chat']['last_frame'] = iso_now()
+                    parsed = parse_push_events(frame)
+                    for event in parsed:
+                        if event['kind'] == 'chat':
+                            saved = add_event('chat',user_name=event['user_name'],
+                                     content=event['content'],source='huya-public-websocket')
+                            if saved is not None:
+                                state['chat']['messages'] += 1
+                                state['chat'].update(state='receiving', last_success=iso_now(), error=None)
+                        elif event['kind'] == 'unparsed':
+                            k = str(event.get('uri'))[:20]
+                            state['unknown_uris'][k] = state['unknown_uris'].get(k,0)+1
+                state['chat'].update(state='disconnected',error='WebSocket 连接已结束，正在重连')
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
+            LOGGER.warning('Huya WS failed: %s',str(exc)[:180])
             state['chat'].update(state='error',error=str(exc)[:180])
-            LOGGER.warning('Huya chat WebSocket disconnected: %s',str(exc)[:180])
-            await asyncio.sleep(backoff)
-            backoff = min(backoff*2,60)
+        finally:
+            if heartbeat_task:
+                heartbeat_task.cancel()
+                await asyncio.gather(heartbeat_task,return_exceptions=True)
+            publish({'type':'sources','data':dict(state)})
+        # Random jitter avoids a thundering herd if multiple self-hosted
+        # workers are restarted by the upstream at the same time.
+        await asyncio.sleep(backoff + random.random()*min(3,backoff))
+        backoff = min(backoff*2,90)
+
+
+async def housekeeping():
+    """Cap retention without losing events during normal request traffic."""
+    while True:
+        await asyncio.sleep(3600)
+        cutoff = (datetime.now(UTC) - timedelta(days=RETENTION_DAYS)).isoformat(timespec='seconds')
+        with sql() as db:
+            db.execute('DELETE FROM events WHERE ts < ?', (cutoff,))
+            db.execute('DELETE FROM snapshots WHERE ts < ?', (cutoff,))
+        LOGGER.info('Retention applied, days=%s',RETENTION_DAYS)
 
 
 def seed_demo():
@@ -290,6 +345,7 @@ async def lifespan(app: FastAPI):
         seed_demo()
     else:
         tasks.append(asyncio.create_task(poll_room(),name='room-poller'))
+        tasks.append(asyncio.create_task(housekeeping(),name='history-retention'))
         if CHAT_ENABLED:
             tasks.append(asyncio.create_task(collect_chat(),name='chat-collector'))
     yield
@@ -297,7 +353,7 @@ async def lifespan(app: FastAPI):
     await asyncio.gather(*tasks,return_exceptions=True)
 
 
-app = FastAPI(title='集美小喵直播间 · 采集 API',version='0.2.0',lifespan=lifespan)
+app = FastAPI(title='集美小喵直播间 · 采集 API',version='0.3.0',lifespan=lifespan)
 app.add_middleware(CORSMiddleware,allow_origins=CORS_ORIGINS,allow_credentials=False,allow_methods=['GET'],allow_headers=['Accept','Content-Type'])
 
 
@@ -309,7 +365,7 @@ def index():
 @app.get('/api/health')
 def health():
     return {'ok': True,'room_id':ROOM_ID,'demo':DEMO_MODE,'timestamp':iso_now(),
-            'collectors':state}
+            'collectors':state,'retention_days':RETENTION_DAYS}
 
 
 @app.get('/api/overview')
@@ -410,8 +466,8 @@ def sessions(limit: int=Query(30,ge=1,le=100)):
 
 @app.get('/api/sources')
 def sources():
-    return {'sources':state,'room_ids':{k:latest_room.get(k) for k in ('yyuid','channel_id','sub_channel_id')},
-            'scope':'公开房间页 + 尝试匿名弹幕 WebSocket；礼物等事件需另接入获授权数据源',
+    return {'sources':state,'room_ids':{k:latest_room.get(k) for k in ('topic_uid','yyuid','channel_id','sub_channel_id')},
+            'scope':'公开房间页 + 公开匿名 WebSocket 两种协议可切换；未能解析的礼物/入场不可统计',
             'official_api':'虎牙旧开放 API 于 2026-10-31 下线；本程序不使用该接口'}
 
 
@@ -460,6 +516,7 @@ class IngestEvent(BaseModel):
     noble_level: int | None = Field(default=None,ge=0,le=100)
     fans_level: int | None = Field(default=None,ge=0,le=1000)
     amount_cents: int | None = Field(default=None,ge=0)
+    event_key: str | None = Field(default=None,max_length=128)
 
 
 @app.post('/api/ingest')
@@ -469,7 +526,7 @@ async def ingest(data: IngestEvent,authorization: str | None=Header(None)):
         raise HTTPException(status_code=401,detail='Authenticated integration not configured')
     if DEMO_MODE:
         raise HTTPException(status_code=403,detail='Demo does not accept external events')
-    return add_event(source='authorized-integration',raw=data.model_dump(),**data.model_dump())
+    return add_event(source='authorized-integration',raw=None,**data.model_dump()) or {'status':'duplicate'}
 
 
 @app.get('/api/stream')
@@ -489,7 +546,7 @@ async def stream(request: Request):
         finally:
             clients.discard(queue)
     return StreamingResponse(gen(),media_type='text/event-stream',
-       headers={'Cache-Control':'no-cache','X-Accel-Buffering':'no'})
+       headers={'Cache-Control':'no-cache','X-Accel-Buffering':'no','Content-Security-Policy':"default-src 'none'"})
 
 
 # Dashboard is served by the tanchensiyi.com static Site, not this API process.

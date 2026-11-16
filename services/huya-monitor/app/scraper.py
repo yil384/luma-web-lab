@@ -2,6 +2,7 @@
 from __future__ import annotations
 import html
 import re
+import json
 from datetime import datetime, timezone
 from bs4 import BeautifulSoup
 
@@ -56,7 +57,10 @@ def parse_room_page(html_text: str, room_id: str = ROOM_ID):
         cover = 'https:' + cover
     if cover and not cover.startswith('https://'):
         cover = None
+    topic_uid = (_script_int(html_text, 'lp') or _script_int(html_text, 'ayyuid')
+                 or _script_int(html_text, 'lYyid') or _script_int(html_text, 'yyuid'))
     return {
+        'topic_uid': topic_uid,
         'room_id': room_id,
         'anchor': anchor,
         'room_title': room_title,

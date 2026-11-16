@@ -178,3 +178,77 @@ def parse_push(packet: bytes) -> dict | None:
     except (ValueError, TypeError, struct.error):
         pass
     return None
+
+# Topic subscriptions are used by recent anonymous web clients. This is
+# distinct from the older anonymous WSRegisterReq. Implement both rather than
+# silently treating a successful TCP/WebSocket handshake as chat success.
+HUYA_WS_URL = 'wss://cdnws.api.huya.com/'
+HEARTBEAT = bytes.fromhex(
+    '00 03 1d 00 00 69 00 00 00 69 10 03 2c 3c 4c 56 '
+    '08 6f 6e 6c 69 6e 65 75 69 66 0f 4f 6e 55 73 65 '
+    '72 48 65 61 72 74 42 65 61 74 7d 00 00 3c 08 00 '
+    '01 06 04 74 52 65 71 1d 00 00 2f 0a 0a 0c 16 00 '
+    '26 00 36 07 61 64 72 5f 77 61 70 46 00 0b 12 03 '
+    'ae f0 0f 22 03 ae f0 0f 3c 42 6d 52 02 60 5c 60 '
+    '01 7c 82 00 0b b0 1f 9c ac 0b 8c 98 0c a8 0c'
+)
+
+
+def topic_join_request(uid: int) -> bytes:
+    """Subscribe to public live/chat room groups (WS command 16)."""
+    if uid <= 0:
+        raise ValueError('Topic UID must be positive')
+    topic_list = (head(0, TYPE_LIST) + integer(0, 2)
+                  + string(0, f'live:{uid}') + string(0, f'chat:{uid}'))
+    return integer(0, 16) + blob(1, topic_list + string(1, ''))
+
+
+def parse_push_events(packet: bytes) -> list[dict]:
+    """Parse both legacy URI=1400 and newer list-of-struct chat pushes.
+
+    Other command types, unknown URIs and malformed packets are not fabricated
+    into chat/gift events. All fields are protocol-derived rather than inferred.
+    """
+    try:
+        if not isinstance(packet, bytes) or len(packet) > 2_000_000:
+            return []
+        outer = Reader(packet).parse()
+        if find(outer, 0) != 7:
+            return []
+        body = find(outer, 1)
+        if not isinstance(body, bytes):
+            return []
+        pushed = Reader(body).parse()
+        uri = find(pushed, 1)
+        inner = find(pushed, 2)
+        if not isinstance(inner, bytes):
+            return []
+        fields = Reader(inner).parse()
+        results = []
+        # Modern list of structs: tag 4 -> repeated {1: nick, 2: text}.
+        items = find(fields, 4)
+        if isinstance(items, list):
+            for item in items[:250]:
+                obj = item.value if isinstance(item, Field) else item
+                if not isinstance(obj, list):
+                    continue
+                user = find(obj, 1)
+                content = find(obj, 2)
+                if isinstance(user, str) and isinstance(content, str) and user.strip() and content.strip():
+                    results.append({'kind': 'chat', 'user_name': user[:128],
+                                    'content': content[:2000], 'transport_uri': uri,
+                                    'format': 'topic-batch'})
+            if results:
+                return results
+        # Older chat notification, URI 1400.
+        if uri == 1400:
+            person = find(fields, 0)
+            user = find(person, 2, '') if isinstance(person, list) else ''
+            content = find(fields, 3, '')
+            if isinstance(user, str) and isinstance(content, str) and user.strip() and content.strip():
+                return [{'kind': 'chat', 'user_name': user[:128],
+                         'content': content[:2000], 'transport_uri': uri,
+                         'format': 'legacy-1400'}]
+        return [{'kind': 'unparsed', 'uri': uri}]
+    except (ValueError, TypeError, struct.error, IndexError, RecursionError):
+        return []

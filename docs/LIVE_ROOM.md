@@ -1,23 +1,40 @@
-# 集美小喵直播间 /live/
+# 集美小喵直播间：公开数据观察与监控
 
-用户于 2026-11-16 要求把虎牙房间 [156324](https://www.huya.com/156324) 的监控网页接入 `https://tanchensiyi.com/xxx`，命名和视觉使用主站风格。本分支采用 `https://tanchensiyi.com/live/`。
+目标：`https://tanchensiyi.com/live/`，虎牙房间 `https://www.huya.com/156324`。
 
-## 路由与界面
+## 组成与数据可信度
 
-- 代码：`public/live/index.html`，由 Vite 的 `public/` 资源复制到 `dist/live/index.html`。**独立静态入口**，不需要也不应修改 `src/lib/experience-route.ts` 的季节逻辑。
-- `/` 继续固定圣诞树；`/christmas/` 和 `/letter/` 不变。`scripts/finalize-build.mjs` 保留它们的独立 HTML 元信息。
-- 标题「集美小喵直播间」，主站 `xiaomiao-mark-v2` SVG/PNG/ICO/apple-touch-icon 一套图标共享，保持深海蓝、奶油白、香槟金、红色点缀与相同文字风格。
-- 页面支持趋势、历史、事件/关键词/贵族等级筛选、排行、直播场次和 CSV（在 API 可用时）。可在网页「数据连接」设置 HTTPS 的 `/api` 前缀；默认**不连接后端，也不提供虚假的数字**。
+- **静态手机页面：** `public/live/index.html`，移动竖屏单列优先，复用主站 `public/icons/xiaomiao-mark-v2.*` favicon。页面默认读取 `public/live/data/room.json`；时间过期后提示“数据已过期”，不能把旧热度或开播状态冒充实时值。
+- **GitHub Actions 定时快照：** `scripts/huya_snapshot.py` 与 `.github/workflows/live-room-snapshot.yml`，每 30 分钟尝试拉取一次公开网页，并将真实获得的字段更新到 `gh-pages/live/data/room.json`。运行失败保持上一份可信记录，不能伪造。Actions 的 cron 可能延迟/跳过，也不能补全弹幕。
+- **Mac 或服务器常驻采集器：** `services/huya-monitor/`，FastAPI + SQLite WAL + 公开 WebSocket/Tars。可对比现代 topic 订阅和旧版匿名注册，心跳、断线退避重连、事件校验和失败状态分离。
+- **Mac 备用节点：** `services/huya-monitor/mac/` 安装单用户 launchd 服务，自动重启、日志、本地数据库和每日在线备份。详细说明见 `services/huya-monitor/mac/README.md`。
 
-## 数据与发布边界
+## 前后端数据连接
 
-这不是完整服务上线：GitHub `main` 源码和 ChatGPT Sites **生产源码/部署是不同系统**。GitHub 提交不等于 `tanchensiyi.com/live/` 可访问。正式上线需在原 Sites 项目 `appgprj_6aef1795eb688191a80ffb20460dbab1` 将改动同步到最新源码，保留 `.openai/hosting.json` 与用户既有访问权限，使用官方 build/deploy 流程确认部署完成，最后实测 `/`、`/letter/`、`/christmas/`、`/live/`。**不要**把 GitHub Pages 预览误认为主域名部署。
+- GitHub Pages 只提供静态 HTML/JS/JSON，不能运行 Python 常驻进程。
+- 实时接口必须在自有 HTTPS 域名提供（比如 `https://monitor.example.com/api`）；前端的「连接」设置可以覆盖默认 API。不要将 Mac 的 8765 端口直接公开。
+- 如果没有 HTTPS 实时入口，页面仍显示公开房间快照，但无法显示实时弹幕/礼物/排行。不能把 GitHub Actions 的定时抓取称作实时监控。
+- 原始公开页面 `heat` 是平台展示热度，**不是当前真实在线人数**。
+- 非官方 WebSocket 对房间组订阅与批量弹幕的支持属于实验性适配，必须以实网接收到有效弹幕为准。连接到 WebSocket 不代表已经成功解析消息。
+- 暂不声称已解析礼物、贵族、关注、礼物现金金额或平台私有指标。所有此类字段必须经实际验证的事件协议或授权集成提供。
 
-主站静态托管无法持续运行 Python、SQLite、WebSocket。采集后端源码在 `services/huya-monitor/`，部署时需要单独的常驻、可出网的服务、持久化数据卷、HTTPS 反向代理和访问控制。页面元信息的 `xiaomiao-monitor-api-base` 空值表示尚未有正式公共 API；不能将 localhost 当成线上服务。完整部署前，访问新页面只能看到状态诚实的 UI 框架。
+## 测试与部署
 
-## 验证清单
+在 `services/huya-monitor` 目录：
 
-1. `npm test` 覆盖静态路径与共享图标引用；`npm run build` 检查最终 `dist/live/index.html` 存在。
-2. 浏览器分别检查桌面、手机、弹幕检索、数据来源与连接弹窗，确认断线状态没有伪造统计。
-3. 单独验证采集服务 `/api/health`、CORS、SSE 长连接、弹幕真值、时间戳、重连和 CSV 下载；只在验证成功后说“实时采集已经上线”。
-4. 正式 Sites 发布后实测域名内的四条路径，并记录生产部署 ID。不要只凭 GitHub commit 或静态截图宣布网站上线。
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m pytest -q
+```
+
+在完整主站仓库根目录：
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+发布 GitHub Pages 时仅将 `dist/live/` 的新页面同步到 `gh-pages/live/`，保留主站 `/`、`/letter/`、`/christmas/` 和根目录 `CNAME`；不要切回旧 Sites 服务。
+
+本次状态：完成代码和本地单元测试；**没有远程登录用户 Mac，也没有完成 24 小时实际采集验收**。安装 launchd 和联通 HTTPS 需要在用户 Mac/服务器上实际执行并确认。MacBook 合盖休眠、网络中断或上游限流都会造成记录间隙。

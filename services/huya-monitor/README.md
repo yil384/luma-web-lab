@@ -1,31 +1,23 @@
-# 集美小喵直播间 · 采集 API
+# 集美小喵直播间采集服务
 
-配套前端：`/live/`（位于主站源码 `public/live/index.html`），房间号固定为 [156324](https://www.huya.com/156324)。本服务不依赖主站的 Three.js/React 构建。
+对虎牙房间 `156324` 进行公开网页轮询和非官方 WebSocket 弹幕尝试，写入本地 SQLite WAL 数据库，提供只读 HTTP API 和 SSE 事件流。默认 `DEMO_MODE=0`，不会生成模拟互动。
 
-## 自行部署
+## Mac 备用采集器（推荐）
+
+详见 [`mac/README.md`](mac/README.md)：使用当前 macOS 用户的 `launchd` 管理后台 Python，自动重连、进程自动重启、每日数据库一致性备份。本机默认访问 `http://127.0.0.1:8765/api/health`。本机采集器不会自动让手机网页获得实时数据，必须另配安全 HTTPS 通道。
+
+## 服务器部署
 
 ```bash
-cd services/huya-monitor
 cp .env.example .env
-# 自行检查 .env，设置 CORS_ORIGINS=https://tanchensiyi.com，确保 DEMO_MODE=0
-# 如果要允许礼物等外部授权写入，必须设置长随机 INGEST_TOKEN
+# 修改后再启动；仅绑定 127.0.0.1:8765
+# INGEST_TOKEN 为自愿集成（不提供就无法写入外部事件）
 docker compose up -d --build
 curl http://127.0.0.1:8765/api/health
 ```
 
-Compose **仅监听 `127.0.0.1:8765`**。如需供 `https://tanchensiyi.com/live/` 访问，请在你控制的服务器前部署 HTTPS 反向代理，例如 `https://monitor.example.com/api/*` 转发到 `http://127.0.0.1:8765/api/*`，并配置适当的访问控制、日志、流量限额、SSE 超时和备份。CORS 白名单默认为 `https://tanchensiyi.com`，只开放跨域 GET；公开只读接口仍应评估公开展示互动昵称带来的隐私风险。没有 HTTPS 后端时不要在网站上伪装为实时服务。
+HTTP API: `/api/overview`, `/api/events`, `/api/trend`, `/api/ranking`, `/api/sessions`, `/api/sources`, `/api/health`, `/api/export`, `/api/stream`。公开互动昵称应视作可能的个人数据，开放到公网前应按需求进行隐私审核、脱敏和访问限速。CORS 只配置允许的网页来源，不代表真正的认证措施。
 
-前端顶部「数据连接」填写 `https://monitor.example.com/api`；该配置仅保存本地浏览器。面向所有用户统一接入时，在 `public/live/index.html` 的 `<meta name="xiaomiao-monitor-api-base" content="">` 设置已部署的 HTTPS API；**不要**将私密令牌放到这里。
+默认优先 `HUYA_CHAT_PROTOCOL=topic`，使用直播间公开页面确认的 `lp` / `ayyuid` 主播 UID 订阅 `live:<uid>` 和 `chat:<uid>`；可在适配器失效时设置 `legacy` 尝试旧式匿名注册。只有收到真实并解析成功的公开聊天才将 `chat.state` 变为 `receiving`。必须先完成房间 `156324` 的实网测试，不能仅凭协议代码断言虎牙当前可用。
 
-接口：`/api/overview`、`/api/events`、`/api/trend`、`/api/ranking`、`/api/sessions`、`/api/sources`、`/api/health`、`/api/export`、`/api/stream`。`POST /api/ingest` 需要单独设置 `INGEST_TOKEN`，不启用公开跨域 POST。
-
-## 采集事实边界
-
-- 房间公开网页每 45 秒左右尝试拉取；实际可用性由目标网络和虎牙页面结构决定。
-- 非官方 WebSocket/Tars 弹幕采集是 **待验证的实验性支持**，真实收到并解析文本弹幕后才标记可用。
-- 礼物、贵宾、关注需要另外授权数据源；金额不推算。
-- 平台热度 **不等于真实同时在线人数**，互动昵称数也不等于所有观众。
-- 只能保存监控启动之后可实际采集的公开事件；启动前的历史无法凭空补回。
-- 不采集密码、私密 Cookie、用户私信或未公开个人信息。遵守平台规则和适用法律。
-
-运行测试：在本目录执行 `python -m pytest -q`。默认模式不播种演示数据。
+测试：`python -m pytest -q`。默认 90 天事件保留，数据库和历史备份归用户所有。不存用户 Cookie、私信、真实在线人数或未验证的礼物现金价值。

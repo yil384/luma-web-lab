@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app import main
 from app.scraper import parse_room_page
 from app.tars import (TYPE_END, TYPE_STRUCT, Reader, blob, find, head,
-                      integer, join_request, parse_push, string)
+                      integer, join_request, parse_push, parse_push_events, topic_join_request, string, TYPE_LIST)
 
 
 @pytest.fixture(autouse=True)
@@ -120,3 +120,28 @@ def test_health_and_source_state():
     assert client.get('/api/health').json()['room_id']=='156324'
     assert client.get('/api/sources').status_code==200
     assert client.get('/').status_code==200
+
+
+def test_huya_topic_join_and_batch_parser():
+    from app.tars import Reader, find, head, TYPE_STRUCT, TYPE_END, blob, integer, string
+    reg = Reader(topic_join_request(1199660059462)).parse()
+    assert find(reg, 0) == 16
+    subscribed = Reader(find(reg, 1)).parse()
+    topics = find(subscribed, 0)
+    assert [x.value for x in topics] == ['live:1199660059462', 'chat:1199660059462']
+    first = head(0, TYPE_STRUCT) + integer(0, 0) + string(1, '小喵一号') + string(2, '晚上好') + head(0, TYPE_END)
+    second = head(0, TYPE_STRUCT) + string(1, '小喵二号') + string(2, '喜欢小猫') + head(0, TYPE_END)
+    payload = head(4, TYPE_LIST) + integer(0, 2) + first + second
+    packet = integer(0, 7) + blob(1, integer(1, 888) + blob(2, payload))
+    parsed = parse_push_events(packet)
+    assert len(parsed) == 2
+    assert [x['content'] for x in parsed] == ['晚上好', '喜欢小猫']
+    assert all(x['format'] == 'topic-batch' for x in parsed)
+    assert parse_push_events(b'\x01\x02') == []
+
+def test_topic_uid_is_anchor_uid_not_room_id():
+    page = '<title>集美小喵【ZKL】官方直播间-户外-虎牙直播</title>' \
+           '<script>const TT_PROFILE_INFO={"lp":123456789,"ayyuid":987654321}</script>'
+    info = parse_room_page(page)
+    assert info['topic_uid'] == 123456789
+

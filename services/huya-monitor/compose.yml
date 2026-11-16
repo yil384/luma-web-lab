@@ -9,6 +9,7 @@ services:
     environment:
       - DEMO_MODE=${DEMO_MODE:-0}
       - HUYA_CHAT_ENABLED=${HUYA_CHAT_ENABLED:-1}
+      - HUYA_CHAT_PROTOCOL=${HUYA_CHAT_PROTOCOL:-topic}
       - POLL_SECONDS=${POLL_SECONDS:-45}
       - INGEST_TOKEN=${INGEST_TOKEN:-}
       - CORS_ORIGINS=${CORS_ORIGINS:-https://tanchensiyi.com}
