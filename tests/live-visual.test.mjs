@@ -21,6 +21,10 @@ test('live fallback is validated and uses HTTPS-only user-configured API', () =>
   assert.match(page, /knownCover/);
   assert.match(page, /room_id!==['"]156324['"]/);
   assert.match(page, /\/live\/data\/history\.json/);
-  assert.match(page, /const ws=new WebSocket\('wss:\/\/cdnws\.api\.huya\.com\/'\)/);
+  assert.match(page, /const ws=new WebSocket\('wss:\/\/wsapi\.huya\.com\/'\)/);
   assert.match(page, /apiBase\(raw\)/);
+  assert.match(page, /data-tab=\"gifts\"/);
+  assert.match(page, /decodeHuyaItem/);
+  assert.match(page, /6501/);
+  assert.match(page, /startApiStream/);
 });

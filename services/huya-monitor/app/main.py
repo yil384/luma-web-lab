@@ -29,8 +29,8 @@ from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 
 from .scraper import ROOM_ID, ROOM_URL, parse_room_page
-from .tars import (HEARTBEAT, HUYA_WS_URL, join_request, topic_join_request,
-                   parse_push_events)
+from .tars import (HEARTBEAT, LEGACY_HEARTBEAT, HUYA_WS_URL,
+                   HUYA_LEGACY_WS_URL, join_request, topic_join_request, inspect_frame)
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.getenv('DATA_DIR', str(ROOT / 'data')))
@@ -49,7 +49,7 @@ UTC = timezone.utc
 
 state = {
     'page': {'state': 'starting', 'last_success': None, 'last_attempt': None, 'error': None},
-    'chat': {'state': 'starting' if CHAT_ENABLED else 'disabled', 'last_success': None, 'last_attempt': None, 'error': None, 'protocol': CHAT_PROTOCOL, 'last_frame': None, 'frames': 0, 'messages': 0},
+    'chat': {'state': 'starting' if CHAT_ENABLED else 'disabled', 'last_success': None, 'last_attempt': None, 'error': None, 'protocol': CHAT_PROTOCOL, 'last_frame': None, 'frames': 0, 'messages': 0, 'gifts': 0, 'gift_items': 0, 'last_gift': None, 'last_command': None},
     'unknown_uris': {},
     'demo': DEMO_MODE,
 }
@@ -218,15 +218,15 @@ async def poll_room():
         await asyncio.sleep(POLL_SECONDS)
 
 
-async def _send_huya_heartbeats(ws):
+async def _send_huya_heartbeats(ws, protocol):
     """Application-level heartbeat; WebSocket pings alone are insufficient."""
     while True:
         await asyncio.sleep(20)
-        await ws.send(HEARTBEAT)
+        await ws.send(HEARTBEAT if protocol == 'topic' else LEGACY_HEARTBEAT)
 
 
 async def collect_chat():
-    """Observe public anonymous messages; no cookies or private endpoints.
+    """Observe public anonymous messages and schema-validated gift notices.
 
     Connection success is not message success: states reflect transport vs
     actual parsed events. The group subscription is the default protocol;
@@ -250,11 +250,16 @@ async def collect_chat():
         state['chat'].update(state='connecting',error=None)
         heartbeat_task = None
         try:
-            async with websockets.connect(HUYA_WS_URL, open_timeout=18,
+            ws_url = HUYA_WS_URL if CHAT_PROTOCOL == 'topic' else HUYA_LEGACY_WS_URL
+            async with websockets.connect(ws_url, origin='https://www.huya.com', open_timeout=18,
                      ping_interval=30, ping_timeout=30,
                      max_size=2_000_000, max_queue=32) as ws:
                 await ws.send(registration)
-                heartbeat_task = asyncio.create_task(_send_huya_heartbeats(ws))
+                heartbeat_task = asyncio.create_task(_send_huya_heartbeats(ws, CHAT_PROTOCOL))
+                # Website-style group subscription expects the new 20/empty heartbeat
+                # immediately after registration, not after the first 20-second sleep.
+                if CHAT_PROTOCOL == 'topic':
+                    await ws.send(HEARTBEAT)
                 state['chat'].update(state='transport_connected',error=None)
                 publish({'type':'sources','data':dict(state)})
                 backoff = 3
@@ -263,17 +268,37 @@ async def collect_chat():
                         continue
                     state['chat']['frames'] += 1
                     state['chat']['last_frame'] = iso_now()
-                    parsed = parse_push_events(frame)
-                    for event in parsed:
+                    observed = inspect_frame(frame, expected_presenter_uid=uid if CHAT_PROTOCOL == 'topic' else None)
+                    state['chat']['last_command'] = observed['command']
+                    for event in observed['events']:
+                        message_id = event.get('message_id')
+                        event_key = (f'huya-156324:{event.get("transport_uri")}:{message_id}'
+                                     if isinstance(message_id, int) and message_id > 0 else None)
                         if event['kind'] == 'chat':
-                            saved = add_event('chat',user_name=event['user_name'],
-                                     content=event['content'],source='huya-public-websocket')
+                            saved = add_event('chat', user_name=event['user_name'],
+                                     content=event['content'], source='huya-public-websocket',
+                                     event_key=event_key)
                             if saved is not None:
                                 state['chat']['messages'] += 1
                                 state['chat'].update(state='receiving', last_success=iso_now(), error=None)
+                        elif event['kind'] == 'gift':
+                            # The modern packet carries an item ID, count and sender,
+                            # but may not carry a human-readable name or a verified price.
+                            name = event.get('gift_name') or f'礼物 #{event["gift_id"]}'
+                            saved = add_event('gift', user_name=event['user_name'],
+                                gift_name=name, gift_count=event['gift_count'],
+                                source='huya-public-websocket', event_key=event_key,
+                                raw={'gift_id': event['gift_id'],
+                                     'name_verified': bool(event.get('gift_name'))})
+                            if saved is not None:
+                                state['chat']['gifts'] += 1
+                                state['chat']['gift_items'] += event['gift_count']
+                                state['chat']['last_gift'] = iso_now()
+                                state['chat'].update(state='receiving', last_success=iso_now(), error=None)
                         elif event['kind'] == 'unparsed':
-                            k = str(event.get('uri'))[:20]
-                            state['unknown_uris'][k] = state['unknown_uris'].get(k,0)+1
+                            k = f'{observed["command"]}:{str(event.get("uri"))[:20]}'
+                            if k in state['unknown_uris'] or len(state['unknown_uris']) < 64:
+                                state['unknown_uris'][k] = state['unknown_uris'].get(k, 0) + 1
                 state['chat'].update(state='disconnected',error='WebSocket 连接已结束，正在重连')
         except asyncio.CancelledError:
             raise
@@ -467,7 +492,7 @@ def sessions(limit: int=Query(30,ge=1,le=100)):
 @app.get('/api/sources')
 def sources():
     return {'sources':state,'room_ids':{k:latest_room.get(k) for k in ('topic_uid','yyuid','channel_id','sub_channel_id')},
-            'scope':'公开房间页 + 公开匿名 WebSocket 两种协议可切换；未能解析的礼物/入场不可统计',
+            'scope':'公开房间页 + 匿名 WS 命令 7/22；发言 URI 1400、礼物 URI 6501，礼物价格未知不可估算；进场暂未解析',
             'official_api':'虎牙旧开放 API 于 2026-10-31 下线；本程序不使用该接口'}
 
 
