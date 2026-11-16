@@ -20,8 +20,8 @@ sys.path.insert(0, str(ROOT / 'services' / 'huya-monitor'))
 from app.tars import HEARTBEAT, HUYA_WS_URL, inspect_frame, topic_join_request  # noqa: E402
 
 
-def room_uid():
-    published = json.loads((ROOT / 'public/live/data/room.json').read_text('utf-8'))
+def room_uid(snapshot_path: Path):
+    published = json.loads(snapshot_path.read_text('utf-8'))
     if published.get('room_id') != '156324':
         raise RuntimeError('Room identity mismatch')
     uid = published.get('topic_uid')
@@ -30,9 +30,9 @@ def room_uid():
     return uid
 
 
-async def run_probe(duration: int):
+async def run_probe(duration: int, snapshot_path: Path):
     import websockets
-    uid = room_uid()
+    uid = room_uid(snapshot_path)
     counters = Counter()
     started = time.monotonic()
     transport = 'connecting'
@@ -85,11 +85,12 @@ async def run_probe(duration: int):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument('--seconds',type=int,default=45)
+    p.add_argument('--snapshot',type=Path,default=ROOT / 'public/live/data/room.json')
     p.add_argument('--out',type=Path,default=Path('huya-probe-result.json'))
     args=p.parse_args()
     if not 5 <= args.seconds <= 90:
         p.error('Duration must be 5..90 seconds')
-    result=asyncio.run(run_probe(args.seconds))
+    result=asyncio.run(run_probe(args.seconds,args.snapshot))
     args.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result,ensure_ascii=False))
     if os.getenv('GITHUB_STEP_SUMMARY'):
