@@ -192,7 +192,7 @@ function HairAndTiara() {
   </group>;
 }
 
-function SleevesAndArms({ wave }: { wave: React.RefObject<THREE.Group | null> }) {
+function SleevesAndArms({ wave }: { wave: React.RefObject<THREE.Group> }) {
   return <>
     <group position={[-0.61, 3.46, 0]}>
       <Oval at={[0, 0, 0]} scale={[0.31, 0.33, 0.31]} color="#f8e7dd" />
@@ -215,7 +215,7 @@ function SleevesAndArms({ wave }: { wave: React.RefObject<THREE.Group | null> })
   </>;
 }
 
-function DressAndBody({ wave }: { wave: React.RefObject<THREE.Group | null> }) {
+function DressAndBody({ wave }: { wave: React.RefObject<THREE.Group> }) {
   return <group>
     <Oval at={[-0.27, 0.18, 0.17]} scale={[0.19, 0.15, 0.36]} color="#e6c5ae" />
     <Oval at={[0.27, 0.18, 0.17]} scale={[0.19, 0.15, 0.36]} color="#e6c5ae" />
