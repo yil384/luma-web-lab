@@ -15,6 +15,11 @@ interface Props {
 
 /** The model is an actual GLB mesh, not a single photograph or HTML billboard. */
 const MODEL_URL = assetUrl('princess/luma-princess-hd-study-v2.glb');
+// The GLB has intentionally not passed cinematic/all-angle acceptance.
+// Keep the procedural companion and avoid an unnecessary 404 on every visit.
+// Enable this only in an isolated approved-asset preview build, after
+// committing the actual GLB and checking its origin, topology and phone load.
+const MODEL_ENABLED = import.meta.env.VITE_PRINCESS_GLB_APPROVED === 'true';
 const PLACE_X = 6.25;
 const PLACE_Z = 7.15;
 const PLACE_Y = GROUND_Y + snowHeightAt(PLACE_X, PLACE_Z) + 0.02;
@@ -162,7 +167,7 @@ export default function PrincessAsset({ active, paused, reducedMotion }: Props) 
   const [unavailable, setUnavailable] = useState(false);
   // A safe fallback means a missing/invalid GLB never hides or breaks the tree.
   const onUnavailable = useCallback(() => setUnavailable(true), []);
-  if (unavailable) return <FairytalePrincess active={active} paused={paused} reducedMotion={reducedMotion} />;
+  if (!MODEL_ENABLED || unavailable) return <FairytalePrincess active={active} paused={paused} reducedMotion={reducedMotion} />;
   return <DetailedPrincess active={active} paused={paused} reducedMotion={reducedMotion}
     onUnavailable={onUnavailable} />;
 }
