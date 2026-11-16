@@ -1,0 +1,82 @@
+/* Luma Garden interaction island. The WebGL canvas and photo gallery remain untouched. */
+.luma-experience-ready .luma-camera-tools { display: none !important; }
+.luma-garden-shell { position: absolute; inset: 0; z-index: 6; pointer-events: none; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; color: #fdf1d8; }
+.luma-garden-shell *, .luma-garden-shell *::before, .luma-garden-shell *::after { box-sizing: border-box; }
+.luma-garden-shell button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.luma-garden-shell button:focus-visible { outline: 2px solid #ffe5ac; outline-offset: 3px; }
+.luma-garden-shell button:disabled { cursor: default; opacity: .38; }
+.luma-garden-shell [hidden] { display: none !important; }
+.luma-garden-shell.luma-under-modal { visibility: hidden; }
+.luma-hud { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); width: min(354px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
+.luma-fab { order: 2; pointer-events: auto; display: flex; align-items: center; gap: 10px; min-height: 53px; padding: 6px 13px 6px 7px; border: 1px solid #e9d3a899; border-radius: 29px; background: linear-gradient(120deg, #253c47ef, #102b3ef2); color: #fff2dd; box-shadow: 0 5px 26px #03101ab8, inset 0 1px #fae4af38; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: transform .2s ease, border-color .2s ease; }
+.luma-fab:active { transform: scale(.97); }
+.luma-launcher-icon { display: grid; place-items: center; width: 39px; height: 39px; font-size: 24px; border: 1px solid #f5dbad80; border-radius: 50%; color: #ffe3ab; background: radial-gradient(circle at 30% 20%, #5a6576, #293f4a 70%); text-shadow: 0 1px 10px #f8bb7a; }
+.luma-launcher-copy { display: flex; flex-direction: column; text-align: left; gap: 2px; }
+.luma-launcher-copy strong { font-size: 13px; font-weight: 600; letter-spacing: .12em; }
+.luma-launcher-caption { font-size: 10px; color: #cbd2d5; letter-spacing: .07em; }
+.luma-launcher-chevron { padding-left: 4px; opacity: .7; font-size: 16px; }
+.luma-panel { order: 1; width: 100%; max-height: min(77svh, 690px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid #edd39d88; border-radius: 19px; padding: 19px 17px 15px; background: radial-gradient(ellipse at 15% -10%, #495260aa, transparent 63%), linear-gradient(155deg, #203848f8 0%, #142c3ef8 50%, #0c2033fa 100%); box-shadow: 0 18px 80px #030b17c4, inset 0 0 0 1px #fce6af13; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); pointer-events: auto; scrollbar-width: thin; scrollbar-color: #f3dcb77a transparent; animation: luma-panel-rise .26s ease-out both; }
+.luma-panel::before { content: ''; position: absolute; pointer-events: none; top: 7px; left: 19px; right: 19px; height: 1px; background: linear-gradient(90deg, transparent, #f3dcad7a, transparent); }
+.luma-panel-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.luma-overline { font-size: 9px; font-weight: 500; letter-spacing: .21em; color: #b5c6ca; }
+.luma-panel h2 { margin: 5px 0 0; font: 500 24px/1.2 Georgia, 'Songti SC', serif; letter-spacing: .11em; color: #fff0d3; }
+.luma-close { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #f0d49d50; border-radius: 50%; color: #ead8b9; background: #071a2c6b; font-size: 23px !important; line-height: 1; }
+.luma-intro { margin: 10px 0 14px; color: #c7d0d2; font-size: 11px; letter-spacing: .025em; line-height: 1.6; }
+.luma-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border: 1px solid #f6dda92e; border-radius: 13px; background: #061b2b66; gap: 4px; }
+.luma-tabs button { min-height: 35px; border: 0; border-radius: 9px; background: transparent; color: #adbcc3; font-size: 12px; letter-spacing: .09em; }
+.luma-tabs button.is-active { color: #fff0d0; background: linear-gradient(125deg, #c4a06c45, #6f7c8450); box-shadow: 0 1px 10px #0004, inset 0 0 0 1px #f6dba345; }
+.luma-cat-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 14px; }
+.luma-cat-picker button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 3px 9px; border: 1px solid #dfcba330; border-radius: 12px; color: #c5d2d6; background: #09213266; font-size: 11px; transition: border .2s ease, background .2s ease, transform .15s ease; }
+.luma-cat-picker button.is-selected { color: #fff0d1; border-color: #e4c99d9c; background: #d2b5811b; box-shadow: 0 0 0 1px #e4c99d12; }
+.luma-cat-picker button:active { transform: scale(.96); }
+.luma-cat-swatch { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #fff4d849; font-size: 21px; }
+.luma-cat-swatch.cat-black { background: linear-gradient(140deg, #222834, #505168); color: #d8cdef; }
+.luma-cat-swatch.cat-cream { background: linear-gradient(140deg, #e4d5b6, #c49b79); color: #695943; }
+.luma-cat-swatch.cat-calico { background: linear-gradient(140deg, #d89f8c, #ffe8b8 48%, #48515d); color: #7e4d42; }
+.luma-selected-card { margin-top: 12px; padding: 12px 11px 11px; border: 1px solid #e1d0ac39; border-radius: 12px; background: radial-gradient(circle at 95% 0, #e9d2ad2c, transparent 55%), #061b2d70; }
+.luma-cat-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 11px; }
+.luma-cat-meta strong { color: #ffe9ce; font-size: 12px; font-weight: 600; }
+.luma-cat-tally { font-size: 10px; color: #bbcad0; white-space: nowrap; }
+.luma-cat-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.luma-cat-actions button { display: grid; place-items: center; gap: 3px; min-height: 64px; padding: 6px 3px; border: 1px solid #e5cba550; border-radius: 10px; background: linear-gradient(155deg, #6d60501f, #0b23364a); color: #ffeaca; font-size: 11px; }
+.luma-cat-actions button span { font: 26px Georgia, serif; line-height: 1; }
+.luma-cat-actions button:active, .luma-sky-actions button:active { background: #c8a77d33; transform: scale(.97); }
+.luma-collection { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; font-size: 10px; color: #bfcdd2; }
+.luma-progress-paws { display: flex; gap: 5px; }
+.luma-paw-dot { display: inline-grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; border: 1px solid #c8d4d23b; color: #889ba6; background: #071a28ad; font-size: 12px; }
+.luma-paw-dot.is-collected { color: #29363b; border-color: #f6d8a899; background: var(--cat-color); box-shadow: 0 0 12px #f1d5af35; }
+.luma-sky-caption { color: #c6d0d1; margin: 13px 0 10px; font-size: 11px; }
+.luma-sky-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.luma-sky-actions button { display: grid; justify-items: center; gap: 3px; min-height: 84px; padding: 9px 6px; border: 1px solid #e6d6b548; border-radius: 11px; background: radial-gradient(circle at 50% 0, #f1c78c1a, transparent 60%), #0b2639a3; color: #fff0d6; }
+.luma-sky-actions button > span { font-size: 27px; line-height: 1.1; color: #ffe4ab; }
+.luma-sky-actions strong { font-size: 11px; font-weight: 600; }
+.luma-sky-actions small { font-size: 9px; color: #b8c8ca; }
+.luma-view-tools { margin-top: 13px; padding-top: 12px; border-top: 1px solid #f4d5a33b; }
+.luma-view-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.luma-view-row > span { color: #d3c6ae; font-size: 11px; }
+.luma-control-group { display: flex; gap: 5px; }
+.luma-control-group button { width: 38px; height: 36px; border: 1px solid #e2cda25d; border-radius: 9px; background: #102b41ac; color: #ffeaca; font-size: 19px; }
+.luma-view-foot { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 10px; }
+.luma-view-foot button { min-height: 32px; padding: 6px 10px; border: 1px solid #dfc39250; border-radius: 9px; background: #081e319a; color: #dccaaa; font-size: 10px; }
+.luma-help { margin: 14px 0 0; color: #99b0ba; font-size: 9px; line-height: 1.6; letter-spacing: .03em; text-align: center; }
+.luma-status { position: absolute; left: 50%; bottom: max(103px, calc(env(safe-area-inset-bottom) + 94px)); transform: translate(-50%, 14px); width: max-content; max-width: min(82vw, 380px); opacity: 0; text-align: center; pointer-events: none; padding: 9px 15px; border: 1px solid #ffe3a04d; border-radius: 20px; color: #fff1dd; font-size: 11px; line-height: 1.5; background: #061c30e8; box-shadow: 0 6px 32px #0008; }
+.luma-status.luma-status-pop { animation: luma-status-in 3.05s ease forwards; }
+.luma-effects { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.luma-effects i { position: absolute; pointer-events: none; font-style: normal; will-change: transform,opacity; }
+.luma-vfx-ripple { width: 56px; height: 56px; margin: -28px; border: 1px solid var(--lc, #f8d5a6); border-radius: 50%; opacity: 0; box-shadow: 0 0 21px #ffe4b783,inset 0 0 19px #fff0d122; animation: luma-ripple var(--lt,1300ms) ease-out var(--ld,0ms) both; }
+.luma-vfx-spark { color: var(--lc,#f4d9a9); font: 22px Georgia,serif; line-height: 1; opacity: 0; text-shadow: 0 0 9px var(--lc,#f4d9a9); animation: luma-spark var(--lt,1600ms) ease-out var(--ld,0ms) both; }
+.luma-vfx-heart { font-size: 21px; }
+.luma-vfx-meteor { width: 63px; height: 2px; background: linear-gradient(90deg, transparent, #badfed72, #fff3c5); transform: rotate(-36deg); filter: drop-shadow(0 0 4px #b5d9d7); animation: luma-meteor var(--lt,1100ms) cubic-bezier(.24,.41,.39,1) var(--ld,0ms) both; }
+.luma-vfx-meteor::after { content: ''; position: absolute; right: 0; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #fff7d9; box-shadow: 0 0 8px #f6e9bb; }
+.luma-vfx-snow { width: 4px; height: 4px; border-radius: 50%; background: #f3f9ff; box-shadow: 0 0 5px #e2f1ff7a; animation: luma-snow var(--lt,3000ms) linear var(--ld,0ms) both; }
+.luma-vfx-aurora { position: absolute; inset: -15%; pointer-events: none; background: radial-gradient(ellipse at 22% 40%, #78c9b04c, transparent 44%),radial-gradient(ellipse at 77% 25%, #a4a3db4d, transparent 50%), linear-gradient(40deg,transparent 30%, #97bfc820 57%,transparent 76%); opacity: 0; filter: blur(28px); animation: luma-aurora 5.2s ease-in-out both; }
+@keyframes luma-panel-rise { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes luma-status-in { 0% { opacity: 0; transform: translate(-50%,12px); } 10%,72% { opacity: 1; transform: translate(-50%,0); } 100% { opacity: 0; transform: translate(-50%,-7px); } }
+@keyframes luma-ripple { 0% { opacity: 0; transform: scale(.3); } 12% { opacity: .85; } 100% { opacity: 0; transform: scale(4.3); } }
+@keyframes luma-spark { 0% { opacity: 0; transform: translate(0,0) scale(.4) rotate(-15deg); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--lx),var(--ly)) scale(.3) rotate(35deg); } }
+@keyframes luma-meteor { 0% { opacity: 0; transform: translate(0,0) rotate(-36deg) scale(.5); } 12% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--lx),var(--ly)) rotate(-36deg); } }
+@keyframes luma-snow { 0% { opacity: 0; transform: translate(0,0); } 13% { opacity: .85; } 100% { opacity: 0; transform: translate(var(--lx),var(--ly)); } }
+@keyframes luma-aurora { 0%,100% { opacity: 0; transform: translate(-3%,2%) rotate(-4deg); } 25%,70% { opacity: .7; } 55% { transform: translate(4%,-3%) rotate(5deg); } }
+@media (max-width:600px) { .luma-hud { right: max(11px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); width: min(345px, calc(100vw - 22px)); } .luma-panel { padding: 16px 14px 12px; max-height: min(76svh, 630px); } .luma-panel h2 { font-size: 22px; } .luma-status { bottom: max(99px, calc(env(safe-area-inset-bottom) + 86px)); } }
+@media (max-height:650px) { .luma-panel { max-height: 70svh; } }
+@media (prefers-reduced-motion:reduce) { .luma-garden-shell *, .luma-garden-shell *::before, .luma-garden-shell *::after { animation:none !important; transition:none !important; } }
