@@ -7,7 +7,7 @@ const source = await readFile(new URL('../src/lib/experience-route.ts', import.m
 const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 }).outputText;
-const { resolveExperience } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const { resolveExperience, relativeExperiencePath } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 
 test('the home page is Christmas immediately, including old and incorrect visitor clocks', () => {
   for (const host of ['tanchensiyi.com', 'jimeixiaomiao.wildmole.chatgpt.site', 'localhost']) {
@@ -26,4 +26,12 @@ test('both gifts remain available regardless of date and host', () => {
   }
   assert.equal(resolveExperience('/letter'), 'letter');
   assert.equal(resolveExperience('/christmas'), 'christmas');
+});
+
+test('GitHub project prefix does not swallow the letter route', () => {
+  assert.equal(relativeExperiencePath('/luma-web-lab/', '/luma-web-lab/'), '/');
+  assert.equal(relativeExperiencePath('/luma-web-lab/letter/', '/luma-web-lab/'), '/letter/');
+  assert.equal(relativeExperiencePath('/luma-web-lab/christmas/', '/luma-web-lab/'), '/christmas/');
+  assert.equal(relativeExperiencePath('/letter/', '/'), '/letter/');
+  assert.equal(resolveExperience(relativeExperiencePath('/luma-web-lab/letter/', '/luma-web-lab/')), 'letter');
 });
