@@ -25,20 +25,20 @@ Use a front-facing **full-body** original character design with arms separated s
 5. Click **Extract GLB**, then **Download GLB**. A preview image is *not* a GLB.
 6. Run the dependency-free validator:
 
-   \`\`\`bash
+   ```bash
    python3 scripts/validate_generated_princess_glb.py ~/Downloads/generated-princess.glb
-   \`\`\`
+   ```
 
 7. Open the downloaded GLB in a real 360° viewer; inspect face, hair thickness, sleeves, hands, dress folds, backside, and whether the foreground is a true volume.
-8. Only if it passes visual quality review, copy the asset to \`public/princess/luma-princess-hd-study-v2.glb\` on this feature branch. The \`PrincessAsset.tsx\` loader now normalizes imported models to the tree scene's floor and scale and retains a controlled non-rigged tap response. It cannot invent natural facial animation or a functional arm skeleton.
-9. Build and test the source branch. Publish an isolated preview first. Do **not** replace \`gh-pages\` or overwrite the currently deployed site or domain without separate acceptance of the generated result.
+8. Only if it passes visual quality review, copy the asset to `public/princess/luma-princess-hd-study-v2.glb` on this feature branch. The `PrincessAsset.tsx` loader now normalizes imported models to the tree scene's floor and scale and retains a controlled non-rigged tap response. It cannot invent natural facial animation or a functional arm skeleton.
+9. Build and test the source branch. Publish an isolated preview first. Do **not** replace `gh-pages` or overwrite the currently deployed site or domain without separate acceptance of the generated result.
 
 ## Acceptance gate
 
 - **No uncanny face:** clearly modeled jaw/nose/eyelids, both cheeks consistent at 45°/90°, no photographic patch boundary.
 - **No hair tubes:** coherent primary hair volume and secondary strands when rotated.
 - **Real skirt depth:** layers are separated physically; seams, hem, sleeves and rear silhouette must survive a 180° check.
-- **No silently broken routes:** Christmas home and \`/christmas/\` and \`/letter/\` still load, as do the photo album and HLS video.
+- **No silently broken routes:** Christmas home and `/christmas/` and `/letter/` still load, as do the photo album and HLS video.
 - **Phone rendering:** check GLB network size, PBR textures, triangle count, loading and interaction on an actual phone.
 - **Rig honesty:** if a GLB has no skeleton/morph targets, do not label a whole-body tilt as a full waving/blinking animation. Keep it a placeholder gesture until rigged.
 - **Asset rights:** model-code license does not automatically grant rights to all third-party source images or textures.
