@@ -25,8 +25,8 @@ jobs:
           python-version: '3.12'
       - name: Install socket library
         run: python -m pip install 'websockets>=13,<16'
-      - name: 45-second public protocol probe (no message content logged)
-        run: python scripts/huya_ws_probe.py --seconds 45 --snapshot published/live/data/room.json --out "$RUNNER_TEMP/huya-probe-result.json"
+      - name: 90-second public protocol probe (no message content logged)
+        run: python scripts/huya_ws_probe.py --seconds 90 --snapshot published/live/data/room.json --out "$RUNNER_TEMP/huya-probe-result.json"
       - name: Upload counters only
         if: always()
         uses: actions/upload-artifact@v4
