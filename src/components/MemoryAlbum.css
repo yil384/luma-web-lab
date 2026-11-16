@@ -1,0 +1,273 @@
+/* A small book-shaped dialog, not a full-screen gallery panel. */
+.gift-dialog.photo-dialog {
+  width: min(96vw, 1080px);
+  max-width: none;
+  max-height: 94svh;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.gift-dialog.photo-dialog::backdrop {
+  background: rgba(3, 10, 23, .42);
+  backdrop-filter: blur(6px) saturate(.78);
+  -webkit-backdrop-filter: blur(6px) saturate(.78);
+}
+.gift-dialog.photo-dialog .dialog-inner { padding: 52px 12px 55px; }
+.gift-dialog.photo-dialog .dialog-close {
+  position: absolute;
+  top: 0;
+  right: clamp(5px, 4vw, 54px);
+  float: none;
+  margin: 0;
+  z-index: 15;
+  border-color: rgba(246, 212, 159, .5);
+  background: rgba(17, 27, 37, .7);
+  backdrop-filter: blur(6px);
+}
+.memory-album { position: relative; width: 100%; isolation: isolate; }
+.memory-album-stage { position: relative; display: grid; place-items: center; min-height: 0; padding: 12px 0 28px; perspective: 1500px; }
+.memory-album-ground-shadow {
+  position: absolute;
+  width: min(69vw, 880px);
+  height: 24%;
+  bottom: -4%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, .55), rgba(0, 0, 0, .16) 52%, transparent 74%);
+  filter: blur(16px);
+  transform: scaleY(.46);
+  pointer-events: none;
+}
+.memory-album-book {
+  position: relative;
+  width: min(67vw, 840px);
+  aspect-ratio: 1.56 / 1;
+  transform: rotateX(8deg) rotateY(-3deg) rotateZ(-1.1deg);
+  transform-style: preserve-3d;
+  border-radius: 16px 12px 14px 18px;
+  box-shadow: 0 4px 2px #100a16cc, 0 16px 7px -9px #080613bf, 0 28px 55px #000b, 0 58px 95px #0005;
+  animation: memory-album-appear 540ms cubic-bezier(.2, .84, .24, 1) both;
+}
+@keyframes memory-album-appear {
+  from { opacity: 0; transform: translateY(30px) scale(.87) rotateX(17deg) rotateY(-10deg) rotateZ(-4deg); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotateX(8deg) rotateY(-3deg) rotateZ(-1.1deg); }
+}
+.memory-album-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(36deg, #fff1 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at 50% 35%, #76586c, transparent 68%),
+    linear-gradient(115deg, #3b243a, #634352 30%, #3c2639 48%, #5d394a 52%, #392239);
+  border: 2px solid #956e64;
+  box-shadow: inset 0 0 0 4px #312035, inset 0 0 0 6px #d4ac6f78, inset 0 0 14px #160d23;
+  transform: translateZ(-12px);
+}
+.memory-album-cover-emboss {
+  position: absolute;
+  inset: 12px 13px 17px;
+  border: 1px solid #f1c98e58;
+  border-radius: 10px 8px 10px 10px;
+  box-shadow: inset 0 0 0 3px #250f2d44;
+  transform: translateZ(-11px);
+  pointer-events: none;
+}
+.memory-album-page-block {
+  position: absolute;
+  inset: 2.9% 2.4% 4.6%;
+  background: repeating-linear-gradient(180deg, #f1e4ce 0 1px, #c8b89b 1px 2px, #f7e9d3 2px 4px);
+  border-radius: 6px 5px 8px 8px;
+  border: 1px solid #c4a783;
+  box-shadow: 1px 8px 4px #12081980, 0 5px 2px #c0a585aa;
+  transform: translateZ(-4px);
+}
+.memory-album-page-spine {
+  position: absolute;
+  top: 3%; bottom: 5%; left: 49.1%; width: 2.2%;
+  border-radius: 40%; background: linear-gradient(90deg, #a98b6b, #eee0c6 40%, #b39878 65%, #9a7b5a);
+  box-shadow: 0 1px 5px #2e1d39b8;
+  transform: translateZ(-1px);
+}
+.memory-album-spread {
+  position: absolute;
+  inset: 3.5% 3.5% 6.2%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  transform: translateZ(1px);
+  border-radius: 8px;
+  box-shadow: 0 2px 7px #4935284d;
+  touch-action: pan-y;
+}
+.memory-album-sheet, .memory-album-leaf-face {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 52% 42%, #fffaf0 6%, #f4e7d0 72%, #d0bda2 125%);
+  overflow: hidden;
+}
+.memory-album-sheet--left {
+  border-radius: 7px 1px 1px 8px;
+  box-shadow: inset -23px 0 25px -22px #60442e82, inset 7px 0 17px -9px #fff;
+}
+.memory-album-sheet--right {
+  border-radius: 1px 7px 8px 1px;
+  box-shadow: inset 23px 0 25px -22px #60442e82, inset -7px 0 17px -9px #fff;
+}
+.memory-album-paper-grain {
+  position: absolute;
+  inset: 0;
+  opacity: .4;
+  background: repeating-linear-gradient(115deg, transparent 0 3px, #83633b09 3px 4px), repeating-linear-gradient(20deg, transparent 0 7px, #fff7 7px 8px);
+  pointer-events: none;
+}
+.memory-album-paper-gilt {
+  position: absolute;
+  inset: 5.1% 6.3%;
+  border: 1px solid #bb996368;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.memory-album-photo-mount {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 78%;
+  height: 78%;
+  margin: 0;
+  border: 0;
+  border-radius: 2px;
+  padding: 5px;
+  color: #392532;
+  background: linear-gradient(145deg, #fffef9, #f8eedb 60%, #d9c8ab);
+  box-shadow: 0 4px 12px #48372949, 0 1px 1px #32241b66, inset 0 0 0 1px #d0b996;
+  transform: rotate(-.6deg);
+  transition: transform 190ms ease, box-shadow 190ms ease;
+  cursor: zoom-in;
+}
+.memory-album-sheet--right .memory-album-photo-mount { transform: rotate(.7deg); }
+button.memory-album-photo-mount:hover, button.memory-album-photo-mount:focus-visible {
+  transform: translateY(-3px) rotate(0deg);
+  box-shadow: 0 8px 20px #48372955, inset 0 0 0 1px #b38d57;
+}
+button.memory-album-photo-mount:focus-visible { outline: 2px solid #8b5d45; outline-offset: 3px; }
+.memory-album-print { position: relative; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; background: #e9ddcb; }
+.memory-album-print img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.memory-album-print-fallback { display: grid; place-items: center; color: #8c7764; }
+.memory-album-photo-corners { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px #ffffff35, inset 0 0 10px #4b352321; }
+.memory-album-binding {
+  position: absolute;
+  z-index: 5;
+  left: calc(50% - 1.3%);
+  top: 3.5%; bottom: 6.2%; width: 2.6%;
+  background: linear-gradient(90deg, #4e38234d, #a8907469 23%, #fff7e45c 52%, #ad98746b 75%, #47311c42);
+  box-shadow: 0 0 3px #533b2590;
+  transform: translateZ(2px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.memory-album-leaf {
+  position: absolute;
+  z-index: 4;
+  top: 3.5%; bottom: 6.2%;
+  width: 46.5%;
+  transform-style: preserve-3d;
+  transform: translateZ(3px) rotateY(var(--memory-turn-angle, 0deg));
+  pointer-events: none;
+  will-change: transform;
+}
+.memory-album-leaf.is-moving { transition: transform 740ms cubic-bezier(.43, .06, .2, .97); }
+.memory-album-leaf--forward { left: 50%; transform-origin: left center; }
+.memory-album-leaf--backward { right: 50%; transform-origin: right center; }
+.memory-album-leaf-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: inset 8px 0 22px #59432e33, 1px 3px 7px #47352254;
+}
+.memory-album-leaf-front { border-radius: 1px 7px 8px 1px; }
+.memory-album-leaf-back { transform: rotateY(180deg); border-radius: 7px 1px 1px 8px; box-shadow: inset -8px 0 22px #59432e33; }
+.memory-album-leaf--backward .memory-album-leaf-front { border-radius: 7px 1px 1px 8px; }
+.memory-album-leaf--backward .memory-album-leaf-back { border-radius: 1px 7px 8px 1px; }
+.memory-album-leaf .memory-album-photo-mount { transform: translateZ(1px); }
+.memory-album-corner-foil {
+  position: absolute;
+  z-index: 6;
+  width: 29px; height: 29px;
+  border: solid #d4aa70;
+  filter: drop-shadow(0 1px 2px #1a0e15b0);
+  pointer-events: none;
+}
+.memory-album-corner-foil--tl { top: 3px; left: 4px; border-width: 2px 0 0 2px; border-radius: 10px 0 0; }
+.memory-album-corner-foil--tr { top: 3px; right: 4px; border-width: 2px 2px 0 0; border-radius: 0 8px 0 0; }
+.memory-album-corner-foil--bl { bottom: 5px; left: 4px; border-width: 0 0 2px 2px; border-radius: 0 0 0 10px; }
+.memory-album-corner-foil--br { bottom: 5px; right: 4px; border-width: 0 2px 2px 0; border-radius: 0 0 8px; }
+.memory-album-turn {
+  position: absolute;
+  z-index: 9;
+  top: 49%;
+  display: grid;
+  place-items: center;
+  width: 43px; height: 53px;
+  border: 1px solid #e6c99596;
+  border-radius: 14px;
+  background: #151c2ac7;
+  color: #ffebcc;
+  box-shadow: 0 5px 21px #0007;
+  backdrop-filter: blur(4px);
+  transform: translateY(-50%);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.memory-album-turn:active { cursor: grabbing; }
+.memory-album-turn:disabled { opacity: .48; cursor: default; }
+.memory-album-turn:not(:disabled):hover { background: #3b3443dd; border-color: #f7d8a4; }
+.memory-album-turn:focus-visible { outline: 2px solid #ffedb9; outline-offset: 2px; }
+.memory-album-turn--previous { left: 3%; }
+.memory-album-turn--next { right: 3%; }
+.memory-album-turn--next svg { transform: rotate(180deg); }
+.memory-album-empty { display: grid; place-items: center; min-height: 200px; color: #fff0d5; }
+.memory-album-camera-off {
+  position: absolute; right: 15%; bottom: -13px; display: flex; align-items: center;
+  width: 38px; height: 34px; padding: 6px;
+  border: 1px solid #edcb8b6c; border-radius: 12px;
+  background: #132132dc; color: #fbe9ce;
+}
+.memory-album-camera-off svg { width: 15px; height: 15px; }
+.gift-dialog.memory-album-zoom-dialog { width: min(1170px, calc(100% - 32px)); }
+.memory-album-zoom-dialog::backdrop { background: #030914de; }
+.memory-album-zoom-dialog .photo-viewer-tip { display: none; }
+.memory-album-zoom-dialog .photo-viewer-toolbar { margin-top: 9px; }
+.memory-album-zoom-dialog .photo-native-size { opacity: .65; }
+@media (max-width: 600px) {
+  .gift-dialog.photo-dialog { width: calc(100% - 8px); max-height: 95svh; }
+  .gift-dialog.photo-dialog .dialog-inner { padding: 54px 1px 47px; }
+  .gift-dialog.photo-dialog .dialog-close { top: 3px; right: 5%; width: 36px; height: 36px; }
+  .memory-album-stage { padding: 4px 0 22px; }
+  .memory-album-book { width: 86vw; max-width: 480px; aspect-ratio: 1.48 / 1; border-radius: 9px; }
+  .memory-album-ground-shadow { width: 90vw; filter: blur(12px); }
+  .memory-album-turn { width: 35px; height: 42px; border-radius: 11px; background: #1a2333b5; }
+  .memory-album-turn--previous { left: 2%; }
+  .memory-album-turn--next { right: 2%; }
+  .memory-album-photo-mount { width: 84%; height: 78%; padding: 3px; }
+  .memory-album-paper-gilt { inset: 4.3% 4.2%; }
+  .memory-album-corner-foil { width: 17px; height: 17px; }
+  .memory-album-camera-off { right: 8%; }
+  .gift-dialog.memory-album-zoom-dialog { width: calc(100% - 12px); }
+}
+@media (max-height: 550px) and (min-width: 601px) {
+  .gift-dialog.photo-dialog .dialog-inner { padding: 30px 12px 24px; }
+  .memory-album-book { width: min(64vw, 720px, 109svh); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-album-book { animation: none; }
+  .memory-album-photo-mount, .memory-album-leaf { transition: none !important; }
+}
