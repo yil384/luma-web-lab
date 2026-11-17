@@ -1,0 +1,65 @@
+name: Generate V73 cradle-pose princess safely
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/stage-princess-v73.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v73-cradle-model-staging
+  cancel-in-progress: false
+
+jobs:
+  build-model:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Checkout current feature branch with verified V72
+        uses: actions/checkout@v4
+        with:
+          ref: feat/princess-kitten-art-direction-20261116
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify source asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf  public/princess/luma-princess-v72.glb' | sha256sum --check
+      - name: Install sculpt dependencies
+        run: python -m pip install 'numpy>=2,<3' 'scipy>=1.14,<2' 'pillow>=11,<13'
+      - name: Generate independent V73 pose without touching V72 face
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/pose-princess-v73.py public/princess/luma-princess-v72.glb public/princess/luma-princess-hug-v73.glb
+          test "$(stat -c%s public/princess/luma-princess-hug-v73.glb)" = 15329160
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          source=Path("public/princess/luma-princess-v72.glb").read_bytes()
+          output=Path("public/princess/luma-princess-hug-v73.glb").read_bytes()
+          assert source!=output
+          assert len(source)==len(output)
+          assert hashlib.sha256(source).hexdigest()=="9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf"
+          print("V73 sha256",hashlib.sha256(output).hexdigest())
+          PY
+      - name: Commit ONLY experimental V73 GLB to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- public/princess/luma-princess-hug-v73.glb
+          if git diff --cached --quiet; then
+            echo 'V73 already committed'
+          else
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit -m 'assets: stage arm-posed V73 GLB without replacing original V72'
+            git push origin HEAD:feat/princess-kitten-art-direction-20261116
+          fi
+          echo "Staged V73 for visual preview ONLY; no production deployment" >> "$GITHUB_STEP_SUMMARY"
