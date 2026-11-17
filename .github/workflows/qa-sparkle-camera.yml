@@ -96,23 +96,32 @@ jobs:
               await page.waitForTimeout(500);
               const farView=await status(page);
               check(spec.name+' cannot zoom out to 165',farView.distance<=first.far+.3,farView);
-              // A click pauses; a second single click resumes. It must actually rotate.
-              const startRotation=await status(page);
+              // After zoom/drag, the first simple tap RESUMES the prior
+              // rotation; a further tap pauses, and a further tap resumes.
+              const manual=await status(page);
+              check(spec.name+' gesture holds manual camera',manual.manualHold==='true',manual.manualHold);
               await clickBlank(page,spec);
-              await page.waitForTimeout(500);
-              const paused=await status(page);
-              check(spec.name+' one tap pauses',paused.sceneRotation==='paused',paused.sceneRotation);
-              await clickBlank(page,spec);
-              await page.waitForTimeout(700);
+              await page.waitForTimeout(850);
               const resumed=await status(page);
-              check(spec.name+' another tap resumes',resumed.sceneRotation==='playing',resumed.sceneRotation);
-              const angleBefore=resumed.cameraPosition;
-              await page.waitForTimeout(1900);
-              const after=await status(page);
-              const coords=s=>String(s||'').split(',').map(Number);
-              const vals1=coords(angleBefore),vals2=coords(after);
-              const movement=Math.hypot(...vals1.map((v,i)=>v-vals2[i]));
-              check(spec.name+' actual automatic rotation resumes',movement>.08,{angleBefore,angleAfter:after.cameraPosition,movement});
+              check(spec.name+' one tap resumes after gesture',resumed.sceneRotation==='playing'&&resumed.manualHold==='false',resumed);
+              const beforeMoving=await status(page);
+              await page.waitForTimeout(2300);
+              const rotated=await status(page);
+              function movement(a,b){
+                const av=String(a||'').split(',').map(Number),bv=String(b||'').split(',').map(Number);
+                return av.length===3&&bv.length===3&&av.every(Number.isFinite)&&bv.every(Number.isFinite)
+                  ? Math.hypot(...av.map((v,i)=>v-bv[i])) : null;
+              }
+              const delta=movement(beforeMoving.cameraPosition,rotated.cameraPosition);
+              check(spec.name+' resumed orbit truly moves camera',delta!==null&&delta>.08,{before:beforeMoving.cameraPosition,after:rotated.cameraPosition,movement:delta});
+              await clickBlank(page,spec);
+              await page.waitForTimeout(850);
+              const paused=await status(page);
+              check(spec.name+' next tap pauses',paused.sceneRotation==='paused',paused);
+              await clickBlank(page,spec);
+              await page.waitForTimeout(850);
+              const resumedAgain=await status(page);
+              check(spec.name+' next tap resumes',resumedAgain.sceneRotation==='playing'&&resumedAgain.manualHold==='false',resumedAgain);
               check(spec.name+' no JS exceptions',errors.length===0,errors.slice(0,5));
               details.push({spec:spec.name,first,farView,paused,resumed,after,errors});
               await context.close();
