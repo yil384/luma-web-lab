@@ -1,0 +1,62 @@
+name: Prepare lossless compressed V73 GLB for GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/compress-v73-model.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-v73-model-compression
+  cancel-in-progress: false
+
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out the deployed GitHub Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Verify the exact approved V73 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s princess/luma-princess-hug-v73.glb
+          echo '82850162e6363cf41fdcf660d7cf317d276bc99d4c6872824f51f939af5dc297  princess/luma-princess-hug-v73.glb' | sha256sum --check
+      - name: Produce deterministic gzip transport (original geometry and textures unchanged)
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -9 -n -c princess/luma-princess-hug-v73.glb > princess/luma-princess-hug-v73.glb.gz
+          gzip -t princess/luma-princess-hug-v73.glb.gz
+          gzip -dc princess/luma-princess-hug-v73.glb.gz | sha256sum | grep -q '^82850162e6363cf41fdcf660d7cf317d276bc99d4c6872824f51f939af5dc297 '
+          python3 - <<'PY'
+          from pathlib import Path
+          raw=Path('princess/luma-princess-hug-v73.glb').stat().st_size
+          comp=Path('princess/luma-princess-hug-v73.glb.gz').stat().st_size
+          print(f'Exact V73 bytes: {raw:,}, gzip transport: {comp:,}, saving {(raw-comp)/raw:.1%}')
+          if comp >= raw: raise SystemExit('Compression did not save bandwidth')
+          PY
+      - name: Commit only the new transport asset (never replace site HTML)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- princess/luma-princess-hug-v73.glb.gz
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'perf: add lossless gzip transport for V73 GLB'
+            git push origin HEAD:gh-pages
+          fi
+      - name: Summarize
+        run: |
+          {
+            echo '## Optimized V73 transport ready'
+            echo 'Only the additional .glb.gz binary was staged. No current page, JS or photo media changed.'
+            echo 'The original .glb remains intact and available for unsupported browsers.'
+          } >> "$GITHUB_STEP_SUMMARY"
