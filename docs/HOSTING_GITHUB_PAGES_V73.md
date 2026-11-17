@@ -40,3 +40,14 @@
 - **Rollback:** create a new fast-forward commit on current `gh-pages`, replacing only `index.html` and `christmas/index.html` with the two old blob SHAs above (and optionally marking V73 status as rolled back). No DNS, media, movie, page deletion or ChatGPT Sites operation required.
 - Do not merge source feature branch wholesale to Pages: the actual live compiled tree has a separately evolved three-cat/album implementation. Reconcile future source improvements before a full rebuild.
 - This V73 is a **static arm pose + independently rigged kitten at the waist**. It is *not* a human armature/bone-rig animation, nor is there natural blinking/waving. It should not be marketed as a true fully rigged princess.
+
+## Production browser confirmation 44164476307
+
+- **Successful real Chromium QA run**: https://github.com/yil384/luma-web-lab/actions/runs/44164476307
+- Desktop home `/`: HTTP 200, one WebGL canvas, `princess=ready`, `kitten=ready`, no 3D fallback, V73 GLB HTTP 200, cat rig HTTP 200, no JavaScript console errors.
+- Mobile emulation `/christmas/` (390 × 844): same successful checks and a captured PNG of the real rendered page. Artifact name `V73-WebGL-preview-evidence` (this workflow's historical name).
+- The mobile screenshot visibly contains the princess, a cream kitten near her hands/waist, and the original scene. Because it is small-screen it does not prove precise 3D hand-to-fur contact, and it is not a physical iPhone/Safari performance test.
+- Desktop screenshot capture still timed out in CI's continuous WebGL readback; the actual runtime checks passed. Do not interpret an optional screenshot failure as a model load failure.
+- Site's published V73 marker: https://tanchensiyi.com/v73-release-status.json
+- All preexisting production media, letter route, album CSS and three ground cats preserved; rollback blobs remain listed below.
+
