@@ -42,7 +42,13 @@ jobs:
             const context=await browser.newContext({viewport:{width:spec.width,height:spec.height},isMobile:spec.mobile,hasTouch:spec.mobile,deviceScaleFactor:spec.mobile?2:1,serviceWorkers:'block'});
             const p=await context.newPage(),errors=[];
             p.on('pageerror',e=>errors.push(e.message));
-            const response=await p.goto('https://tanchensiyi.com/explore-preview/',{waitUntil:'domcontentloaded',timeout:75000});
+            let response;
+            for(let attempt=1;attempt<=4;attempt++){
+              response=await p.goto('https://tanchensiyi.com/explore-preview/',{waitUntil:'domcontentloaded',timeout:75000});
+              if(response?.status()===200)break;
+              console.log('Transient preview HTTP '+response?.status()+' attempt '+attempt);
+              await p.waitForTimeout(1400*attempt);
+            }
             check(spec.name+' preview HTTP',response?.status()===200,response?.status());
             try{await p.locator('#luma-camera-explore').waitFor({timeout:90000})}catch(e){check(spec.name+' toolbar appears',false,e.message.slice(0,200));await context.close();continue}
             const buttons=await p.locator('#luma-camera-explore button').allTextContents();
