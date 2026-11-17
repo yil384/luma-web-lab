@@ -1,0 +1,105 @@
+name: QA Christmas explore / cat close-up / V73 regressions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/qa-scene-explore.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test runtime
+        run: |
+          mkdir -p "$RUNNER_TEMP/explore"
+          cd "$RUNNER_TEMP/explore"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Exercise 3D preview and existing routes
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/explore"
+          cat > smoke.cjs <<'NODE'
+          const {chromium,request}=require('playwright');
+          const fs=require('node:fs'),path=require('node:path');
+          const out=path.join(process.env.GITHUB_WORKSPACE,'explore-qa');
+          fs.mkdirSync(out,{recursive:true});
+          const reports=[],checks=[];
+          function check(name,pass,data){checks.push({name,pass,data});console.log((pass?'PASS':'FAIL')+' '+name+' '+JSON.stringify(data||{}))}
+          const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+          for (const spec of [{name:'desktop',width:1280,height:850,mobile:false},{name:'mobile',width:390,height:844,mobile:true}]) {
+            const context=await browser.newContext({viewport:{width:spec.width,height:spec.height},isMobile:spec.mobile,hasTouch:spec.mobile,deviceScaleFactor:spec.mobile?2:1,serviceWorkers:'block'});
+            const p=await context.newPage(),errors=[];
+            p.on('pageerror',e=>errors.push(e.message));
+            const response=await p.goto('https://tanchensiyi.com/explore-preview/',{waitUntil:'domcontentloaded',timeout:75000});
+            check(spec.name+' preview HTTP',response?.status()===200,response?.status());
+            try{await p.locator('#luma-camera-explore').waitFor({timeout:90000})}catch(e){check(spec.name+' toolbar appears',false,e.message.slice(0,200));await context.close();continue}
+            const buttons=await p.locator('#luma-camera-explore button').allTextContents();
+            check(spec.name+' all camera controls',buttons.length===4,buttons);
+            await p.waitForTimeout(600);
+            let before=await p.evaluate(()=>({mode:document.documentElement.dataset.cameraMode,distance:document.documentElement.dataset.cameraDistance,princess:document.documentElement.dataset.princessV73}));
+            await p.getByRole('button',{name:'靠近小猫，自由旋转与缩放'}).click();
+            await p.waitForTimeout(850);
+            const cat=await p.evaluate(()=>({mode:document.documentElement.dataset.cameraMode,distance:Number(document.documentElement.dataset.cameraDistance),position:document.documentElement.dataset.cameraPosition}));
+            check(spec.name+' cat focus active',cat.mode==='cat'&&cat.distance<12,cat);
+            // Changing camera zoom while focused must change 3D camera distance, not only HTML page zoom.
+            await p.locator('canvas').hover({force:true});
+            await p.mouse.wheel(0,-550);
+            await p.waitForTimeout(350);
+            const zoomDist=await p.evaluate(()=>Number(document.documentElement.dataset.cameraDistance));
+            check(spec.name+' optical-to-physical dolly',Number.isFinite(zoomDist)&&Math.abs(zoomDist-cat.distance)>.03,{was:cat.distance,after:zoomDist});
+            await p.getByRole('button',{name:'返回完整圣诞树全景'}).click();
+            await p.waitForTimeout(850);
+            const reset=await p.evaluate(()=>({mode:document.documentElement.dataset.cameraMode,distance:Number(document.documentElement.dataset.cameraDistance)}));
+            check(spec.name+' reset overview',reset.mode==='overview'&&reset.distance>25,reset);
+            await p.getByRole('button',{name:'解锁全方向旋转、拖拽平移和滚轮缩放'}).click();
+            await p.waitForTimeout(850);
+            check(spec.name+' free exploration',await p.evaluate(()=>document.documentElement.dataset.cameraMode==='free'),null);
+            await p.getByRole('button',{name:'靠近公主及怀中小猫'}).click();
+            await p.waitForTimeout(850);
+            check(spec.name+' princess focus',await p.evaluate(()=>document.documentElement.dataset.cameraMode==='princess'),null);
+            try{await p.waitForFunction(()=>document.documentElement.dataset.princessV73==='ready',null,{timeout:35000})}catch(e){}
+            const status=await p.evaluate(()=>({princess:document.documentElement.dataset.princessV73,kitten:document.documentElement.dataset.princessHeldKitten,canvas:document.querySelectorAll('canvas').length}));
+            check(spec.name+' V73 intact',status.princess==='ready'&&status.canvas>0,status);
+            check(spec.name+' no runtime exceptions',errors.length===0,errors.slice(0,5));
+            reports.push({spec,before,cat,zoomDist,reset,status,errors,buttons});
+            await context.close();
+          }
+          await browser.close();
+          const req=await request.newContext();
+          for(const route of ['/','/christmas/','/letter/','/v73-fast-release-status.json','/princess/luma-princess-hug-v73.glb.gz']){
+            const r=await req.get('https://tanchensiyi.com'+route,{timeout:80000});
+            check('existing route '+route,r.status()===200,{status:r.status(),length:r.headers()['content-length']});
+          }
+          await req.dispose();
+          fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({checks,reports},null,2));
+          if(checks.some(c=>!c.pass))process.exitCode=1;
+          NODE
+          # CommonJS supports top-level await only inside an async function.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('smoke.cjs')
+          s=p.read_text().replace("const browser=await chromium.launch(", "async function main(){\nconst browser=await chromium.launch(")
+          s += "\n}\nmain().catch(e=>{console.error('FATAL_EXPLORE_QA',e);process.exitCode=1});\n"
+          p.write_text(s)
+          PY
+          node smoke.cjs
+      - name: Store regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Christmas-explore-QA
+          path: explore-qa/
+          if-no-files-found: warn
+          retention-days: 5
