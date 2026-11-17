@@ -13,7 +13,7 @@ async function exists(path) {
 }
 
 /** Finish Vite output without ever modifying source photos or generated WebP assets. */
-export async function finalizeBuild({ root = projectRoot } = {}) {
+export async function finalizeBuild({ root = projectRoot, includePrincessV72 = process.env.VITE_PRINCESS_V72_PREVIEW === 'true' } = {}) {
   const dist = join(root, 'dist');
   let directory;
   let index;
@@ -42,7 +42,34 @@ export async function finalizeBuild({ root = projectRoot } = {}) {
   // The former confession entry is no longer reachable. Keep its source
   // assets in public for history, but do not ship its obsolete films or
   // unattached image imports with the current ride and Christmas routes.
-  await rm(join(dist, 'princess'), { recursive: true, force: true });
+  // The old princess media are unreachable. When V72 is explicitly enabled,
+  // retain exactly its verified static GLB; otherwise remove princess/ as before.
+  // This must match PrincessAsset.tsx and the V72 staging workflow.
+  const princess = join(dist, 'princess');
+  if (includePrincessV72) {
+    const princessDir = await lstat(princess).catch(error => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!princessDir?.isDirectory() || princessDir.isSymbolicLink()) {
+      throw new Error('V72 was enabled but dist/princess is not a real directory.');
+    }
+    const modelPath = join(princess, 'luma-princess-v72.glb');
+    const model = await lstat(modelPath).catch(error => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!model?.isFile() || model.isSymbolicLink()) {
+      throw new Error('V72 was enabled but dist/princess/luma-princess-v72.glb is missing or invalid.');
+    }
+    for (const entry of await readdir(princess)) {
+      if (entry !== 'luma-princess-v72.glb') {
+        await rm(join(princess, entry), { recursive: true, force: true });
+      }
+    }
+  } else {
+    await rm(princess, { recursive: true, force: true });
+  }
   await rm(join(dist, 'hd-assets'), { recursive: true, force: true });
   await rm(join(dist, 'scene.json'), { force: true });
   await rm(starterIcon, { force: true });
