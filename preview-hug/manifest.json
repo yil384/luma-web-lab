@@ -1,0 +1,10 @@
+{
+  "status": "V73 staged, preview only",
+  "model": "/princess/luma-princess-hug-v73.glb",
+  "originalV72": "/princess/luma-princess-v72.glb",
+  "heldCat": "existing chonky cream kitten rig",
+  "lighting": "warm key + cool fill + rim",
+  "loading": "atomic reveal of princess plus kitten",
+  "production": "unchanged V72",
+  "sourceCommit": "506345aca7157be68a672cb4ef70d51cec32610b"
+}
