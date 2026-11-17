@@ -13,161 +13,140 @@ interface Props {
   reducedMotion: boolean;
 }
 
-/** The model is an actual GLB mesh, not a single photograph or HTML billboard. */
-const MODEL_URL = assetUrl('princess/luma-princess-hd-study-v2.glb');
-// The GLB has intentionally not passed cinematic/all-angle acceptance.
-// Keep the procedural companion and avoid an unnecessary 404 on every visit.
-// Enable this only in an isolated approved-asset preview build, after
-// committing the actual GLB and checking its origin, topology and phone load.
-const MODEL_ENABLED = import.meta.env.VITE_PRINCESS_GLB_APPROVED === 'true';
+/** V72 is user-selected for preview, not a film-grade or rigged production asset. */
+const ENABLE_V72_PREVIEW = import.meta.env.VITE_PRINCESS_V72_PREVIEW === 'true';
+const MODEL_URL = assetUrl('princess/luma-princess-v72.glb');
 const PLACE_X = 6.25;
 const PLACE_Z = 7.15;
 const PLACE_Y = GROUND_Y + snowHeightAt(PLACE_X, PLACE_Z) + 0.02;
+const DISPLAY_HEIGHT = 5.12;
+const DEFAULT_YAW = -0.24;
 
-function detachIntoPivot(root: THREE.Object3D, namePrefix: string, pivot: THREE.Vector3) {
-  const moved: THREE.Object3D[] = [];
-  root.traverse((node) => {
-    if (node.name.startsWith(namePrefix)) moved.push(node);
-  });
-  if (!moved.length) return null;
-  const group = new THREE.Group();
-  group.name = namePrefix + 'animation-pivot';
-  group.position.copy(pivot);
-  for (const node of moved) {
-    const parent = node.parent;
-    if (!parent) continue;
-    // Exported GLB nodes are in the common local coordinate system.
-    parent.remove(node);
-    node.position.sub(pivot);
-    group.add(node);
-  }
-  root.add(group);
-  return group;
-}
-
-function disposeScene(root: THREE.Object3D) {
+/** GLTFLoader owns unique GLB materials/textures; keep them intact while displayed. */
+function disposeImportedScene(root: THREE.Object3D) {
   const geometries = new Set<THREE.BufferGeometry>();
   const materials = new Set<THREE.Material>();
-  root.traverse((node) => {
+  const textures = new Set<THREE.Texture>();
+  root.traverse(node => {
     if (!(node instanceof THREE.Mesh)) return;
     geometries.add(node.geometry);
-    for (const material of Array.isArray(node.material) ? node.material : [node.material]) {
-      if (material) materials.add(material);
-    }
+    const assigned = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of assigned) if (material) materials.add(material);
   });
-  for (const geometry of geometries) geometry.dispose();
+  for (const material of materials) {
+    // The original PBR data and normal maps are part of the accepted V72 look.
+    for (const value of Object.values(material)) {
+      if (value instanceof THREE.Texture) textures.add(value);
+    }
+  }
+  for (const texture of textures) texture.dispose();
   for (const material of materials) material.dispose();
+  for (const geometry of geometries) geometry.dispose();
 }
 
-function DetailedPrincess(props: Props & { onUnavailable: () => void }) {
+function V72Princess({ active, paused, reducedMotion, onUnavailable }: Props & { onUnavailable: () => void }) {
   const mount = useRef<THREE.Group>(null);
   const loaded = useRef<THREE.Group | null>(null);
-  const headPivot = useRef<THREE.Group | null>(null);
-  const armPivot = useRef<THREE.Group | null>(null);
   const elapsed = useRef(0);
-  const waveAt = useRef(-100);
+  const greetingAt = useRef(-100);
+  const [ready, setReady] = useState(false);
   const { gl, invalidate } = useThree();
 
   useEffect(() => {
     const parent = mount.current;
     if (!parent) return;
     let mounted = true;
-    const loader = new GLTFLoader();
     const previousCursor = gl.domElement.style.cursor;
-
-    loader.load(MODEL_URL, (asset) => {
+    const loader = new GLTFLoader();
+    loader.load(MODEL_URL, asset => {
       if (!mounted) {
-        disposeScene(asset.scene);
+        disposeImportedScene(asset.scene);
         return;
       }
       const scene = asset.scene;
-      const head = detachIntoPivot(scene, 'luma-head-', new THREE.Vector3(0, 4.23, 0));
-      const arm = detachIntoPivot(scene, 'luma-arm-', new THREE.Vector3(0.64, 3.45, 0));
-      // AI-generated GLBs can have wildly different unit scale, centers and
-      // floor offsets. Normalize by actual geometry, not guessed model height.
-      // Do this after grouping any legacy hand-authored animation pivots.
       const bounds = new THREE.Box3().setFromObject(scene);
-      const boxSize = bounds.getSize(new THREE.Vector3());
-      if (bounds.isEmpty() || !Number.isFinite(boxSize.y) || boxSize.y < 1e-5) {
-        disposeScene(scene);
-        props.onUnavailable();
+      const dimensions = bounds.getSize(new THREE.Vector3());
+      if (bounds.isEmpty() || !Number.isFinite(dimensions.y) || dimensions.y < 1e-5) {
+        disposeImportedScene(scene);
+        onUnavailable();
         return;
       }
-      const scale = 5.12 / boxSize.y;
+      const scale = DISPLAY_HEIGHT / dimensions.y;
       const center = bounds.getCenter(new THREE.Vector3());
+      // V72 is Y-up and faces +Z. Never alter source vertices/normals/UVs.
       scene.scale.setScalar(scale);
       scene.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
-      const root = new THREE.Group();
-      root.name = 'luma-detailed-princess';
-      root.add(scene);
-      parent.add(root);
-      headPivot.current = head;
-      armPivot.current = arm;
-      loaded.current = root;
+      const wrapper = new THREE.Group();
+      wrapper.name = 'princess-v72-greeting';
+      wrapper.rotation.y = DEFAULT_YAW;
+      wrapper.add(scene);
+      parent.add(wrapper);
+      loaded.current = wrapper;
+      setReady(true);
       invalidate();
-    }, undefined, () => {
-      if (mounted) props.onUnavailable();
+    }, undefined, error => {
+      if (!mounted) return;
+      console.warn('Princess V72 could not load; displaying the procedural companion.', error);
+      onUnavailable();
     });
     return () => {
       mounted = false;
       gl.domElement.style.cursor = previousCursor;
-      const root = loaded.current;
-      if (root) {
-        parent.remove(root);
-        disposeScene(root);
+      if (loaded.current) {
+        parent.remove(loaded.current);
+        disposeImportedScene(loaded.current);
+        loaded.current = null;
       }
-      loaded.current = null;
-      headPivot.current = null;
-      armPivot.current = null;
     };
-  }, [gl, invalidate, props.onUnavailable]);
+  }, [gl, invalidate, onUnavailable]);
 
   useFrame((_, delta) => {
-    const group = loaded.current;
-    if (!group || !props.active || props.paused) return;
-    if (props.reducedMotion) {
-      group.rotation.y = -0.24;
-      group.position.y = 0;
-      if (headPivot.current) headPivot.current.rotation.y = 0;
-      if (armPivot.current) armPivot.current.rotation.z = 0;
-      group.rotation.z = 0;
+    const model = loaded.current;
+    if (!model || !active || paused) return;
+    if (reducedMotion) {
+      model.rotation.set(0, DEFAULT_YAW, 0);
+      model.position.y = 0;
       return;
     }
-    elapsed.current += Math.min(Math.max(delta, 0), 0.05);
+    elapsed.current += THREE.MathUtils.clamp(delta, 0, 0.05);
     const t = elapsed.current;
-    group.rotation.y = -0.24 + Math.sin(t * 0.23) * 0.065;
-    group.position.y = Math.sin(t * 0.75) * 0.014;
-    if (headPivot.current) headPivot.current.rotation.y = Math.sin(t * 0.35) * 0.055;
-    const phase = t - waveAt.current;
-    if (armPivot.current) armPivot.current.rotation.z =
-      phase > 0 && phase < 2.25 ? -0.17 - Math.sin(phase * Math.PI / 2.25) * (0.28 + 0.06 * Math.sin(phase * 11)) : 0;
-    // Unrigged community-generated meshes have no arm joint. A restrained
-    // curtsy keeps tap feedback honest instead of pretending the arm can wave.
-    if (!armPivot.current) {
-      group.rotation.z = phase > 0 && phase < 1.25 ? Math.sin(phase * Math.PI / 1.25) * 0.055 : 0;
-    }
+    const afterTap = t - greetingAt.current;
+    const greeting = afterTap >= 0 && afterTap < 1.6
+      ? Math.sin((afterTap / 1.6) * Math.PI) : 0;
+    // Unrigged V72: only a modest whole-body acknowledgement. No fake wave.
+    model.rotation.y = DEFAULT_YAW + Math.sin(t * 0.26) * 0.045;
+    model.rotation.x = greeting * 0.055;
+    model.rotation.z = Math.sin(t * 0.33) * 0.008;
+    model.position.y = Math.sin(t * 0.85) * 0.012;
   });
 
-  return <group position={[PLACE_X, PLACE_Y, PLACE_Z]} ref={mount}
-    onClick={event => {
-      event.stopPropagation();
-      waveAt.current = elapsed.current;
-      invalidate();
-    }}
-    onPointerOver={event => {
-      if (!loaded.current) return;
-      event.stopPropagation();
-      gl.domElement.style.cursor = 'pointer';
-    }}
-    onPointerOut={() => { gl.domElement.style.cursor = ''; }}
-  />;
+  return <>
+    {!ready && <FairytalePrincess active={active} paused={paused} reducedMotion={reducedMotion} />}
+    <group ref={mount} position={[PLACE_X, PLACE_Y, PLACE_Z]}
+      onClick={event => {
+        if (!loaded.current || event.delta > 6) return;
+        event.stopPropagation();
+        greetingAt.current = elapsed.current;
+        invalidate();
+      }}
+      onPointerOver={event => {
+        if (!loaded.current) return;
+        event.stopPropagation();
+        gl.domElement.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => { gl.domElement.style.cursor = ''; }}
+    />
+  </>;
 }
 
 export default function PrincessAsset({ active, paused, reducedMotion }: Props) {
   const [unavailable, setUnavailable] = useState(false);
-  // A safe fallback means a missing/invalid GLB never hides or breaks the tree.
+  const [everActivated, setEverActivated] = useState(active);
+  useEffect(() => { if (active) setEverActivated(true); }, [active]);
   const onUnavailable = useCallback(() => setUnavailable(true), []);
-  if (!MODEL_ENABLED || unavailable) return <FairytalePrincess active={active} paused={paused} reducedMotion={reducedMotion} />;
-  return <DetailedPrincess active={active} paused={paused} reducedMotion={reducedMotion}
+  if (!ENABLE_V72_PREVIEW || !everActivated || unavailable) {
+    return <FairytalePrincess active={active} paused={paused} reducedMotion={reducedMotion} />;
+  }
+  return <V72Princess active={active} paused={paused} reducedMotion={reducedMotion}
     onUnavailable={onUnavailable} />;
 }
