@@ -16,12 +16,22 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Gemini V72 公主 · 圣诞树预览</title>
     <style>html,body{margin:0;background:#080e25;color:#fff0d5}#root:empty{min-height:100svh;display:grid;place-items:center}#root:empty::before{content:'';width:48px;height:48px;background:url('/icons/xiaomiao-cat-transparent-512.png') center/contain no-repeat}</style>
-    <script type="module" crossorigin src="/assets/index-CJX_PAH8.js"></script>
+    <script type="importmap">{"imports":{"/assets/index-CJX_PAH8.js":"/assets/index-CJX_PAH8.js?x=v72-1117-d1","/assets/App-GeminiV72.js":"/assets/App-GeminiV72.js?x=v72-1117-d1","/assets/TreeScene-GeminiV72.js":"/assets/TreeScene-GeminiV72.js?x=v72-1117-d1","/assets/princess-v72-loader.js":"/assets/princess-v72-loader.js?x=v72-1117-d1"}}</script>
+    <script type="module" crossorigin src="/assets/index-CJX_PAH8.js?x=v72-1117-d1"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BbhkVABR.css">
     <link rel="stylesheet" href="/assets/memory-album-v4.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+    if(new URLSearchParams(location.search).has('princessDebug')){
+      const node=document.createElement('output');
+      node.id='princess-runtime-diagnostic';
+      Object.assign(node.style,{position:'fixed',right:'10px',bottom:'10px',zIndex:9999,padding:'10px 16px',background:'#121b2be8',color:'#fff',border:'1px solid #e4bfd5',borderRadius:'8px',font:'14px system-ui'});
+      document.body.appendChild(node);
+      setInterval(()=>node.textContent='V72: '+(document.documentElement.dataset.princessV72||'not mounted')+(document.documentElement.dataset.princessV72Error?' • '+document.documentElement.dataset.princessV72Error:''),500);
+    }
+    </script>
     <noscript><main style="padding:20vh 8vw;text-align:center"><h1>集美小喵的圣诞魔法</h1><p>请启用 JavaScript 来打开照片圣诞树。</p></main></noscript>
   </body>
 </html>

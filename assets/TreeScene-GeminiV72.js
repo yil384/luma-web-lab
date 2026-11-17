@@ -811,12 +811,18 @@ function GeminiPrincessV72({active=true,paused=false,reducedMotion=false,onInter
   const {gl,invalidate}=$e();
   U.useEffect(()=>{
     let disposed=false,loaded=null;
+    document.documentElement.dataset.princessV72 = 'loading';
     import("./princess-v72-loader.js").then(m=>new m.PrincessGLTFLoader().loadAsync("/princess/luma-princess-v72.glb"))
       .then(gltf=>{
         if(disposed){for(const n of (gltf.scene?.children||[]))n.traverse?.(()=>{});return}
-        loaded=gltf.scene;setAsset(gltf.scene);invalidate();
+        loaded=gltf.scene;
+        document.documentElement.dataset.princessV72 = 'loaded';
+        document.documentElement.dataset.princessV72MeshCount = String(gltf.scene.children.length);
+        setAsset(gltf.scene);invalidate();
       })
-      .catch(err=>{if(!disposed){console.warn("V72 model failed; using original princess",err);setFailed(true);invalidate()}});
+      .catch(err=>{if(!disposed){document.documentElement.dataset.princessV72 = "failed";
+        document.documentElement.dataset.princessV72Error = String(err?.message||err).slice(0,200);
+        console.warn("V72 model failed; using original princess",err);setFailed(true);invalidate()}});
     return()=>{
       disposed=true;
       if(loaded){
