@@ -1,0 +1,102 @@
+name: QA V73 faster-loading preview in Chromium
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-v73-fast-preview.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Install browser QA tooling in temporary workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v73-fast"
+          cd "$RUNNER_TEMP/v73-fast"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Verify exact compressed model and measure preview readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/v73-fast"
+          cat > qa.cjs <<'NODE'
+          const {chromium,request}=require('playwright');
+          const {createHash}=require('node:crypto');
+          const {gunzipSync}=require('node:zlib');
+          const {writeFileSync,mkdirSync}=require('node:fs');
+          const base='https://tanchensiyi.com',evidence=process.env.GITHUB_WORKSPACE+'/v73-fast-evidence';
+          mkdirSync(evidence,{recursive:true});
+          const checks=[],expected='82850162e6363cf41fdcf660d7cf317d276bc99d4c6872824f51f939af5dc297';
+          const assert=(name,ok,details)=>{checks.push({name,ok,details});if(!ok)console.error('FAIL',name,details)};
+          async function main(){
+            const api=await request.newContext();
+            const gr=await api.get(base+'/princess/luma-princess-hug-v73.glb.gz',{timeout:80000});
+            assert('gzip HTTP 200',gr.status()===200,gr.status());
+            const gzip=await gr.body();let decoded;
+            if(gzip[0]===0x1f&&gzip[1]===0x8b)decoded=gunzipSync(gzip);
+            else if(gzip.toString('ascii',0,4)==='glTF')decoded=gzip;
+            else throw Error('Unexpected compressed GLB response header');
+            const sha=createHash('sha256').update(decoded).digest('hex');
+            assert('lossless GLB SHA preserved',sha===expected,{sha,size:decoded.length,transferBytes:gzip.length});
+            assert('compressed V73 saves at least 30%',gzip.length<0.70*15329160,gzip.length);
+            await api.dispose();
+            const browser=await chromium.launch({headless:true,executablePath:undefined,
+              args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            for(const mode of [{name:'desktop',width:1200,height:850,mobile:false},{name:'mobile',width:390,height:844,mobile:true}]){
+              const context=await browser.newContext({viewport:{width:mode.width,height:mode.height},deviceScaleFactor:mode.mobile?2:1,isMobile:mode.mobile,hasTouch:mode.mobile,serviceWorkers:'block'});
+              const page=await context.newPage(),errors=[],requests=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              page.on('response',r=>{if(r.url().includes('luma-princess-hug-v73'))requests.push({status:r.status(),url:r.url()})});
+              const began=Date.now(),resp=await page.goto(base+'/preview-fast/',{waitUntil:'domcontentloaded',timeout:90000});
+              let timedOut=false;
+              try{
+                await page.waitForFunction(()=>['ready','failed'].includes(document.documentElement.dataset.princessV73),null,{timeout:95000,polling:500});
+              }catch(e){timedOut=true;}
+              const data=await page.evaluate(()=>({
+                princess:document.documentElement.dataset.princessV73||'absent',
+                kitten:document.documentElement.dataset.princessHeldKitten||'absent',
+                transport:document.documentElement.dataset.princessTransport||'absent',
+                readyMs:document.documentElement.dataset.princessV73ReadyMs||'unknown',
+                loadStart:document.documentElement.dataset.princessV73LoadStart||'unknown',
+                canvas:document.querySelectorAll('canvas').length,
+                resources:performance.getEntriesByType('resource').filter(e=>/princess-hug-v73|chonky-cat-trio/.test(e.name)).map(e=>({url:e.name.split('/').pop(),durationMs:Math.round(e.duration),transfer:e.transferSize,decoded:e.decodedBodySize}))
+              }));
+              const result={mode:mode.name,http:resp?.status(),wallMs:Date.now()-began,timedOut,errors:errors.slice(0,9),requests,data};
+              console.log('MEASURE_V73_FAST '+JSON.stringify(result));
+              assert(mode.name+' preview 200',resp?.status()===200,resp?.status());
+              assert(mode.name+' princess ready',!timedOut&&data.princess==='ready',result);
+              assert(mode.name+' uses gzip',data.transport==='gzip'||data.transport==='http-decompressed',data.transport);
+              assert(mode.name+' has WebGL canvas',data.canvas>0,data.canvas);
+              assert(mode.name+' no fatal errors',errors.length===0,errors.slice(0,9));
+              // Image evidence is optional: screenshotting a large WebGL scene can time out on CI GPUs.
+              await context.close();
+            }
+            await browser.close();
+            writeFileSync(evidence+'/result.json',JSON.stringify({checks,at:new Date().toISOString()},null,2));
+            if(checks.some(x=>!x.ok))process.exitCode=1;
+          }
+          main().catch(e=>{console.error('V73_FAST_QA_FATAL',e);process.exitCode=1});
+          NODE
+          node qa.cjs
+      - name: Upload timing evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v73-fast-timing-report
+          path: v73-fast-evidence/
+          retention-days: 7
+          if-no-files-found: warn
