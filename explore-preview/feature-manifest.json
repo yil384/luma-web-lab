@@ -1,0 +1,18 @@
+{
+  "version": "Explore-20261117-v1",
+  "preview": true,
+  "productionUnchanged": true,
+  "features": [
+    "tap cat to focus",
+    "tap princess to focus",
+    "zoom cat and princess",
+    "free orbit around targets",
+    "right-drag pan",
+    "mobile pinch zoom & two-finger pan",
+    "reset full-scene view",
+    "preserve 3 cats",
+    "preserve V73 kitten and prefetch"
+  ],
+  "source": "derived from current gh-pages TreeScene-GeminiV73-fast.js",
+  "baseCommit": "4b5fe7b9e4e4fbe71845239b968437de27f7fa62"
+}
