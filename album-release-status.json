@@ -1,0 +1,34 @@
+{
+  "hosting": "GitHub Pages",
+  "version": "AlbumSwipe-20261117-v5",
+  "production": true,
+  "changes": [
+    "late left-page reveal prevents mid-flip flashing",
+    "predecoded small book prints prevent image decode flashing",
+    "touch swipe left/right to turn two-page spread",
+    "desktop mouse-drag to turn spread",
+    "swipe suppression protects photo taps",
+    "HD viewer retains original-resolution images"
+  ],
+  "preserved": [
+    "V73 princess holding kitten",
+    "three ground cats",
+    "pinch-to-position 3D camera",
+    "8 fireworks groups",
+    "95 album photos",
+    "film",
+    "/letter/"
+  ],
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44200112645",
+  "previousPagesCommit": "f7242fc9800d8b7c105532ba8142f0d37c92d9fd",
+  "previousHomeBlob": "9649910cbf83bd65900469332f01d28b9ee3417f",
+  "previousChristmasBlob": "88d6437f5b733774a718c325a0d75bd2b4bcb301",
+  "pathsChanged": [
+    "index.html",
+    "christmas/index.html",
+    "album-release-status.json"
+  ],
+  "css": "/assets/memory-album-v5.css",
+  "bookJs": "/assets/PhotoGallery-AlbumSwipe-20261117-v5.js",
+  "originalMediaChanged": false
+}
