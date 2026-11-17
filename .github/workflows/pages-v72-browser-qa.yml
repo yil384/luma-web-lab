@@ -1,0 +1,98 @@
+name: Browser QA for live Pages V72 preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pages-v72-browser-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Install isolated browser QA (no repository dependency changes)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v72-browser-qa"
+          cd "$RUNNER_TEMP/v72-browser-qa"
+          npm init -y >/dev/null
+          npm install --no-save --ignore-scripts playwright@^1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify V72 binary + preview + fixed live routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/v72-browser-qa"
+          cat > qa.cjs <<'NODE'
+          const { chromium, request } = require('playwright');
+          const { createHash } = require('node:crypto');
+          const { writeFileSync, mkdirSync } = require('node:fs');
+          const base = 'https://tanchensiyi.com';
+          const out = process.env.GITHUB_WORKSPACE + '/v72-browser-evidence';
+          mkdirSync(out, {recursive: true});
+          const results = { testedAt: new Date().toISOString(), checks: [] };
+          const record = (name,pass,detail) => results.checks.push({name,pass,detail});
+          (async () => {
+            const api = await request.newContext();
+            const modelResponse=await api.get(base+'/princess/luma-princess-v72.glb',{timeout:70000});
+            const modelBytes=await modelResponse.body();
+            const checksum=createHash('sha256').update(modelBytes).digest('hex');
+            record('V72 GET 200',modelResponse.status()===200,modelResponse.status());
+            record('V72 pinned checksum',checksum==='9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf', {bytes:modelBytes.length,sha256:checksum});
+            await api.dispose();
+            const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            for (const mode of [{name:'desktop',w:1400,h:900,mobile:false},{name:'mobile-emulation',w:390,h:844,mobile:true}]) {
+              const ctx=await browser.newContext({viewport:{width:mode.w,height:mode.h},deviceScaleFactor:mode.mobile?2:1,isMobile:mode.mobile,hasTouch:mode.mobile,ignoreHTTPSErrors:false,serviceWorkers:'block'});
+              const p=await ctx.newPage(),issues=[],glb=[];
+              p.on('pageerror',err=>issues.push(err.message));
+              p.on('console',msg=>{if(msg.type()==='error')issues.push(msg.text())});
+              p.on('response',res=>{if(res.url().includes('/princess/luma-princess-v72.glb'))glb.push({status:res.status(),url:res.url()})});
+              const response=await p.goto(base+'/preview-v72/',{waitUntil:'domcontentloaded',timeout:75000});
+              await p.waitForTimeout(24000);
+              const view=await p.evaluate(()=>({
+                title:document.title,
+                canvas:document.querySelectorAll('canvas').length,
+                text:document.body.innerText.slice(0,450),
+                loadedImageCount:[...document.images].filter(x=>x.complete&&x.naturalWidth).length,
+                resourceUrls:performance.getEntriesByType('resource').filter(x=>x.name.includes('princess-v72')).map(x=>x.name)
+              }));
+              await p.screenshot({path:out+'/preview-'+mode.name+'.png',fullPage:false});
+              record(mode.name+' preview HTTP',response?.status()===200,response?.status());
+              record(mode.name+' WebGL canvas exists',view.canvas>0,view);
+              record(mode.name+' browser loaded V72 GLB',glb.some(x=>x.status===200),glb);
+              record(mode.name+' no fatal GLB/WebGL errors',!issues.some(x=>/V72 model failed|WebGL|THREE.GLTFLoader:|Failed to fetch/i.test(x)),issues.slice(0,12));
+              await ctx.close();
+            }
+            const ctx=await browser.newContext({viewport:{width:1280,height:800}});
+            const p=await ctx.newPage();
+            for (const [route,titlePiece] of [['/','圣诞'],['/christmas/','圣诞'],['/letter/','思仪']]) {
+              const resp=await p.goto(base+route,{waitUntil:'domcontentloaded',timeout:75000});
+              record('route '+route,resp?.status()===200 && (await p.title()).includes(titlePiece),{http:resp?.status(),title:await p.title()});
+            }
+            await ctx.close();
+            await browser.close();
+            writeFileSync(out+'/summary.json',JSON.stringify(results,null,2));
+            console.log('V72_BROWSER_REPORT '+JSON.stringify(results,null,2));
+            if(results.checks.some(x=>!x.pass))process.exitCode=1;
+          })().catch(e=>{console.error('BROWSER_QA_FATAL',e);process.exitCode=1});
+          NODE
+          node qa.cjs
+      - name: Save evidence even when checks fail
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pages-v72-browser-evidence
+          path: v72-browser-evidence/
+          retention-days: 7
+          if-no-files-found: warn
