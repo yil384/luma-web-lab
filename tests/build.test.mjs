@@ -103,3 +103,45 @@ test('home and fixed routes retain their own share metadata after homepage resto
   assert.match(letter, /property="og:url" content="https:\/\/tanchensiyi\.com\/letter\/"/);
   assert.match(letter, /请启用 JavaScript，进入城堡。/);
 });
+
+
+test('V72 opt-in build retains only the selected real GLB and drops old princess media', async t => {
+  const root = await temporaryProject(t);
+  const fixtures = {
+    'dist/index.html': '<html>christmas</html>',
+    'dist/princess/luma-princess-v72.glb': 'v72-binary-fixture',
+    'dist/princess/arrival.mp4': 'legacy-film',
+    'dist/princess/other-old.glb': 'legacy-asset',
+    'dist/generated/photos/final.webp': 'generated-photo',
+  };
+  for (const [path, content] of Object.entries(fixtures)) {
+    await mkdir(join(root, path, '..'), { recursive: true });
+    await writeFile(join(root, path), content);
+  }
+  await finalizeBuild({ root, includePrincessV72: true });
+  assert.equal(await readFile(join(root, 'dist/princess/luma-princess-v72.glb'), 'utf8'), 'v72-binary-fixture');
+  assert.equal(await readFile(join(root, 'dist/generated/photos/final.webp'), 'utf8'), 'generated-photo');
+  for (const legacy of ['dist/princess/arrival.mp4', 'dist/princess/other-old.glb']) {
+    await assert.rejects(readFile(join(root, legacy)), { code: 'ENOENT' });
+  }
+  // Re-running cleanup with V72 enabled is idempotent.
+  await finalizeBuild({ root, includePrincessV72: true });
+  assert.equal(await readFile(join(root, 'dist/princess/luma-princess-v72.glb'), 'utf8'), 'v72-binary-fixture');
+});
+
+test('V72 build fails closed if requested model is absent', async t => {
+  const root = await temporaryProject(t);
+  await mkdir(join(root, 'dist', 'princess'), { recursive: true });
+  await writeFile(join(root, 'dist', 'index.html'), '<html>test</html>');
+  await writeFile(join(root, 'dist', 'princess', 'old-portrait.webp'), 'old');
+  await assert.rejects(finalizeBuild({ root, includePrincessV72: true }), /luma-princess-v72\.glb is missing/);
+});
+
+test('V72 not enabled continues to strip princess assets from output', async t => {
+  const root = await temporaryProject(t);
+  await mkdir(join(root, 'dist', 'princess'), { recursive: true });
+  await writeFile(join(root, 'dist', 'index.html'), '<html>test</html>');
+  await writeFile(join(root, 'dist', 'princess', 'luma-princess-v72.glb'), 'v72');
+  await finalizeBuild({ root, includePrincessV72: false });
+  await assert.rejects(readFile(join(root, 'dist', 'princess', 'luma-princess-v72.glb')), { code: 'ENOENT' });
+});
