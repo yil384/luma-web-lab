@@ -1,0 +1,12 @@
+{
+  "preview": true,
+  "version": "AlbumSwipe-20261117-v5",
+  "previousCommit": "60b15a73aff8618036acf18ddd35a2579b825b38",
+  "fixes": [
+    "left page no longer flashes at 50% through leaf animation",
+    "book prints use thumbnails, HD photos unchanged",
+    "touch swipe left/right and mouse drag",
+    "vertical scroll and photo taps preserved"
+  ],
+  "isolation": "original published homepage, Christmas route and old album chunk unchanged"
+}
