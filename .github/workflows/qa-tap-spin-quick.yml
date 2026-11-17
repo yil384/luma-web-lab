@@ -45,7 +45,12 @@ jobs:
               pos:document.documentElement.dataset.cameraPosition,
               mode:document.documentElement.dataset.cameraMode,
               manual:document.documentElement.dataset.cameraManualHold,
-              firework:document.documentElement.dataset.fireworksBurstCount
+              firework:document.documentElement.dataset.fireworksBurstCount,
+              auto:document.documentElement.dataset.cameraAutoEnabled,
+              paused:document.documentElement.dataset.cameraPaused,
+              holdUntil:document.documentElement.dataset.cameraHoldUntil,
+              cameraTime:document.documentElement.dataset.cameraTime,
+              resumeIssued:document.documentElement.dataset.cameraResumeIssued
             }));
             const first=await read();console.log('FIRST '+JSON.stringify(first));
             const click=()=>page.mouse.click(48,425);
@@ -66,6 +71,6 @@ jobs:
             if(moved.firework!=='8'||errors.length)throw Error('Fireworks or JS errors '+JSON.stringify({errors,firework:moved.firework}));
             await browser.close();
           }
-          main().catch(e=>{console.error('QUICK_TAP_QA_FATAL',e);process.exitCode=1});
+          main().then(()=>process.exit(0)).catch(e=>{console.error('QUICK_TAP_QA_FATAL',e);process.exit(1)});
           NODE
-          timeout 180 node quick.cjs
+          timeout 115 node quick.cjs
