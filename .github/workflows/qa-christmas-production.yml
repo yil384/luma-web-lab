@@ -91,9 +91,9 @@ jobs:
               add(mode.name+' V73 scene model',model.princess==='ready'&&model.canvas===1,model);
               add(mode.name+' no JS errors',errors.length===0,errors.slice(0,7));
               // Verify the pre-existing film dialog itself still opens, not just its source link.
-              const film=page.locator('button.film-entry');
+              const film=page.locator('button.christmas-greeting.greeting-gate');
               const count=await film.count();
-              add(mode.name+' story film entry',count>0,count);
+              add(mode.name+' story film entry',count>0 && ((await film.getAttribute('aria-label'))||'').includes('点击播放视频'),{count,label:count?await film.getAttribute('aria-label'):null});
               if(count>0){
                 await film.click({timeout:12000,force:true});
                 await page.waitForTimeout(650);
