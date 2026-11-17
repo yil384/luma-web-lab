@@ -1,0 +1,71 @@
+name: Quick production-candidate tap-to-spin verification
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-tap-spin-quick.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Chromium driver
+        run: |
+          mkdir -p "$RUNNER_TEMP/tapcheck"
+          cd "$RUNNER_TEMP/tapcheck"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Check blank tap pause, resume and camera movement
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/tapcheck"
+          cat > quick.cjs <<'NODE'
+          const {chromium}=require('playwright');
+          async function main(){
+            const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            const page=await browser.newPage({viewport:{width:1280,height:850},serviceWorkers:'block'});
+            const errors=[];page.on('pageerror',e=>errors.push(e.message));
+            let response;
+            for(let a=1;a<=3;a++){
+              response=await page.goto('https://tanchensiyi.com/sparkle-preview/',{waitUntil:'domcontentloaded',timeout:45000});
+              if(response.status()===200)break;
+            }
+            if(response.status()!==200)throw Error('Preview HTTP '+response.status());
+            await page.waitForFunction(()=>document.documentElement.dataset.cameraMode==='pinch-anywhere',{timeout:35000});
+            const read=()=>page.evaluate(()=>({
+              rotation:document.querySelector('.tree-stage')?.dataset.rotation,
+              pos:document.documentElement.dataset.cameraPosition,
+              mode:document.documentElement.dataset.cameraMode,
+              manual:document.documentElement.dataset.cameraManualHold,
+              firework:document.documentElement.dataset.fireworksBurstCount
+            }));
+            const first=await read();console.log('FIRST '+JSON.stringify(first));
+            const click=()=>page.mouse.click(48,425);
+            await click();await page.waitForTimeout(600);
+            const paused=await read();console.log('PAUSED '+JSON.stringify(paused));
+            if(paused.rotation!=='paused')throw Error('First click should pause');
+            await click();await page.waitForTimeout(700);
+            const resume=await read();console.log('RESUME '+JSON.stringify(resume));
+            if(resume.rotation!=='playing')throw Error('Second click should resume');
+            await page.waitForTimeout(1850);
+            const moved=await read();console.log('MOVED '+JSON.stringify(moved));
+            const xyz=s=>String(s).split(',').map(Number);
+            const a=xyz(resume.pos),b=xyz(moved.pos);
+            if(a.length!==3||b.length!==3||a.some(v=>!Number.isFinite(v))||b.some(v=>!Number.isFinite(v)))throw Error('Camera diagnostic missing');
+            const delta=Math.hypot(...a.map((v,i)=>v-b[i]));
+            console.log('CAMERA_MOVEMENT '+delta);
+            if(delta<.045)throw Error('Auto rotation failed to resume after click');
+            if(moved.firework!=='8'||errors.length)throw Error('Fireworks or JS errors '+JSON.stringify({errors,firework:moved.firework}));
+            await browser.close();
+          }
+          main().catch(e=>{console.error('QUICK_TAP_QA_FATAL',e);process.exitCode=1});
+          NODE
+          timeout 180 node quick.cjs
