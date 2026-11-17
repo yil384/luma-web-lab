@@ -1,0 +1,13 @@
+{
+  "hosting": "GitHub Pages",
+  "domain": "tanchensiyi.com",
+  "productionV72": true,
+  "publicAsset": "/princess/luma-princess-v72.glb",
+  "preview": "/preview-v72/",
+  "modelSha256": "9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf",
+  "modelSize": 15329160,
+  "previousPagesCommit": "564de41ab7f4c625016e6e46dd87cd9acb1d3567",
+  "previousIndexBlob": "60fb50bc2a9bf68007080c4f3ce7c809f36a44f2",
+  "rollback": "Restore assets/index-CJX_PAH8.js to previousIndexBlob in a new fast-forward commit",
+  "notes": "Original Christmas, letter, three cats, memory album, film and media retained; changed only entry App module."
+}
