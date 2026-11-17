@@ -1,4 +1,4 @@
-name: Validate V73 princess preview in real Chromium
+name: Validate V73 production in real Chromium
 
 on:
   push:
@@ -49,17 +49,17 @@ jobs:
           const {writeFileSync,mkdirSync}=require('fs');
           const dir=process.env.GITHUB_WORKSPACE+'/v73-preview-qa';
           mkdirSync(dir,{recursive:true});
-          const report={url:'https://tanchensiyi.com/preview-hug/?debug=1',checks:[],browserErrors:[],glbRequests:[]};
+          const report={url:'https://tanchensiyi.com/',checks:[],browserErrors:[],glbRequests:[]};
           const run=async()=>{
             const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
-            for(const mode of [{name:'desktop',width:1440,height:900},{name:'mobile',width:390,height:844}]) {
+            for(const mode of [{name:'desktop-home',width:1440,height:900,url:'https://tanchensiyi.com/'},{name:'mobile-christmas',width:390,height:844,url:'https://tanchensiyi.com/christmas/'}]) {
               const ctx=await browser.newContext({viewport:{width:mode.width,height:mode.height},deviceScaleFactor:mode.name==='mobile'?2:1,isMobile:mode.name==='mobile',hasTouch:mode.name==='mobile',serviceWorkers:'block'});
               const page=await ctx.newPage();
               page.on('pageerror',error=>report.browserErrors.push(mode.name+': '+error.message));
               page.on('console',message=>{if(message.type()==='error')report.browserErrors.push(mode.name+': '+message.text())});
               page.on('response',response=>{if(response.url().endsWith('luma-princess-hug-v73.glb')||response.url().includes('chonky-cat-trio'))report.glbRequests.push({mode:mode.name,url:response.url(),status:response.status()})});
               try {
-                const res=await page.goto(report.url,{waitUntil:'domcontentloaded',timeout:45000});
+                const res=await page.goto(mode.url,{waitUntil:'domcontentloaded',timeout:45000});
                 try{await page.waitForFunction(()=>['ready','ready-no-kitten','failed'].includes(document.documentElement.dataset.princessV73),{timeout:35000})}catch{}
                 await page.waitForTimeout(4000);
                 const info=await page.evaluate(()=>({
