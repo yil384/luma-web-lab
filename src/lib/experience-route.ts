@@ -7,3 +7,12 @@ export function resolveExperience(pathname: string): Experience {
   if (path === '/letter') return 'letter';
   return 'christmas';
 }
+
+/** Strip the GitHub Pages project prefix before dispatching a static route. */
+export function relativeExperiencePath(pathname: string, basePath = '/'): string {
+  const cleaned = basePath.replace(/^\/+|\/+$/g, '');
+  if (!cleaned) return pathname;
+  const prefix = '/' + cleaned;
+  if (pathname === prefix || pathname === prefix + '/') return '/';
+  return pathname.startsWith(prefix + '/') ? pathname.slice(prefix.length) : pathname;
+}

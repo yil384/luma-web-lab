@@ -18,6 +18,7 @@ import NightBackground from './NightBackground';
 import SnowGround from './SnowGround';
 import HandMagic from './HandMagic';
 import ChristmasCat from './ChristmasCat';
+import PrincessAsset from './PrincessAsset';
 import FairytaleFireworks from './FairytaleFireworks';
 import { getCameraFraming, setCameraOpticalZoom } from './camera-framing';
 import { createCatGroundContact } from './cat-placement';
@@ -307,6 +308,7 @@ function SceneContents({ photos, state, paused, reducedMotion, active, onPhotoPr
         handInput={handInput} handActive={handsEnabled} onHandPhotoSelect={onHandPhotoSelect} />
     </group>
     {cat.src && <ChristmasCat src={cat.src} reducedMotion={reducedMotion} paused={paused} active={active} companionContact={companionContact} handInput={handInput} onPress={onCatPress} onInteract={onCatInteract} />}
+    {cat.src && <PrincessAsset active={active} paused={paused} reducedMotion={reducedMotion} />}
     {handsEnabled && handInput && !reducedMotion && <HandMagic handInput={handInput} reducedMotion={reducedMotion} />}
     <CameraControls interacting={interacting} handInput={handInput} handActive={handsEnabled} paused={paused} reducedMotion={reducedMotion} active={active} projection={background.projection} />
     <Bloom compact={compact} />

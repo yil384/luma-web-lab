@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "photos": "node scripts/prepare-photos.mjs",
-    "predev": "npm run photos && npm run scene && npm run hand-assets",
+    "predev": "node scripts/prepare-icons.mjs && npm run photos && npm run scene && npm run hand-assets",
     "dev": "vite --host 0.0.0.0",
-    "prebuild": "npm run photos && npm run scene && npm run hand-assets",
+    "prebuild": "node scripts/prepare-icons.mjs && npm run photos && npm run scene && npm run hand-assets",
     "build": "tsc -b && vite build && node scripts/finalize-build.mjs",
     "test": "node --test tests/*.test.mjs src/hand-tracking/*.test.mjs",
     "lint": "eslint .",
@@ -16,7 +16,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "scene": "node scripts/prepare-scene.mjs",
-    "hand-assets": "node scripts/prepare-hand-tracking.mjs"
+    "hand-assets": "node scripts/prepare-hand-tracking.mjs",
+    "princess:install": "node scripts/install-princess-v72.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^8.18.0",

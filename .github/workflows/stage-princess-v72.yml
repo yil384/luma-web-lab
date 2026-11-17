@@ -1,0 +1,80 @@
+name: Stage Gemini V72 princess model (manual, safe)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: princess-v72-asset-stage
+  cancel-in-progress: false
+
+jobs:
+  stage-v72:
+    # Never write into main or gh-pages. Start this manually on the feature branch only.
+    if: github.ref == 'refs/heads/feat/princess-kitten-art-direction-20261116'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source feature branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Fetch V72 from user-owned Google Drive (must be shared Anyone with link)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet 'gdown>=5,<6'
+          mkdir -p public/princess
+          gdown --id '1yKq-WtC7UH8pn6L66LuIvlqUpT-z4Bja' \
+            --output public/princess/luma-princess-v72.glb
+          test -s public/princess/luma-princess-v72.glb
+      - name: Verify exact original V72 file before any commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf  public/princess/luma-princess-v72.glb' | sha256sum -c -
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; import {validatePrincessV72} from './scripts/princess-v72-contract.mjs'; console.log(validatePrincessV72(readFileSync('public/princess/luma-princess-v72.glb')))"
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint, test and build with V72 enabled in an isolated build
+        shell: bash
+        env:
+          VITE_PRINCESS_V72_PREVIEW: 'true'
+        run: |
+          set -euo pipefail
+          npm run lint
+          npm test
+          npm run build
+          test -s dist/princess/luma-princess-v72.glb
+          sha256sum dist/princess/luma-princess-v72.glb
+      - name: Stage only the verified asset on the feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- public/princess/luma-princess-v72.glb
+          if git diff --cached --quiet; then
+            echo "V72 already staged on this branch"
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m 'assets: stage validated Gemini V72 princess GLB for preview'
+          # No force push. A concurrent update fails safely.
+          git push origin HEAD:feat/princess-kitten-art-direction-20261116
+      - name: Summarize staging (not a public launch)
+        shell: bash
+        run: |
+          {
+            echo '## V72 staged to source feature branch'
+            echo
+            echo 'The exact model was checksum-verified and built with the feature enabled.'
+            echo
+            echo 'This did NOT publish to ChatGPT Sites, GitHub Pages root or production domain.'
+            echo 'The PR remains Draft until real browser/phone QA and production Sites source reconciliation.'
+          } >> "$GITHUB_STEP_SUMMARY"
