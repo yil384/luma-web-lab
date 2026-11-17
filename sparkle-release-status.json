@@ -1,0 +1,31 @@
+{
+  "hosting": "GitHub Pages",
+  "productionVersion": "SparkleCamera-20261117-v2",
+  "newFeatures": {
+    "framing": "Zoom-out capped close to original overview; desktop at 94% and compact at 91% of former overview camera distance",
+    "minCameraDistance": 2.35,
+    "tap": "Single tap on blank stage pauses; next tap resumes actual automatic rotation. After manual zoom, first tap resumes",
+    "fireworks": {
+      "bursts": 8,
+      "style": "staggered gold, pink, blue, lavender, ivory, mint and peach shells; one GPU particle draw"
+    }
+  },
+  "retained": [
+    "V73 princess and kitten",
+    "3 ground cats",
+    "95 photo memories",
+    "Christmas film",
+    "/letter/ castle entry",
+    "touch pinch zoom at finger midpoint",
+    "mouse wheel cursor zoom",
+    "free dragging and pan"
+  ],
+  "previousCommit": "6bac0bb03646a790c4b265c484415f7a56a4da31",
+  "previousHomeBlob": "4ecf3d93628150e0ae502fa0f6d8fc0d3c1e8761",
+  "previousChristmasBlob": "725c8fc0377166e8ab9d4436d2147a20b3ba3d90",
+  "QA": {
+    "realRotation": "https://github.com/yil384/luma-web-lab/actions/runs/44195021222",
+    "cameraAndFireworksPreview": "https://github.com/yil384/luma-web-lab/actions/runs/44191910417"
+  },
+  "note": "Published by changing only the home and Christmas HTML asset entry names; the original media and model binaries are unchanged."
+}
