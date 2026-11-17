@@ -1,0 +1,110 @@
+name: QA touch-centered pinch zoom without camera buttons
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-pinch-anywhere.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser tools in temp workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/pinch"
+          cd "$RUNNER_TEMP/pinch"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Run exact two-touch pinch, off-center wheel and 3D regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/pinch"
+          cat > qa.cjs <<'NODE'
+          const {chromium,request}=require('playwright'),fs=require('node:fs');
+          const out=process.env.GITHUB_WORKSPACE+'/pinch-qa';fs.mkdirSync(out,{recursive:true});
+          const checks=[],details=[];
+          const check=(name,pass,data)=>{checks.push({name,pass,data});console.log((pass?'PASS':'FAIL')+' '+name+' '+JSON.stringify(data??null))};
+          const vals=async p=>p.evaluate(()=>({mode:document.documentElement.dataset.cameraMode,zoomToCursor:document.documentElement.dataset.cameraZoomToCursor,distance:Number(document.documentElement.dataset.cameraDistance),target:document.documentElement.dataset.cameraTarget,position:document.documentElement.dataset.cameraPosition,princess:document.documentElement.dataset.princessV73,heldCat:document.documentElement.dataset.princessHeldKitten,canvasCount:document.querySelectorAll('canvas').length,oldButtons:document.querySelectorAll('#luma-camera-explore button').length}));
+          const vector=s=>String(s||'').split(',').map(Number);
+          const diff=(a,b)=>Math.hypot(...vector(a).map((x,i)=>x-vector(b)[i]));
+          async function main(){
+            const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            for(const mode of [{name:'desktop',w:1200,h:850,mobile:false},{name:'mobile',w:390,h:844,mobile:true}]){
+              const context=await browser.newContext({viewport:{width:mode.w,height:mode.h},deviceScaleFactor:mode.mobile?2:1,isMobile:mode.mobile,hasTouch:mode.mobile,serviceWorkers:'block'});
+              const page=await context.newPage(),errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              let response;
+              for(let attempt=1;attempt<=4;attempt++){
+                response=await page.goto('https://tanchensiyi.com/pinch-preview/',{waitUntil:'domcontentloaded',timeout:75000});
+                if(response.status()===200)break;
+                await page.waitForTimeout(attempt*1000);
+              }
+              check(mode.name+' preview HTTP 200',response?.status()===200,response?.status());
+              await page.waitForFunction(()=>document.documentElement.dataset.cameraMode==='pinch-anywhere',null,{timeout:75000});
+              try{await page.waitForFunction(()=>document.documentElement.dataset.princessV73==='ready',null,{timeout:80000})}catch(e){}
+              let before=await vals(page);
+              check(mode.name+' no 4 camera buttons',before.oldButtons===0,before);
+              check(mode.name+' zoom to pointer enabled',before.zoomToCursor==='true',before);
+              check(mode.name+' V73 intact',before.princess==='ready'&&before.canvasCount===1,before);
+              if(mode.mobile){
+                const cdp=await context.newCDPSession(page);
+                const start=[{x:222,y:620,id:1},{x:264,y:620,id:2}];
+                await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:start});
+                for(let i=1;i<=7;i++){
+                  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:222-i*10,y:620+i*2,id:1},{x:264+i*10,y:620+i*2,id:2}]});
+                  await page.waitForTimeout(65);
+                }
+                await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+              }else{
+                const rect=await page.locator('canvas').boundingBox();
+                await page.mouse.move(rect.x+rect.width*.74,rect.y+rect.height*.68);
+                await page.mouse.wheel(0,-660);
+              }
+              await page.waitForTimeout(800);
+              const after=await vals(page);
+              check(mode.name+' zoom changed physical camera distance',after.distance<before.distance-1,{before:before.distance,after:after.distance});
+              check(mode.name+' zoom is spatially anchored away from center',diff(after.target,before.target)>.05,{from:before.target,to:after.target});
+              if(!mode.mobile){
+                await page.mouse.move(mode.w*.51,mode.h*.51);
+                await page.mouse.down();
+                await page.mouse.move(mode.w*.71,mode.h*.62,{steps:8});
+                await page.mouse.up();
+                await page.waitForTimeout(350);
+                const rotated=await vals(page);
+                check('desktop single-drag rotates world camera',diff(rotated.position,after.position)>.03,{before:after.position,after:rotated.position});
+              }
+              check(mode.name+' no page errors',errors.length===0,errors.slice(0,5));
+              details.push({mode:mode.name,before,after,errors});
+              await context.close();
+            }
+            await browser.close();
+            const api=await request.newContext();
+            for(const route of ['/','/christmas/','/letter/','/generated/photo-manifest.json','/princess/luma-princess-hug-v73.glb.gz']){
+              const r=await api.get('https://tanchensiyi.com'+route,{timeout:80000});
+              check('preserved '+route,r.status()===200,r.status());
+            }
+            await api.dispose();
+            fs.writeFileSync(out+'/summary.json',JSON.stringify({checks,details,date:new Date().toISOString()},null,2));
+            if(checks.some(x=>!x.pass))process.exitCode=1;
+          }
+          main().catch(e=>{console.error('PINCH_QA_FATAL',e);process.exitCode=1});
+          NODE
+          node qa.cjs
+      - name: Save logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinch-anywhere-QA
+          path: pinch-qa/
+          if-no-files-found: warn
+          retention-days: 5
