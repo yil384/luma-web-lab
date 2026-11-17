@@ -1,0 +1,34 @@
+{
+  "hosting": "GitHub Pages",
+  "production": "Pinch Anywhere V73",
+  "routes": [
+    "/",
+    "/christmas/",
+    "/letter/"
+  ],
+  "controls": {
+    "buttons": 0,
+    "pinch": "touch midpoint, zoom to cursor",
+    "singleFinger": "orbit",
+    "twoFingers": "pan and pinch zoom",
+    "desktop": "wheel zoom under pointer, left-drag rotate, right-drag pan"
+  },
+  "preserved": [
+    "V73 princess and cream kitten",
+    "three ground cats",
+    "95 photo memories",
+    "memory album",
+    "Christmas film",
+    "letter route"
+  ],
+  "model": "/princess/luma-princess-hug-v73.glb.gz",
+  "replacedPaths": [
+    "index.html",
+    "christmas/index.html"
+  ],
+  "QA": "https://github.com/yil384/luma-web-lab/actions/runs/44189101194",
+  "previousCommit": "46affb99169d0734af949332efb50086e83ed275",
+  "previousHomeBlob": "1aac5fb13ea4af81d0a251aaadf795ba8c0d3beb",
+  "previousChristmasBlob": "dc142f9e0635ce8c19de13bac267819e64adf341",
+  "explanation": "All other deployed static assets unchanged; revert two HTML files via new fast-forward commit to roll back."
+}
