@@ -1,3 +1,17 @@
+## Production activation — verified 2026-11-17
+
+**The V72 default scene has been activated via GitHub Pages, not ChatGPT Sites.**
+
+- Production commit: `a2ca89847fdf2edb3124a79913ee3bd147c86614` on `gh-pages`
+- Deploy run: https://github.com/yil384/luma-web-lab/actions/runs/44155848723 — `success`
+- Public deployment marker: https://tanchensiyi.com/v72-release-status.json — confirmed returned `productionV72: true` plus exact model SHA-256
+- New default React App module: `assets/App-GeminiV72.js` through one change in `assets/index-CJX_PAH8.js`, with original `index.html`, Christmas/letter entry HTML, original main App, cats, film, photo assets, album CSS and CNAME untouched.
+- Browser visual preview: https://tanchensiyi.com/preview-v72/ showed a 3D tree, 3 cats and a pink-gowned princess.
+- **Limits:** preview browser inspection could not definitively confirm the GLB network request or physical Safari performance. Automated Playwright QA has been separately initiated; those checks are not a substitute for real phone testing. The unrigged model has no natural blink/wave.
+- **Rollback:** the previous `assets/index-CJX_PAH8.js` blob SHA is `60fb50bc2a9bf68007080c4f3ce7c809f36a44f2`. Restore that exact blob in a new fast-forward `gh-pages` commit to switch the site back without deleting any media. The current production commit SHA is the restore parent unless a newer Pages commit exists.
+
+---
+
 # Production hosting: GitHub Pages (V72 update)
 
 **Authoritative release target (verified 2026-11-17):** `gh-pages` branch in `yil384/luma-web-lab`, custom-domain `CNAME` exactly `tanchensiyi.com`. The published Pages root has `index.html`, `christmas/index.html`, `letter/index.html`, 95-photo assets, a memory-album v4 stylesheet, the castle/film assets, and an independently customized live TreeScene (three cats). GitHub Actions emitted a successful `pages build and deployment` run after publishing the new V72 preview.
