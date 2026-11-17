@@ -1,0 +1,147 @@
+name: QA book album flicker and touch swipe (GitHub Pages)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-album-swipe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  album:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser test runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/album-qa"
+          cd "$RUNNER_TEMP/album-qa"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Smoke test album preview and gestures
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/album-qa"
+          cat > qa.cjs <<'NODE'
+          const {chromium,request}=require('playwright');
+          const {writeFileSync,mkdirSync}=require('node:fs');
+          const base='https://tanchensiyi.com',out=process.env.GITHUB_WORKSPACE+'/album-qa';
+          mkdirSync(out,{recursive:true});
+          const checks=[],samples=[];
+          function check(name,good,value){checks.push({name,pass:!!good,value});console.log((good?'PASS ':'FAIL ')+name+' '+JSON.stringify(value??null))}
+          const left='.memory-album-spread > .memory-album-sheet--left .memory-album-print img';
+          const read=page=>page.evaluate(sel=>{
+            const el=document.querySelector(sel),reveal=document.querySelector('.memory-album-reveal'),book=document.querySelector('.memory-album-book');
+            return {src:el?.getAttribute('src')||null,complete:!!el?.complete,naturalWidth:el?.naturalWidth||0,
+             revealOpacity:reveal?getComputedStyle(reveal).opacity:null,
+             revealVisibility:reveal?getComputedStyle(reveal).visibility:null,
+             leaf:!!document.querySelector('.memory-album-leaf'),
+             zoomDialogs:document.querySelectorAll('dialog.memory-album-zoom-dialog').length,
+             bookVisible:!!book&&book.getBoundingClientRect().width>100,
+             bookWidth:book?.getBoundingClientRect().width};
+          },left);
+          async function open(page){
+            let res;
+            for(let attempt=1;attempt<=4;attempt++){
+              res=await page.goto(base+'/album-preview/',{waitUntil:'domcontentloaded',timeout:75000});
+              if(res.status()===200)break;
+              await page.waitForTimeout(1000*attempt);
+            }
+            await page.locator('.memory-album-book').waitFor({timeout:70000});
+            await page.locator(left).waitFor({timeout:25000});
+            return res;
+          }
+          async function turnViaButton(page,label){
+            await page.locator(label).click({timeout:20000,force:true});
+            await page.waitForTimeout(910);
+          }
+          async function main(){
+            const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            const pc=await browser.newContext({viewport:{width:1240,height:820},serviceWorkers:'block'});
+            const page=await pc.newPage(),errors=[];
+            page.on('pageerror',e=>errors.push(e.message));
+            const resp=await open(page);
+            check('desktop preview HTTP 200',resp.status()===200,resp.status());
+            const original=await read(page);
+            check('book image ready and uses thumbnail',original.complete&&original.naturalWidth>0&&original.src.includes('-thumb.'),original);
+            const nextBtn='.memory-album-turn--next';
+            await page.locator(nextBtn).click({force:true});
+            await page.waitForTimeout(380);
+            const middle=await read(page);
+            check('left print remains unchanged halfway',middle.src===original.src&&middle.leaf,{original,middle});
+            check('left reveal is NOT flashed halfway',middle.revealOpacity==='0',middle);
+            await page.waitForTimeout(530);
+            const next=await read(page);
+            check('flip commits next left photo',next.src!==original.src&&next.complete&&next.naturalWidth>0&&!next.leaf,{original,next});
+            await turnViaButton(page,'.memory-album-turn--previous');
+            const back=await read(page);
+            check('backward flip returns original ready left',back.src===original.src&&back.complete&&back.naturalWidth>0,back);
+            // Desktop click-and-drag horizontally should turn pages as well.
+            const rect=await page.locator('.memory-album-book').boundingBox();
+            let sx=rect.x+rect.width*.70,sy=rect.y+rect.height*.46;
+            await page.mouse.move(sx,sy);await page.mouse.down();
+            for(let j=1;j<=7;j++)await page.mouse.move(sx-j*19,sy,{steps:2});
+            await page.mouse.up();await page.waitForTimeout(930);
+            const dragged=await read(page);
+            check('desktop horizontal drag turns without arrows',dragged.src!==back.src&&dragged.zoomDialogs===0,dragged);
+            await page.locator('.memory-album-spread .memory-album-sheet--left button.memory-album-photo-mount').click({force:true,timeout:20000});
+            await page.waitForTimeout(200);
+            const hd=await page.evaluate(()=>({dialog:!!document.querySelector('dialog.memory-album-zoom-dialog[open]'),src:document.querySelector('dialog.memory-album-zoom-dialog img.gallery-image')?.getAttribute('src')||''}));
+            check('tapping print opens unchanged HD photo',hd.dialog&&hd.src.includes('/generated/photos/')&&!hd.src.includes('-thumb.'),hd);
+            check('desktop has no JS errors',errors.length===0,errors.slice(0,6));
+            samples.push({mode:'desktop',original,middle,next,back,dragged,hd,errors});
+            await pc.close();
+            const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2,serviceWorkers:'block'});
+            const mp=await mobile.newPage(),mobileErrors=[];
+            mp.on('pageerror',e=>mobileErrors.push(e.message));
+            const mr=await open(mp);
+            check('mobile preview HTTP 200',mr.status()===200,mr.status());
+            const first=await read(mp),bounds=await mp.locator('.memory-album-book').boundingBox();
+            check('mobile book image ready',first.complete&&first.naturalWidth>0,first);
+            async function swipe(from,to){
+              const cdp=await mobile.newCDPSession(mp),y=bounds.y+bounds.height*.52;
+              await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:from,y,id:1}]});
+              for(let i=1;i<=8;i++){
+                await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:from+(to-from)*i/8,y,id:1}]});
+                await mp.waitForTimeout(24);
+              }
+              await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+            }
+            await swipe(bounds.x+bounds.width*.78,bounds.x+bounds.width*.20);
+            await mp.waitForTimeout(950);
+            const leftSwipe=await read(mp);
+            check('mobile left swipe advances book',leftSwipe.src!==first.src&&leftSwipe.complete&&leftSwipe.naturalWidth>0&&leftSwipe.zoomDialogs===0,{first,leftSwipe});
+            await swipe(bounds.x+bounds.width*.20,bounds.x+bounds.width*.78);
+            await mp.waitForTimeout(950);
+            const rightSwipe=await read(mp);
+            check('mobile right swipe returns prior spread',rightSwipe.src===first.src&&rightSwipe.complete&&rightSwipe.naturalWidth>0&&rightSwipe.zoomDialogs===0,{first,rightSwipe});
+            check('mobile has no JS errors',mobileErrors.length===0,mobileErrors.slice(0,6));
+            samples.push({mode:'mobile',first,leftSwipe,rightSwipe,mobileErrors});
+            await mobile.close();await browser.close();
+            const req=await request.newContext();
+            for(const route of ['/','/christmas/','/letter/','/generated/photo-manifest.json']){
+              const r=await req.get(base+route,{timeout:60000});
+              check('preserved '+route,r.status()===200,r.status());
+            }
+            await req.dispose();
+            writeFileSync(out+'/results.json',JSON.stringify({checks,samples,timestamp:new Date().toISOString()},null,2));
+            if(checks.some(x=>!x.pass))process.exitCode=1;
+          }
+          main().then(()=>process.exit(process.exitCode||0)).catch(e=>{console.error('ALBUM_QA_FATAL',e);process.exit(1)});
+          NODE
+          timeout 240 node qa.cjs
+      - name: Save regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: album-swipe-flicker-evidence
+          path: album-qa/
+          retention-days: 7
+          if-no-files-found: warn
