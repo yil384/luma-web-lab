@@ -1,0 +1,22 @@
+{
+  "hosting": "GitHub Pages",
+  "production": "V73 loading optimization",
+  "model": "/princess/luma-princess-hug-v73.glb",
+  "compressedTransport": "/princess/luma-princess-hug-v73.glb.gz",
+  "originalBytes": 15329160,
+  "compressedBytes": 9549096,
+  "sourceSha256": "82850162e6363cf41fdcf660d7cf317d276bc99d4c6872824f51f939af5dc297",
+  "changes": "Only entry HTML for / and /christmas/; new fast modules pre-staged; media, cat trio and /letter/ unchanged",
+  "behavior": "prefetch gzip before entering tree; princess shown as soon as model decodes; held kitten no longer blocks",
+  "previousGhPagesCommit": "a9a79fec5ddfb07807fc118f14633190a8927a02",
+  "previousHomeBlob": "0fe816f04ba8d7b49e0c16ea8e28b2073f0521c9",
+  "previousChristmasBlob": "ed8883fdf3b351635554b68ef0799753823b9aca",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44168329209",
+  "qaResults": {
+    "desktopReadyMs": 1682,
+    "mobileSimulatedReadyMs": 774,
+    "transport": "gzip",
+    "JSerrors": 0
+  },
+  "note": "CI timings are on GitHub runners and not representative of mainland-China or device network conditions"
+}
