@@ -1,0 +1,8 @@
+{
+  "mode": "preview only",
+  "controls": "pinch-to-zoom on gesture centroid, single-finger orbit, two-finger pan, mouse wheel zoom to cursor",
+  "noButtons": true,
+  "sceneModule": "TreeScene-PinchAnywhere-20261117-v1.js",
+  "v73Same": true,
+  "previousPagesCommit": "e56a1a538204434a152c55ed49e7dab4d34927dd"
+}
