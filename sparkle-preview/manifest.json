@@ -1,35 +1,13 @@
 {
+  "version": "SparkleCamera-20261117-v2",
   "preview": true,
-  "version": "SparkleCamera-20261117-v1",
-  "model": "V73 unchanged",
-  "camera": {
-    "maxDistance": "<= normal overview + 1.5%",
-    "nearDistance": 2.35,
-    "initialFraming": "94% desktop / 91% compact",
-    "tap": "pause/resume; after manual dragging one tap resumes",
-    "zoom": "pinch around fingers; wheel under pointer"
-  },
-  "fireworks": {
-    "shells": 8,
-    "cycleSeconds": 9.25,
-    "colors": [
-      "#ffdc89",
-      "#ffb1cf",
-      "#b2ddff",
-      "#e6c1ff",
-      "#fff2ae",
-      "#9cf3e7",
-      "#ffd6b9",
-      "#d5c4ff"
-    ],
-    "deviceBudget": "single points draw call with compact particle cap"
-  },
+  "fix": "explicit single-tap resume event after React pause state; camera auto guard instrumentation for browser QA",
   "preserved": [
+    "8 fireworks groups",
     "V73",
     "3 ground cats",
     "95 photos",
-    "letter",
-    "film"
+    "film and letter"
   ],
-  "previousPagesCommit": "ad75299f316304f9e39bd97f6f5c2eb15b80be7f"
+  "previousPagesCommit": "6116dcbf57b9a11f24745dd844183be925aed712"
 }
