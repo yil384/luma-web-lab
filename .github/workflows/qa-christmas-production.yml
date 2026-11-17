@@ -1,0 +1,121 @@
+name: Full GitHub Pages Christmas production regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/qa-christmas-production.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Playwright isolated from project
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/live-gift-qa"
+          cd "$RUNNER_TEMP/live-gift-qa"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Validate live assets, 3D controls and film dialog
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/live-gift-qa"
+          cat > smoke.cjs <<'NODE'
+          const {chromium,request}=require('playwright');
+          const {writeFileSync,mkdirSync}=require('node:fs');
+          const base='https://tanchensiyi.com',path=process.env.GITHUB_WORKSPACE+'/live-gift-qa';
+          mkdirSync(path,{recursive:true});
+          const checks=[],details=[];
+          const add=(name,ok,data)=>{checks.push({name,ok,data});console.log((ok?'PASS':'FAIL')+' '+name+' '+JSON.stringify(data||{}))}
+          async function main(){
+            const api=await request.newContext();
+            for(const route of ['/','/christmas/','/letter/','/explore-release-status.json','/assets/memory-album-v4.css','/film/starlight-return-poster.webp']){
+              const r=await api.get(base+route,{timeout:50000});
+              add('HTTP '+route,r.status()===200,r.status());
+            }
+            const manifest=await api.get(base+'/generated/photo-manifest.json',{timeout:50000});
+            const photos=manifest.ok()?await manifest.json():{};
+            add('95 published photo records',manifest.status()===200&&photos.photos?.length===95,{status:manifest.status(),count:photos.photos?.length});
+            const one=photos.photos?.[0];
+            if(one){
+              const thumb=await api.get(base+'/'+one.thumbnail,{timeout:30000});
+              add('Photo thumbnail',thumb.status()===200,{url:one.thumbnail,status:thumb.status()});
+              const full=await api.get(base+'/'+one.src,{timeout:30000});
+              add('Full-size photo',full.status()===200,{url:one.src,status:full.status()});
+            }
+            await api.dispose();
+            const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            for(const mode of [{name:'desktop',w:1280,h:850,mobile:false},{name:'mobile',w:390,h:844,mobile:true}]){
+              const ctx=await browser.newContext({viewport:{width:mode.w,height:mode.h},deviceScaleFactor:mode.mobile?2:1,isMobile:mode.mobile,hasTouch:mode.mobile,serviceWorkers:'block'});
+              const page=await ctx.newPage(),errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              let response;
+              for(let attempt=1;attempt<=4;attempt++){
+                response=await page.goto(base+(mode.mobile?'/christmas/':'/'),{waitUntil:'domcontentloaded',timeout:70000});
+                if(response.status()===200)break;
+                await page.waitForTimeout(1400*attempt);
+              }
+              add(mode.name+' live HTTP',response?.status()===200,response?.status());
+              try{await page.locator('#luma-camera-explore').waitFor({timeout:55000})}catch(e){
+                add(mode.name+' explore toolbar visible',false,e.message.slice(0,110));
+                await ctx.close();continue;
+              }
+              const actions=await page.locator('#luma-camera-explore button').allTextContents();
+              add(mode.name+' explore buttons',actions.length===4,actions);
+              await page.getByRole('button',{name:'靠近小猫，自由旋转与缩放'}).click();
+              await page.waitForTimeout(500);
+              const cat=await page.evaluate(()=>({mode:document.documentElement.dataset.cameraMode,dist:Number(document.documentElement.dataset.cameraDistance)}));
+              add(mode.name+' close-up cat',cat.mode==='cat'&&cat.dist<12,cat);
+              await page.getByRole('button',{name:'返回完整圣诞树全景'}).click();
+              await page.waitForTimeout(500);
+              const reset=await page.evaluate(()=>({mode:document.documentElement.dataset.cameraMode,dist:Number(document.documentElement.dataset.cameraDistance)}));
+              add(mode.name+' reset view',reset.mode==='overview'&&reset.dist>25,reset);
+              await page.getByRole('button',{name:'解锁全方向旋转、拖拽平移和滚轮缩放'}).click();
+              await page.waitForTimeout(350);
+              add(mode.name+' free camera',await page.evaluate(()=>document.documentElement.dataset.cameraMode==='free'),null);
+              try{await page.waitForFunction(()=>document.documentElement.dataset.princessV73==='ready',null,{timeout:33000})}catch(e){}
+              const model=await page.evaluate(()=>({princess:document.documentElement.dataset.princessV73,cat:document.documentElement.dataset.princessHeldKitten,canvas:document.querySelectorAll('canvas').length}));
+              add(mode.name+' V73 scene model',model.princess==='ready'&&model.canvas===1,model);
+              add(mode.name+' no JS errors',errors.length===0,errors.slice(0,7));
+              // Verify the pre-existing film dialog itself still opens, not just its source link.
+              const film=page.locator('button.film-entry');
+              const count=await film.count();
+              add(mode.name+' story film entry',count>0,count);
+              if(count>0){
+                await film.click({timeout:12000,force:true});
+                await page.waitForTimeout(650);
+                const dialog=page.locator('dialog.film-dialog');
+                add(mode.name+' story film dialog opens',(await dialog.count())>0 && await dialog.getAttribute('open')!==null,await dialog.count());
+                if(await dialog.count())await dialog.locator('button.dialog-close').click({timeout:12000,force:true});
+              }
+              details.push({mode:mode.name,cat,reset,model});
+              await ctx.close();
+            }
+            await browser.close();
+            writeFileSync(path+'/summary.json',JSON.stringify({checks,details,at:new Date().toISOString()},null,2));
+            if(checks.some(x=>!x.ok))process.exitCode=1;
+          }
+          main().catch(e=>{console.error('PRODUCTION_QA_FATAL',e);process.exitCode=1});
+          NODE
+          node smoke.cjs
+      - name: Store production QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Christmas-production-regression
+          path: live-gift-qa/
+          retention-days: 5
+          if-no-files-found: warn
