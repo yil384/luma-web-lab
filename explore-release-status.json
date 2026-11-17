@@ -1,0 +1,27 @@
+{
+  "platform": "github-pages",
+  "production": "V73+Explore-v2",
+  "root": "/",
+  "christmas": "/christmas/",
+  "letter": "/letter/",
+  "features": [
+    "three interactive ground cats",
+    "V73 princess holding cream kitten",
+    "fast gzip GLB preload",
+    "tap-to-focus cat",
+    "princess close-up",
+    "full 3D free orbit",
+    "wheel zoom",
+    "mouse right-button pan",
+    "two-finger gesture controls",
+    "return to full tree panorama",
+    "photo/album and film preserved"
+  ],
+  "browserQA": "https://github.com/yil384/luma-web-lab/actions/runs/44179331038",
+  "preview": "https://tanchensiyi.com/explore-preview/",
+  "previousCommit": "1c59414ce424149a5860e00d5536c87dc8da55c6",
+  "previousIndexHTMLBlob": "a113c089ff3700aa68cb24261eec18baa85399cc",
+  "previousChristmasHTMLBlob": "75d5cff9c0b7b015300c3e887e8ecda5d45e4e47",
+  "mediaChanged": false,
+  "note": "Source main and deployed gh-pages compiled scene differ; this patch changes only two HTML files plus a release marker, preserving all deployed media and 3-cat scene."
+}
