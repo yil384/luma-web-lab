@@ -1,0 +1,11 @@
+{
+  "purpose": "Validate immutable boot module and importmap before production switch",
+  "liveRoot": "/assets/index-GeminiV73-live.js",
+  "importMap": {
+    "imports": {
+      "/assets/index-CJX_PAH8.js": "/assets/index-GeminiV73-live.js"
+    }
+  },
+  "model": "/princess/luma-princess-hug-v73.glb",
+  "production": "V72 unchanged"
+}
