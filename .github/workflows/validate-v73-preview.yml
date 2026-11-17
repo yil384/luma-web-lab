@@ -71,7 +71,19 @@ jobs:
                   debug:document.getElementById('v73-preview-status')?.textContent||''
                 }));
                 report.checks.push({mode:mode.name,http:res?.status(),...info});
-                await page.screenshot({path:dir+'/'+mode.name+'.png',timeout:15000});
+                // Capture the GPU frame through CDP directly. Playwright's
+                // screenshot stabilization may time out on continuously animated WebGL.
+                try {
+                  const cdp=await ctx.newCDPSession(page);
+                  const cap=await Promise.race([
+                    cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true}),
+                    new Promise((_,reject)=>setTimeout(()=>reject(new Error('CDP screenshot timeout')),18000))
+                  ]);
+                  writeFileSync(dir+'/'+mode.name+'.png',Buffer.from(cap.data,'base64'));
+                  await cdp.detach();
+                } catch(err) {
+                  report.browserErrors.push(mode.name+' optional screenshot: '+err.message);
+                }
               }catch(e){report.checks.push({mode:mode.name,error:e.message})}
               await ctx.close();
             }
