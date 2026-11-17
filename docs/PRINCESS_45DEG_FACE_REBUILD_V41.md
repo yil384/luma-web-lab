@@ -1,3 +1,11 @@
+> **ART-DIRECTION REJECTION — 2026-11-16 (supersedes earlier V41 visual optimism).**
+>
+> After re-review of the actual 45-degree renders side by side, **V41 fails visual acceptance and looks worse than V24**. The eyes flatten into narrow slits; the jaw and cheek mass widen, creating a stretched mask-like silhouette; nose/lips remain unaligned with their albedo detail; the chin-to-neck connection creates hard geometric and color transitions. The previous conclusion that V41 was a balanced best candidate is **withdrawn**. Additional mesh detail, manifold geometry, and matching SHA-256 do not prove aesthetic improvement.
+>
+> **Disposition:** V41 is a **failed experiment**, not the active model, not a release candidate, and must not be imported into `public/princess/` or merged into `main`. For visual comparison, V24 remains the less distorted prior prototype; even V24 is not approved for production. The proper next fix requires an artist-quality face topology/UV rebuild with 0°/30°/45°/60°/90° parity, rather than more flattened portrait projection or whole-head ellipsoid edits. Keep the existing production site unchanged.
+
+---
+
 # Princess GLB: 45-degree face-repair V41 (November 16, 2026)
 
 **Draft study, NOT production approval, and NOT deployed.** The actual V41 GLB is delivered separately, not committed to this GitHub branch.
