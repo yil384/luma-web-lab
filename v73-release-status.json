@@ -1,0 +1,25 @@
+{
+  "platform": "GitHub Pages",
+  "domain": "tanchensiyi.com",
+  "production": "V73 princess cradling kitten",
+  "previous": "V72",
+  "model": "/princess/luma-princess-hug-v73.glb",
+  "modelBlobSha": "8cd7438f18deb4ae3237df21cd4684bbfd80cfc0",
+  "modelSha256": "82850162e6363cf41fdcf660d7cf317d276bc99d4c6872824f51f939af5dc297",
+  "modelBytes": 15329160,
+  "entryModule": "/assets/index-GeminiV73-live.js",
+  "importMap": "/assets/index-CJX_PAH8.js -> /assets/index-GeminiV73-live.js",
+  "previousPagesCommit": "400e7474479437498bd05e30f3aac27a78169beb",
+  "previousHomeBlob": "577ebefccf6dd77b47780d1919c39075617aadc3",
+  "previousChristmasBlob": "5ea93dd939bb408f28e50569b5de3f0ba7ba5722",
+  "otherMedia": "unchanged",
+  "rollback": "Fast-forward gh-pages commit restoring previous home and christmas HTML blobs; leave letter, film, album, cats untouched",
+  "confirmedQA": {
+    "glbHTTP": 200,
+    "kittenHTTP": 200,
+    "deskModelStatus": "ready",
+    "mobileModelStatus": "ready",
+    "noRuntimeErrors": true,
+    "screenshotVisualReview": "pending physical device"
+  }
+}
