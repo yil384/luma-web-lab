@@ -1,0 +1,86 @@
+name: Stage Gemini V72 princess asset (safe, manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: princess-v72-asset-stage
+  cancel-in-progress: false
+
+jobs:
+  stage-v72:
+    # This workflow intentionally lives on the default branch so GitHub
+    # exposes the manual Run workflow control. It NEVER updates main or gh-pages.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out isolated source branch, not the public site
+        uses: actions/checkout@v4
+        with:
+          ref: feat/princess-kitten-art-direction-20261116
+          persist-credentials: true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Download V72 from its owner-approved public sharing link
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet 'gdown>=5,<6'
+          mkdir -p public/princess
+          gdown --id 1yKq-WtC7UH8pn6L66LuIvlqUpT-z4Bja \
+            --output public/princess/luma-princess-v72.glb
+          test -s public/princess/luma-princess-v72.glb
+      - name: Validate pinned SHA-256, dimensions and GLB contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf  public/princess/luma-princess-v72.glb' | sha256sum --check
+          node --input-type=module -e "import {readFileSync} from 'node:fs';import {validatePrincessV72} from './scripts/princess-v72-contract.mjs';console.log(validatePrincessV72(readFileSync('public/princess/luma-princess-v72.glb')))"
+      - name: Install and test
+        run: |
+          npm ci
+          npm run lint
+          npm test
+      - name: Build with V72 enabled, without deploying
+        shell: bash
+        env:
+          VITE_PRINCESS_V72_PREVIEW: 'true'
+        run: |
+          set -euo pipefail
+          npm run build
+          test -s dist/princess/luma-princess-v72.glb
+          echo '9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf  dist/princess/luma-princess-v72.glb' | sha256sum --check
+      - name: Commit ONLY the verified model to the feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- public/princess/luma-princess-v72.glb
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'assets: stage SHA-verified Gemini V72 model on preview branch'
+            git push origin HEAD:feat/princess-kitten-art-direction-20261116
+          fi
+      - name: Create reviewable build artifact (not a site deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: princess-v72-sites-review-build
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Explicit production safety notice
+        shell: bash
+        run: |
+          {
+            echo '## V72 verified on isolated feature branch'
+            echo 'The model was committed only to the feature branch and a review build was uploaded.'
+            echo 'The production ChatGPT Sites source, live domain, and gh-pages root are untouched.'
+            echo 'A separate Sites source reconciliation, live browser QA, and publish step remain mandatory.'
+          } >> "$GITHUB_STEP_SUMMARY"
