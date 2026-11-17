@@ -58,9 +58,18 @@ jobs:
             await page.locator(left).waitFor({timeout:25000});
             return res;
           }
-          async function turnViaButton(page,label){
+          async function waitCommitted(page,previousSrc,expectDifferent=true){
+            await page.waitForFunction(({selector,previousSrc,expectDifferent})=>{
+              const img=document.querySelector(selector);
+              const src=img?.getAttribute('src')||'';
+              return !!img&&!document.querySelector('.memory-album-leaf')&&
+                img.complete&&img.naturalWidth>0&&
+                (expectDifferent?src!==previousSrc:src===previousSrc);
+            },{selector:left,previousSrc,expectDifferent},{timeout:25000,polling:100});
+          }
+          async function turnViaButton(page,label,previousSrc){
             await page.locator(label).click({timeout:20000,force:true});
-            await page.waitForTimeout(910);
+            await waitCommitted(page,previousSrc);
           }
           async function main(){
             const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
@@ -69,6 +78,10 @@ jobs:
             page.on('pageerror',e=>errors.push(e.message));
             const resp=await open(page);
             check('desktop preview HTTP 200',resp.status()===200,resp.status());
+            // The book has an introductory 540 ms CSS animation. Allow it to
+            // finish before measuring the first page turn; these are separate
+            // animations and overlapping them creates a false timing failure.
+            await page.waitForTimeout(680);
             const original=await read(page);
             check('book image ready and uses thumbnail',original.complete&&original.naturalWidth>0&&original.src.includes('-thumb.'),original);
             const nextBtn='.memory-album-turn--next';
@@ -77,10 +90,10 @@ jobs:
             const middle=await read(page);
             check('left print remains unchanged halfway',middle.src===original.src&&middle.leaf,{original,middle});
             check('left reveal is NOT flashed halfway',middle.revealOpacity==='0',middle);
-            await page.waitForTimeout(530);
+            await waitCommitted(page,original.src);
             const next=await read(page);
             check('flip commits next left photo',next.src!==original.src&&next.complete&&next.naturalWidth>0&&!next.leaf,{original,next});
-            await turnViaButton(page,'.memory-album-turn--previous');
+            await turnViaButton(page,'.memory-album-turn--previous',next.src);
             const back=await read(page);
             check('backward flip returns original ready left',back.src===original.src&&back.complete&&back.naturalWidth>0,back);
             // Desktop click-and-drag horizontally should turn pages as well.
@@ -88,7 +101,7 @@ jobs:
             let sx=rect.x+rect.width*.70,sy=rect.y+rect.height*.46;
             await page.mouse.move(sx,sy);await page.mouse.down();
             for(let j=1;j<=7;j++)await page.mouse.move(sx-j*19,sy,{steps:2});
-            await page.mouse.up();await page.waitForTimeout(930);
+            await page.mouse.up();await waitCommitted(page,back.src);
             const dragged=await read(page);
             check('desktop horizontal drag turns without arrows',dragged.src!==back.src&&dragged.zoomDialogs===0,dragged);
             await page.locator('.memory-album-spread .memory-album-sheet--left button.memory-album-photo-mount').click({force:true,timeout:20000});
@@ -115,11 +128,11 @@ jobs:
               await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
             }
             await swipe(bounds.x+bounds.width*.78,bounds.x+bounds.width*.20);
-            await mp.waitForTimeout(950);
+            await waitCommitted(mp,first.src);
             const leftSwipe=await read(mp);
             check('mobile left swipe advances book',leftSwipe.src!==first.src&&leftSwipe.complete&&leftSwipe.naturalWidth>0&&leftSwipe.zoomDialogs===0,{first,leftSwipe});
             await swipe(bounds.x+bounds.width*.20,bounds.x+bounds.width*.78);
-            await mp.waitForTimeout(950);
+            await waitCommitted(mp,leftSwipe.src);
             const rightSwipe=await read(mp);
             check('mobile right swipe returns prior spread',rightSwipe.src===first.src&&rightSwipe.complete&&rightSwipe.naturalWidth>0&&rightSwipe.zoomDialogs===0,{first,rightSwipe});
             check('mobile has no JS errors',mobileErrors.length===0,mobileErrors.slice(0,6));
