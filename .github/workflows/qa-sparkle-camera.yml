@@ -1,0 +1,141 @@
+name: QA V73 camera framing, tap-to-spin and richer fireworks
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-sparkle-camera.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Playwright in an isolated temporary workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/sparkle-qa"
+          cd "$RUNNER_TEMP/sparkle-qa"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium
+      - name: Test preview on desktop and touch-screen emulation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/sparkle-qa"
+          cat > qa.cjs <<'NODE'
+          const { chromium, request } = require('playwright');
+          const fs = require('node:fs');
+          const output = process.env.GITHUB_WORKSPACE+'/sparkle-qa';
+          fs.mkdirSync(output,{recursive:true});
+          const checks=[],details=[];
+          function check(name,pass,value){checks.push({name,pass,value}); console.log((pass?'PASS ':'FAIL ')+name+' '+JSON.stringify(value??null));}
+          const status=page=>page.evaluate(()=>{
+            const el=document.documentElement;
+            const canvas=document.querySelector('canvas');
+            return {
+              mode:el.dataset.cameraMode,
+              distance:Number(el.dataset.cameraDistance),
+              far:Number(el.dataset.cameraFarLimit),
+              manualHold:el.dataset.cameraManualHold,
+              fireworksBursts:Number(el.dataset.fireworksBurstCount),
+              fireworksParticles:Number(el.dataset.fireworksParticleCount),
+              princess:el.dataset.princessV73,
+              kitten:el.dataset.princessHeldKitten,
+              sceneRotation:document.querySelector('.tree-stage')?.dataset.rotation,
+              oldToolbar:document.querySelectorAll('#luma-camera-explore button').length,
+              canvas:!!canvas,
+              cameraPosition:el.dataset.cameraPosition
+            };
+          });
+          async function open(page,url){
+            let response;
+            for(let i=1;i<=4;i++){
+              response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});
+              if(response?.status()===200)break;
+              await page.waitForTimeout(i*1000);
+            }
+            return response;
+          }
+          async function clickBlank(page,spec){
+            // Avoid photo ornaments, cat meshes and top greeting button.
+            await page.locator('canvas').click({position:{x:Math.round(spec.w*.07),y:Math.round(spec.h*.48)},timeout:12000,force:true});
+          }
+          async function main(){
+            const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            for(const spec of [{name:'desktop',w:1280,h:820,mobile:false},{name:'mobile',w:390,h:844,mobile:true}]){
+              const context=await browser.newContext({viewport:{width:spec.w,height:spec.h},isMobile:spec.mobile,hasTouch:spec.mobile,deviceScaleFactor:spec.mobile?2:1,serviceWorkers:'block'});
+              const page=await context.newPage(),errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              const response=await open(page,'https://tanchensiyi.com/sparkle-preview/');
+              check(spec.name+' preview HTTP 200',response?.status()===200,response?.status());
+              try{
+                await page.waitForFunction(()=>document.documentElement.dataset.cameraMode==='pinch-anywhere'&&document.documentElement.dataset.fireworksBurstCount==='8',null,{timeout:55000,polling:300});
+                await page.waitForFunction(()=>document.documentElement.dataset.princessV73==='ready',null,{timeout:60000,polling:400});
+              }catch(e){check(spec.name+' preview ready',false,e.message.slice(0,200));await context.close();continue;}
+              await page.waitForTimeout(650);
+              const first=await status(page);
+              check(spec.name+' no camera buttons',first.oldToolbar===0,first.oldToolbar);
+              check(spec.name+' richer fireworks',first.fireworksBursts===8&&first.fireworksParticles>=650&&first.fireworksParticles<2700,{shells:first.fireworksBursts,particles:first.fireworksParticles});
+              check(spec.name+' V73 and held cat ready',first.princess==='ready'&&first.kitten==='ready',first);
+              check(spec.name+' overview is not tiny',first.distance< (spec.mobile?72:52),first.distance);
+              check(spec.name+' zoom-out capped',first.far<= (spec.mobile?80:56),first.far);
+              // Drive zoom out very hard; max distance should stay near full-tree framing.
+              const box=await page.locator('canvas').boundingBox();
+              await page.mouse.move(box.x+box.width*.65,box.y+box.height*.59);
+              await page.mouse.wheel(0,3500);
+              await page.waitForTimeout(500);
+              const farView=await status(page);
+              check(spec.name+' cannot zoom out to 165',farView.distance<=first.far+.3,farView);
+              // A click pauses; a second single click resumes. It must actually rotate.
+              const startRotation=await status(page);
+              await clickBlank(page,spec);
+              await page.waitForTimeout(500);
+              const paused=await status(page);
+              check(spec.name+' one tap pauses',paused.sceneRotation==='paused',paused.sceneRotation);
+              await clickBlank(page,spec);
+              await page.waitForTimeout(700);
+              const resumed=await status(page);
+              check(spec.name+' another tap resumes',resumed.sceneRotation==='playing',resumed.sceneRotation);
+              const angleBefore=resumed.cameraPosition;
+              await page.waitForTimeout(1900);
+              const after=await status(page);
+              const coords=s=>String(s||'').split(',').map(Number);
+              const vals1=coords(angleBefore),vals2=coords(after);
+              const movement=Math.hypot(...vals1.map((v,i)=>v-vals2[i]));
+              check(spec.name+' actual automatic rotation resumes',movement>.08,{angleBefore,angleAfter:after.cameraPosition,movement});
+              check(spec.name+' no JS exceptions',errors.length===0,errors.slice(0,5));
+              details.push({spec:spec.name,first,farView,paused,resumed,after,errors});
+              await context.close();
+            }
+            await browser.close();
+            const api=await request.newContext();
+            for(const path of ['/','/christmas/','/letter/','/generated/photo-manifest.json','/princess/luma-princess-hug-v73.glb.gz']){
+              let response;
+              for(let n=0;n<3;n++){response=await api.get('https://tanchensiyi.com'+path,{timeout:60000});if(response.status()===200)break}
+              check('preserved route '+path,response.status()===200,response.status());
+            }
+            await api.dispose();
+            fs.writeFileSync(output+'/report.json',JSON.stringify({checks,details,at:new Date().toISOString()},null,2));
+            if(checks.some(c=>!c.pass))process.exitCode=1;
+          }
+          main().catch(e=>{console.error('SPARKLE_QA_FATAL',e);process.exitCode=1;});
+          NODE
+          node qa.cjs
+      - name: Save results even on failure
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sparkle-camera-regression
+          path: sparkle-qa/
+          if-no-files-found: warn
+          retention-days: 5
