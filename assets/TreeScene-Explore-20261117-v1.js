@@ -797,7 +797,7 @@ varying float vSnowContact;
    window.addEventListener("luma-camera-focus",onFocus);
    const onStart=()=>{moved=false;i.current=Infinity;focus.current.tween=null};
    const onEnd=()=>{i.current=focus.current.mode==="overview"?(moved?performance.now()+Bo:0):Infinity};
-   const onChange=()=>{if(i.current===Infinity)moved=true;p()};
+   const onChange=()=>{if(i.current===Infinity)moved=true;document.documentElement.dataset.cameraDistance=String(Math.round(m.position.distanceTo(y.target)*100)/100);document.documentElement.dataset.cameraPosition=[m.position.x,m.position.y,m.position.z].map(x=>x.toFixed(2)).join(',');p()};
    y.addEventListener("start",onStart);y.addEventListener("end",onEnd);y.addEventListener("change",onChange);
    const zoomBy=factor=>{if(focus.current.mode!=="overview")return;if(!Number.isFinite(factor)||factor<=0)return;sc(m,m.zoom*factor);moved=true;i.current=fingers.size?Infinity:performance.now()+Bo;p()};
    const distance=()=>{const [a,b]=[...fingers.values()];return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0};
