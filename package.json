@@ -16,7 +16,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "scene": "node scripts/prepare-scene.mjs",
-    "hand-assets": "node scripts/prepare-hand-tracking.mjs"
+    "hand-assets": "node scripts/prepare-hand-tracking.mjs",
+    "princess:install": "node scripts/install-princess-v72.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^8.18.0",
