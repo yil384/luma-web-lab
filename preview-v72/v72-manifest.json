@@ -1,0 +1,9 @@
+{
+  "purpose": "safe preview: original live Pages untouched",
+  "model": "/princess/luma-princess-v72.glb",
+  "sha256": "9bbf7c0ed5da9b7372906a30b665f0e118a3a66c3122e1499ea8dc4ecd454cbf",
+  "bytes": 15329160,
+  "assetsRoot": "assets/index-CJX_PAH8.js",
+  "originalPagesCommit": "f87b00bb895aca60310c228bb011780e55a51fff",
+  "liveRootUpdated": false
+}
