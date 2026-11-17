@@ -839,7 +839,7 @@ varying float vSnowContact;
      const elapsed=performance.now()-tran.started,t=Math.max(0,Math.min(1,elapsed/tran.duration)),smooth=t*t*(3-2*t);
      m.position.copy(tran.fromPos).lerp(tran.toPos,smooth);
      y.target.copy(tran.fromTarget).lerp(tran.toTarget,smooth);
-     if(t>=1)fcs.tween=null;
+     if(t>=1){fcs.tween=null;if(fcs.mode==="overview")i.current=performance.now()+Bo;}
      y.update();m.updateMatrixWorld();p();return;
    }
    const input=n?.current;
