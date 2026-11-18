@@ -1,4 +1,4 @@
-name: QA mobile smooth preview interaction compatibility
+name: QA production mobile 3D performance and preserved interactions
 on:
   push:
     branches: [main]
@@ -39,10 +39,19 @@ jobs:
                 deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block'});
               const page=await context.newPage(),errors=[];
               page.on('pageerror',e=>errors.push(e.message));
-              const r=await page.goto(base+'/mobile-perf-preview/?interactions=1',{waitUntil:'domcontentloaded',timeout:90000});
+              const r=await page.goto(base+'/?mobilePerfRelease=1',{waitUntil:'domcontentloaded',timeout:90000});
               await page.locator('.tree-stage canvas').waitFor({timeout:90000});
               await page.waitForFunction(()=>document.documentElement.dataset.cameraMode==='pinch-anywhere',null,{timeout:20000});
               check(name+' opens preview scene',r.status()===200, r.status());
+              const render=await page.evaluate(()=>{
+                const canvas=document.querySelector('.tree-stage canvas');
+                return {dpr:(canvas?.width||0)/Math.max(1,canvas?.clientWidth||1),
+                  physicalPixels:(canvas?.width||0)*(canvas?.height||0),
+                  mode:document.documentElement.dataset.mobileSceneMode,
+                  bloom:document.documentElement.dataset.sceneBloom};
+              });
+              check(name+' production phone render budget',render.mode==='performance'&&
+                render.bloom==='off'&&render.dpr<=1.7&&render.physicalPixels<=1110000,render);
               const stage=page.locator('.tree-stage');
               await page.waitForFunction(()=>
                 document.documentElement.dataset.princessV73==='ready',
@@ -83,8 +92,20 @@ jobs:
             await run(chromium,'chromium');
             const req=await request.newContext();
             for(const route of ['/','/christmas/','/letter/','/album-preview/']){
-              const r=await req.get(base+route,{timeout:45000});
+              const r=await req.get(base+route+'?mobile-release-v1',{timeout:45000,headers:{'Cache-Control':'no-cache'}});
+              const html=await r.text();
               check('live route remains '+route,r.status()===200,r.status());
+              if(route==='/'||route==='/christmas/'){
+                check('route loads optimized mobile App and unchanged album '+route,
+                  html.includes('/assets/App-MobileSmooth-20261117-v2.js')&&
+                  html.includes('/assets/PhotoGallery-FlipFaces-20261117-v10.js'),
+                  {app:html.includes('App-MobileSmooth-20261117-v2.js'),
+                    album:html.includes('PhotoGallery-FlipFaces-20261117-v10.js')});
+              }
+              if(route==='/letter/'){
+                check('letter remains independent and unchanged',
+                  !html.includes('/assets/App-MobileSmooth-20261117-v2.js'),{independent:true});
+              }
             }
             await req.dispose();
             if(checks.some(c=>!c.pass))process.exitCode=1;
