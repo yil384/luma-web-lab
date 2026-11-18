@@ -1,4 +1,4 @@
-name: QA album v8 mobile handoff and swipe (GitHub Pages)
+name: QA mobile v9 optimized book assets, stable pages, and swipes
 on:
   push:
     branches: [main]
@@ -156,7 +156,14 @@ jobs:
             const original=await read(page);
             const initialLayout=await layout(page);
             check('both desktop HD photos centered and fully inside pages',initialLayout.length===2&&initialLayout.every(x=>x.ok),initialLayout);
-            check('book image ready and uses original HD source',original.complete&&original.naturalWidth>=800&&original.src.includes('/generated/photos/')&&!original.src.includes('-thumb.'),original);
+            check('printed book uses 1280-edge optimized WebP',original.complete&&original.naturalWidth>=800&&
+              original.src.includes('/generated/photos/')&&original.src.endsWith('-book.webp'),original);
+            await page.evaluate(()=>{
+              window.__albumQaLeftPage=document.querySelector('.memory-album-spread > .memory-album-sheet--left');
+              window.__albumQaRightPage=document.querySelector('.memory-album-spread > .memory-album-sheet--right');
+              window.__albumQaLeftImg=window.__albumQaLeftPage.querySelector('img');
+              window.__albumQaRightImg=window.__albumQaRightPage.querySelector('img');
+            });
             await checkStableHover(page,'left');
             await checkStableHover(page,'right');
             await checkStableFocus(page,'left');
@@ -174,7 +181,15 @@ jobs:
             await waitCommitted(page,original.src);
             const next=await read(page);
             const nextLayout=await layout(page);
-            check('next spread stays centered with original photos',nextLayout.length===2&&nextLayout.every(x=>x.ok),nextLayout);
+            check('next spread stays centered with optimized photos',nextLayout.length===2&&nextLayout.every(x=>x.ok),nextLayout);
+            const preserved=await page.evaluate(()=>({
+              left:window.__albumQaLeftPage===document.querySelector('.memory-album-spread > .memory-album-sheet--left'),
+              right:window.__albumQaRightPage===document.querySelector('.memory-album-spread > .memory-album-sheet--right'),
+              leftImage:window.__albumQaLeftImg===document.querySelector('.memory-album-spread > .memory-album-sheet--left img'),
+              rightImage:window.__albumQaRightImg===document.querySelector('.memory-album-spread > .memory-album-sheet--right img')
+            }));
+            check('stationary page and image DOM nodes reused after flip',
+              Object.values(preserved).every(Boolean),preserved);
             check('flip commits next left photo',next.src!==original.src&&next.complete&&next.naturalWidth>0&&!next.leaf,{original,next});
             await turnViaButton(page,'.memory-album-turn--previous',next.src);
             const back=await read(page);
@@ -196,7 +211,8 @@ jobs:
             await page.locator('.memory-album-spread .memory-album-sheet--left button.memory-album-photo-mount').click({force:true,timeout:20000});
             await page.waitForTimeout(200);
             const hd=await page.evaluate(()=>({dialog:!!document.querySelector('dialog.memory-album-zoom-dialog[open]'),src:document.querySelector('dialog.memory-album-zoom-dialog img.gallery-image')?.getAttribute('src')||''}));
-            check('tapping print opens unchanged HD photo',hd.dialog&&hd.src.includes('/generated/photos/')&&!hd.src.includes('-thumb.'),hd);
+            check('opening print loads ORIGINAL image, not lightweight book asset',hd.dialog&&
+              hd.src.includes('/generated/photos/')&&!hd.src.includes('-thumb.')&&!hd.src.includes('-book.'),hd);
             check('desktop has no JS errors',errors.length===0,errors.slice(0,6));
             samples.push({mode:'desktop',original,middle,next,back,dragged,hd,errors});
             await pc.close();
@@ -208,7 +224,8 @@ jobs:
             const first=await read(mp),bounds=await mp.locator('.memory-album-book').boundingBox();
             const firstMobileLayout=await layout(mp);
             check('mobile original photos centered',firstMobileLayout.length===2&&firstMobileLayout.every(x=>x.ok),firstMobileLayout);
-            check('mobile book image ready',first.complete&&first.naturalWidth>0,first);
+            check('mobile optimized book image ready',first.complete&&
+              first.naturalWidth>=800&&first.src.endsWith('-book.webp'),first);
             async function swipe(from,to){
               const cdp=await mobile.newCDPSession(mp),y=bounds.y+bounds.height*.52;
               await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:from,y,id:1}]});
@@ -236,16 +253,26 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // The same mobile-stable v8 bundle is deployed on all entrypoints.
+            // v9 is initially staged only in preview for safety.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const expectedCss='memory-album-mobile-stable-v8.css';
-              const expectedJs='PhotoGallery-AlbumMobileStable-20261117-v8.js';
-              check('production v8 CSS and JS '+route,r.status()===200&&
+              const isPreview=route==='/album-preview/';
+              const expectedCss=isPreview?'memory-album-mobile-optimized-v9.css':'memory-album-mobile-stable-v8.css';
+              const expectedJs=isPreview?'PhotoGallery-MobileOptimized-20261117-v9.js':'PhotoGallery-AlbumMobileStable-20261117-v8.js';
+              check('expected staged mobile optimized CSS and JS '+route,r.status()===200&&
                 html.includes('/assets/'+expectedJs)&&
                 html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
             }
-            for(const name of ['PhotoGallery-AlbumMobileStable-20261117-v8.js','memory-album-mobile-stable-v8.css']){
+            const bookReport=await req.get(base+'/generated/book-photo-report.json',{timeout:60000});
+            const report=await bookReport.json();
+            check('all 95 original-aspect book assets generated',bookReport.ok()&&
+              report.photoCount===95&&report.bookDecodedPixels<report.sourceDecodedPixels*.60&&
+              report.bookBytes<report.sourceBytes*.45,{
+                photoCount:report.photoCount,
+                sourceBytes:report.sourceBytes,bookBytes:report.bookBytes,
+                decodedPixels:report.bookDecodedPixels,sourcePixels:report.sourceDecodedPixels
+              });
+            for(const name of ['PhotoGallery-MobileOptimized-20261117-v9.js','memory-album-mobile-optimized-v9.css']){
               const r=await req.get(base+'/assets/'+name,{timeout:60000});
               check('HD hover asset served '+name,r.status()===200,{status:r.status(),length:(await r.body()).length});
             }
