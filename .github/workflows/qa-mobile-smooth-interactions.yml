@@ -44,17 +44,27 @@ jobs:
               await page.waitForFunction(()=>document.documentElement.dataset.cameraMode==='pinch-anywhere',null,{timeout:20000});
               check(name+' opens preview scene',r.status()===200, r.status());
               const stage=page.locator('.tree-stage');
+              await page.waitForFunction(()=>
+                document.documentElement.dataset.princessV73==='ready',
+                null,{timeout:50000});
               check(name+' scene initially playing',(await stage.getAttribute('data-rotation'))==='playing',
                 await stage.getAttribute('data-rotation'));
-              // Click a truly blank point outside tree, then confirm that
-              // the existing tap-to-pause and tap-to-resume interaction remains.
-              await stage.click({position:{x:18,y:180},force:true,timeout:10000});
-              await page.waitForTimeout(700);
-              check(name+' tap pauses camera',(await stage.getAttribute('data-rotation'))==='paused',
+              // Real touch input, not Playwright mouse click. Heavy model
+              // texture upload can delay the first tap on WebKit; wait for
+              // the actual state transition instead of a fixed 700ms.
+              const bounds=await stage.boundingBox();
+              async function tapBlank(){await page.touchscreen.tap(bounds.x+18,bounds.y+180);}
+              await tapBlank();
+              await page.waitForFunction(()=>
+                document.querySelector('.tree-stage')?.dataset.rotation==='paused',
+                null,{timeout:22000,polling:100});
+              check(name+' touch pauses camera',(await stage.getAttribute('data-rotation'))==='paused',
                 await stage.getAttribute('data-rotation'));
-              await stage.click({position:{x:18,y:180},force:true,timeout:10000});
-              await page.waitForTimeout(700);
-              check(name+' tap resumes camera',(await stage.getAttribute('data-rotation'))==='playing',
+              await tapBlank();
+              await page.waitForFunction(()=>
+                document.querySelector('.tree-stage')?.dataset.rotation==='playing',
+                null,{timeout:22000,polling:100});
+              check(name+' touch resumes camera',(await stage.getAttribute('data-rotation'))==='playing',
                 await stage.getAttribute('data-rotation'));
               await page.locator('.greeting-gate').click({force:true,timeout:15000});
               await page.locator('dialog.film-dialog[open]').waitFor({timeout:20000});
