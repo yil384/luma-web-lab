@@ -1,4 +1,4 @@
-name: QA book album flicker and touch swipe (GitHub Pages)
+name: QA album HD v6 centered prints, flicker and swipes (GitHub Pages)
 on:
   push:
     branches: [main]
@@ -47,6 +47,22 @@ jobs:
              bookVisible:!!book&&book.getBoundingClientRect().width>100,
              bookWidth:book?.getBoundingClientRect().width};
           },left);
+          const layout=page=>page.evaluate(()=>{
+            return [...document.querySelectorAll('.memory-album-spread > .memory-album-sheet')].map(el=>{
+              const mount=el.querySelector('.memory-album-photo-mount');
+              const img=mount?.querySelector('img');
+              if(!mount||!img)return {ok:false,reason:'missing mount or image'};
+              const a=el.getBoundingClientRect(),b=mount.getBoundingClientRect();
+              const dx=Math.round((b.left+b.width/2)-(a.left+a.width/2));
+              const dy=Math.round((b.top+b.height/2)-(a.top+a.height/2));
+              const inside=b.left>=a.left-10&&b.right<=a.right+10&&b.top>=a.top-10&&b.bottom<=a.bottom+10;
+              return {ok:Math.abs(dx)<25&&Math.abs(dy)<25&&inside&&img.complete&&img.naturalWidth>=800&&
+                !img.getAttribute('src')?.includes('-thumb.'),dx,dy,inside,
+                naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,
+                src:img.getAttribute('src'),pageWidth:Math.round(a.width),pageHeight:Math.round(a.height),
+                printWidth:Math.round(b.width),printHeight:Math.round(b.height)};
+            });
+          });
           async function open(page){
             let res;
             for(let attempt=1;attempt<=4;attempt++){
@@ -83,7 +99,9 @@ jobs:
             // animations and overlapping them creates a false timing failure.
             await page.waitForTimeout(680);
             const original=await read(page);
-            check('book image ready and uses thumbnail',original.complete&&original.naturalWidth>0&&original.src.includes('-thumb.'),original);
+            const initialLayout=await layout(page);
+            check('both desktop HD photos centered and fully inside pages',initialLayout.length===2&&initialLayout.every(x=>x.ok),initialLayout);
+            check('book image ready and uses original HD source',original.complete&&original.naturalWidth>=800&&original.src.includes('/generated/photos/')&&!original.src.includes('-thumb.'),original);
             const nextBtn='.memory-album-turn--next';
             await page.locator(nextBtn).click({force:true});
             await page.waitForTimeout(380);
@@ -92,9 +110,13 @@ jobs:
             check('left reveal is NOT flashed halfway',middle.revealOpacity==='0',middle);
             await waitCommitted(page,original.src);
             const next=await read(page);
+            const nextLayout=await layout(page);
+            check('next spread stays centered with original photos',nextLayout.length===2&&nextLayout.every(x=>x.ok),nextLayout);
             check('flip commits next left photo',next.src!==original.src&&next.complete&&next.naturalWidth>0&&!next.leaf,{original,next});
             await turnViaButton(page,'.memory-album-turn--previous',next.src);
             const back=await read(page);
+            const backLayout=await layout(page);
+            check('previous spread stays centered',backLayout.length===2&&backLayout.every(x=>x.ok),backLayout);
             check('backward flip returns original ready left',back.src===original.src&&back.complete&&back.naturalWidth>0,back);
             // Desktop click-and-drag horizontally should turn pages as well.
             const rect=await page.locator('.memory-album-book').boundingBox();
@@ -103,6 +125,8 @@ jobs:
             for(let j=1;j<=7;j++)await page.mouse.move(sx-j*19,sy,{steps:2});
             await page.mouse.up();await waitCommitted(page,back.src);
             const dragged=await read(page);
+            const dragLayout=await layout(page);
+            check('dragged spread stays centered',dragLayout.length===2&&dragLayout.every(x=>x.ok),dragLayout);
             check('desktop horizontal drag turns without arrows',dragged.src!==back.src&&dragged.zoomDialogs===0,dragged);
             await page.locator('.memory-album-spread .memory-album-sheet--left button.memory-album-photo-mount').click({force:true,timeout:20000});
             await page.waitForTimeout(200);
@@ -117,6 +141,8 @@ jobs:
             const mr=await open(mp);
             check('mobile preview HTTP 200',mr.status()===200,mr.status());
             const first=await read(mp),bounds=await mp.locator('.memory-album-book').boundingBox();
+            const firstMobileLayout=await layout(mp);
+            check('mobile original photos centered',firstMobileLayout.length===2&&firstMobileLayout.every(x=>x.ok),firstMobileLayout);
             check('mobile book image ready',first.complete&&first.naturalWidth>0,first);
             async function swipe(from,to){
               const cdp=await mobile.newCDPSession(mp),y=bounds.y+bounds.height*.52;
@@ -134,6 +160,8 @@ jobs:
             await swipe(bounds.x+bounds.width*.20,bounds.x+bounds.width*.78);
             await waitCommitted(mp,leftSwipe.src);
             const rightSwipe=await read(mp);
+            const lastMobileLayout=await layout(mp);
+            check('mobile swipe keeps both photos centered',lastMobileLayout.length===2&&lastMobileLayout.every(x=>x.ok),lastMobileLayout);
             check('mobile right swipe returns prior spread',rightSwipe.src===first.src&&rightSwipe.complete&&rightSwipe.naturalWidth>0&&rightSwipe.zoomDialogs===0,{first,rightSwipe});
             check('mobile has no JS errors',mobileErrors.length===0,mobileErrors.slice(0,6));
             samples.push({mode:'mobile',first,leftSwipe,rightSwipe,mobileErrors});
