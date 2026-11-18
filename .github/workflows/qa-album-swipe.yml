@@ -236,13 +236,12 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // v8 is isolated in the preview; production stays on v7 until QA.
+            // The same mobile-stable v8 bundle is deployed on all entrypoints.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const isPreview=route==='/album-preview/';
-              const expectedCss=isPreview?'memory-album-mobile-stable-v8.css':'memory-album-hd-v7.css';
-              const expectedJs=isPreview?'PhotoGallery-AlbumMobileStable-20261117-v8.js':'PhotoGallery-AlbumHD-20261117-v6.js';
-              check('expected staged HD CSS and JS '+route,r.status()===200&&
+              const expectedCss='memory-album-mobile-stable-v8.css';
+              const expectedJs='PhotoGallery-AlbumMobileStable-20261117-v8.js';
+              check('production v8 CSS and JS '+route,r.status()===200&&
                 html.includes('/assets/'+expectedJs)&&
                 html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
             }
