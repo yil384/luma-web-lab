@@ -139,6 +139,13 @@ jobs:
               const r=await req.get(base+'/assets/'+asset,{timeout:50000});
               check(asset+' is published',r.ok(),{status:r.status(),bytes:(await r.body()).length});
             }
+            for(const route of ['/','/christmas/','/album-preview/']){
+              const response=await req.get(base+route,{timeout:50000}),source=await response.text();
+              check('production v8 WebKit target '+route,response.ok()&&
+                source.includes('/assets/PhotoGallery-AlbumMobileStable-20261117-v8.js')&&
+                source.includes('/assets/memory-album-mobile-stable-v8.css'),
+                {status:response.status()});
+            }
             await req.dispose();
             await run('macos-webkit-iphone-emulation',webkit,{});
             writeFileSync(out+'/results.json',JSON.stringify({checks,traces,timestamp:new Date().toISOString()},null,2));
