@@ -64,6 +64,14 @@ jobs:
             });
           });
           async function checkStableHover(page, side, suffix=''){
+            // The book's intro uses a 540ms scale/translate animation. Its
+            // bounding box changes while that is running independently of
+            // hovering; wait for the opening animation before comparing boxes.
+            await page.locator('.memory-album-book').evaluate(async el=>{
+              await Promise.all(el.getAnimations({subtree:false})
+                .filter(a=>a.playState==='running').map(a=>a.finished.catch(()=>{})));
+            });
+            await page.waitForTimeout(140);
             // Move away first so the before box is genuinely non-hovered.
             await page.mouse.move(4,4);
             const print=page.locator('.memory-album-spread > .memory-album-sheet--'+side+' button.memory-album-photo-mount');
