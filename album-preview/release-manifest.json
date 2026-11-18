@@ -1,12 +1,14 @@
 {
   "preview": true,
-  "version": "AlbumSwipe-20261117-v5",
+  "version": "AlbumHD-20261117-v6",
   "previousCommit": "60b15a73aff8618036acf18ddd35a2579b825b38",
   "fixes": [
-    "left page no longer flashes at 50% through leaf animation",
-    "book prints use thumbnails, HD photos unchanged",
-    "touch swipe left/right and mouse drag",
-    "vertical scroll and photo taps preserved"
+    "book prints now render original-resolution photos (not 600x600 square thumbnails)",
+    "photo frames stay centered in both sheets and turning leaves",
+    "landscape and portrait photo aspect ratio is preserved, without cropping",
+    "nearby original images are predecoded before page flips",
+    "left-page reveal, mouse drag, mobile swipes and HD viewer remain intact"
   ],
-  "isolation": "original published homepage, Christmas route and old album chunk unchanged"
+  "isolation": "production home and /christmas/ use the same isolated verified HD v6 module via importmap; original media and V73 runtime unchanged",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44207386021"
 }
