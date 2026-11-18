@@ -230,12 +230,12 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // Preview stages the hover-specificity fix; production still uses v6 until
-            // the preview's browser checks pass. Both use the unchanged HD JS.
+            // After production release, all three public entrypoints must
+            // reference the cache-busted v7 CSS as well as the unchanged HD JS.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const expectedCss=route==='/album-preview/'?'memory-album-hd-v7.css':'memory-album-hd-v6.css';
-              check('staged HD hover CSS '+route,r.status()===200&&
+              const expectedCss='memory-album-hd-v7.css';
+              check('production hover-stable HD CSS '+route,r.status()===200&&
                 html.includes('/assets/PhotoGallery-AlbumHD-20261117-v6.js')&&
                 html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss});
             }
