@@ -1,4 +1,4 @@
-name: QA album hover-stable HD prints and swipes (GitHub Pages)
+name: QA album v8 mobile handoff and swipe (GitHub Pages)
 on:
   push:
     branches: [main]
@@ -161,6 +161,10 @@ jobs:
             await checkStableFocus(page,'right');
             const nextBtn='.memory-album-turn--next';
             await page.locator(nextBtn).click({force:true});
+            // The v8 turn awaits original-resolution decode before animating.
+            await page.waitForFunction(()=>
+              document.querySelector('.memory-album-book')?.dataset.bookPhase==='turning',
+              null,{timeout:30000});
             await page.waitForTimeout(380);
             const middle=await read(page);
             check('left print remains unchanged halfway',middle.src===original.src&&middle.leaf,{original,middle});
@@ -230,16 +234,17 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // After production release, all three public entrypoints must
-            // reference the cache-busted v7 CSS as well as the unchanged HD JS.
+            // v8 is isolated in the preview; production stays on v7 until QA.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const expectedCss='memory-album-hd-v7.css';
-              check('production hover-stable HD CSS '+route,r.status()===200&&
-                html.includes('/assets/PhotoGallery-AlbumHD-20261117-v6.js')&&
-                html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss});
+              const isPreview=route==='/album-preview/';
+              const expectedCss=isPreview?'memory-album-mobile-stable-v8.css':'memory-album-hd-v7.css';
+              const expectedJs=isPreview?'PhotoGallery-AlbumMobileStable-20261117-v8.js':'PhotoGallery-AlbumHD-20261117-v6.js';
+              check('expected staged HD CSS and JS '+route,r.status()===200&&
+                html.includes('/assets/'+expectedJs)&&
+                html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
             }
-            for(const name of ['PhotoGallery-AlbumHD-20261117-v6.js','memory-album-hd-v7.css']){
+            for(const name of ['PhotoGallery-AlbumMobileStable-20261117-v8.js','memory-album-mobile-stable-v8.css']){
               const r=await req.get(base+'/assets/'+name,{timeout:60000});
               check('HD hover asset served '+name,r.status()===200,{status:r.status(),length:(await r.body()).length});
             }
