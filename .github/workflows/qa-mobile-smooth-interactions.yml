@@ -1,0 +1,84 @@
+name: QA mobile smooth preview interaction compatibility
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-mobile-smooth-interactions.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  interactions:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browsers
+        run: |
+          mkdir -p "$RUNNER_TEMP/mobile-interactions"
+          cd "$RUNNER_TEMP/mobile-interactions"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium webkit
+      - name: Verify camera taps, film and route preservation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/mobile-interactions"
+          cat > qa.cjs <<'NODE'
+          const {chromium,webkit,request}=require('playwright');
+          const checks=[],base='https://tanchensiyi.com';
+          function check(name,ok,data){checks.push({name,pass:!!ok,data}); console.log((ok?'PASS ':'FAIL ')+name+' '+JSON.stringify(data||null));}
+          async function run(engine,name){
+            const browser=await engine.launch({headless:true,args:name==='chromium'?
+              ['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']:[]});
+            try{
+              const context=await browser.newContext({viewport:{width:390,height:844},
+                deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block'});
+              const page=await context.newPage(),errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              const r=await page.goto(base+'/mobile-perf-preview/?interactions=1',{waitUntil:'domcontentloaded',timeout:90000});
+              await page.locator('.tree-stage canvas').waitFor({timeout:90000});
+              await page.waitForFunction(()=>document.documentElement.dataset.cameraMode==='pinch-anywhere',null,{timeout:20000});
+              check(name+' opens preview scene',r.status()===200, r.status());
+              const stage=page.locator('.tree-stage');
+              check(name+' scene initially playing',(await stage.getAttribute('data-rotation'))==='playing',
+                await stage.getAttribute('data-rotation'));
+              // Click a truly blank point outside tree, then confirm that
+              // the existing tap-to-pause and tap-to-resume interaction remains.
+              await stage.click({position:{x:18,y:180},force:true,timeout:10000});
+              await page.waitForTimeout(700);
+              check(name+' tap pauses camera',(await stage.getAttribute('data-rotation'))==='paused',
+                await stage.getAttribute('data-rotation'));
+              await stage.click({position:{x:18,y:180},force:true,timeout:10000});
+              await page.waitForTimeout(700);
+              check(name+' tap resumes camera',(await stage.getAttribute('data-rotation'))==='playing',
+                await stage.getAttribute('data-rotation'));
+              await page.locator('.greeting-gate').click({force:true,timeout:15000});
+              await page.locator('dialog.film-dialog[open]').waitFor({timeout:20000});
+              check(name+' film opens over optimized scene',await page.locator('dialog.film-dialog[open]').count()===1);
+              await page.locator('dialog.film-dialog .dialog-close').click({force:true,timeout:15000});
+              await page.waitForFunction(()=>document.querySelector('dialog.film-dialog[open]')===null,null,{timeout:15000});
+              check(name+' returns to interactive tree',await stage.getAttribute('data-rotation')==='playing',
+                await stage.getAttribute('data-rotation'));
+              check(name+' no app JS errors',errors.length===0,errors.slice(0,5));
+              await context.close();
+            }catch(e){check(name+' interaction run',false,String(e));}
+            finally{await browser.close();}
+          }
+          async function main(){
+            await run(webkit,'webkit');
+            await run(chromium,'chromium');
+            const req=await request.newContext();
+            for(const route of ['/','/christmas/','/letter/','/album-preview/']){
+              const r=await req.get(base+route,{timeout:45000});
+              check('live route remains '+route,r.status()===200,r.status());
+            }
+            await req.dispose();
+            if(checks.some(c=>!c.pass))process.exitCode=1;
+          }
+          main().then(()=>process.exit(process.exitCode||0)).catch(e=>{console.error('MOBILE_INTERACTIONS_FATAL',e);process.exit(1)});
+          NODE
+          node qa.cjs
