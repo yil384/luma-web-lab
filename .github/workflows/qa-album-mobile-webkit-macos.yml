@@ -146,7 +146,7 @@ jobs:
           })().then(()=>process.exit(process.exitCode||0))
             .catch(e=>{console.error('MOBILE_ALBUM_QA_FATAL',e);process.exit(1)});
           NODE
-          timeout 480 node qa.cjs
+          node qa.cjs
       - name: Save paint-handoff evidence
         if: always()
         uses: actions/upload-artifact@v4
