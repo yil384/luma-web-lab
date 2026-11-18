@@ -1,4 +1,4 @@
-name: QA album mobile Safari-like WebKit on macOS
+name: QA optimized v9 album mobile Safari-like WebKit on macOS
 on:
   push:
     branches: [main]
@@ -66,15 +66,29 @@ jobs:
             page.on('pageerror',e=>errors.push(e.message));
             page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
             try {
-              const response=await page.goto(base+'/album-preview/?paintqa=8',{waitUntil:'domcontentloaded',timeout:90000});
+              const response=await page.goto(base+'/album-preview/?paintqa=9',{waitUntil:'domcontentloaded',timeout:90000});
               await page.locator('.memory-album-book').waitFor({timeout:80000});
               await page.waitForFunction(()=>{
                 const imgs=[...document.querySelectorAll('.memory-album-spread > .memory-album-sheet img')];
                 return imgs.length===2&&imgs.every(img=>img.complete&&img.naturalWidth>=800);
               },null,{timeout:70000,polling:100});
               const first=await snap(page);
-              check(name+' preview loads full HD',response.status()===200&&
-                first.left.width>=800&&first.right.width>=800,{status:response.status(),first});
+              check(name+' preview loads optimized aspect-preserving book prints',response.status()===200&&
+                first.left.width>=800&&first.right.width>=800&&
+                first.left.src.endsWith('-book.webp')&&first.right.src.endsWith('-book.webp'),
+                {status:response.status(),first});
+              await page.evaluate(()=>{
+                window.__qaLeftSheet=document.querySelector('.memory-album-spread > .memory-album-sheet--left');
+                window.__qaRightSheet=document.querySelector('.memory-album-spread > .memory-album-sheet--right');
+                window.__qaLeftImg=window.__qaLeftSheet.querySelector('img');
+                window.__qaRightImg=window.__qaRightSheet.querySelector('img');
+              });
+              const backdrop=await page.evaluate(()=>{
+                const el=document.querySelector('.gift-dialog.photo-dialog');
+                return el?getComputedStyle(el,'::backdrop').backdropFilter:null;
+              });
+              check(name+' touch-mode avoids expensive 3D scene backdrop blur',
+                !backdrop||backdrop==='none',{backdrop});
               const turns=[];
               for(let i=0;i<6;i++){
                 const direction=i%2===0?'next':'previous';
@@ -112,12 +126,20 @@ jobs:
                 const badSettled=settled.filter(x=>!x.overlay||x.overlayWidth<800||
                   x.overlayOpacity<.99||x.overlayVisibility==='hidden'||
                   x.l<800||x.r<800);
+                const stableNodes=await page.evaluate(()=>({
+                  leftSheet:window.__qaLeftSheet===document.querySelector('.memory-album-spread > .memory-album-sheet--left'),
+                  rightSheet:window.__qaRightSheet===document.querySelector('.memory-album-spread > .memory-album-sheet--right'),
+                  leftImg:window.__qaLeftImg===document.querySelector('.memory-album-spread > .memory-album-sheet--left img'),
+                  rightImg:window.__qaRightImg===document.querySelector('.memory-album-spread > .memory-album-sheet--right img')
+                }));
                 const good=history.at(-1)?.phase==='ready'&&
                   settled.length>=1&&badSettled.length===0&&
                   after.left.width>=800&&after.right.width>=800&&
-                  after.left.src!==before.left.src;
+                  after.left.src!==before.left.src&&
+                  after.left.src.endsWith('-book.webp')&&after.right.src.endsWith('-book.webp')&&
+                  Object.values(stableNodes).every(Boolean);
                 turns.push({direction,good,samples:history.length,settlingFrames:settled.length,
-                  badSettled:badSettled.slice(0,4),before,after});
+                  badSettled:badSettled.slice(0,4),stableNodes,before,after});
                 check(name+' '+direction+' turn #'+(i+1)+' never uncovers blank left page',good,
                   turns.at(-1));
               }
@@ -132,18 +154,21 @@ jobs:
             const req=await request.newContext();
             const htmlResponse=await req.get(base+'/album-preview/',{timeout:50000});
             const html=await htmlResponse.text();
-            check('preview explicitly stages mobile v8',htmlResponse.ok()&&
-              html.includes('PhotoGallery-AlbumMobileStable-20261117-v8.js')&&
-              html.includes('memory-album-mobile-stable-v8.css'),{status:htmlResponse.status()});
-            for(const asset of ['PhotoGallery-AlbumMobileStable-20261117-v8.js','memory-album-mobile-stable-v8.css']){
+            check('preview explicitly stages optimized v9 book',htmlResponse.ok()&&
+              html.includes('PhotoGallery-MobileOptimized-20261117-v9.js')&&
+              html.includes('memory-album-mobile-optimized-v9.css'),{status:htmlResponse.status()});
+            for(const asset of ['PhotoGallery-MobileOptimized-20261117-v9.js','memory-album-mobile-optimized-v9.css']){
               const r=await req.get(base+'/assets/'+asset,{timeout:50000});
               check(asset+' is published',r.ok(),{status:r.status(),bytes:(await r.body()).length});
             }
             for(const route of ['/','/christmas/','/album-preview/']){
               const response=await req.get(base+route,{timeout:50000}),source=await response.text();
-              check('production v8 WebKit target '+route,response.ok()&&
-                source.includes('/assets/PhotoGallery-AlbumMobileStable-20261117-v8.js')&&
-                source.includes('/assets/memory-album-mobile-stable-v8.css'),
+              const preview=route==='/album-preview/';
+              const js=preview?'PhotoGallery-MobileOptimized-20261117-v9.js':'PhotoGallery-AlbumMobileStable-20261117-v8.js';
+              const css=preview?'memory-album-mobile-optimized-v9.css':'memory-album-mobile-stable-v8.css';
+              check('staged WebKit target '+route,response.ok()&&
+                source.includes('/assets/'+js)&&
+                source.includes('/assets/'+css),
                 {status:response.status()});
             }
             await req.dispose();
