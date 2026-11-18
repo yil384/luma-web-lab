@@ -1,0 +1,157 @@
+/* Album Mobile v10: the actual source photo is displayed in every printed book page.
+   Keep paper dimensions independent of the images' intrinsic aspect ratios. */
+.memory-album-spread {
+  display: block;
+}
+.memory-album-spread > .memory-album-sheet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.memory-album-spread > .memory-album-sheet--left {
+  left: 0;
+}
+.memory-album-spread > .memory-album-sheet--right {
+  right: 0;
+}
+.memory-album-reveal > .memory-album-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* The extra .memory-album ancestor intentionally outranks legacy v5
+   button.memory-album-photo-mount:is(:hover,:focus-visible) { transform:none !important; }.
+   Without it, hover/focus removes the -50% translation, shifting a print
+   right/down by half its width/height. State-invariant positioning below. */
+.memory-album .memory-album-sheet .memory-album-photo-mount,
+.memory-album .memory-album-leaf-face .memory-album-photo-mount {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 78%;
+  height: 78%;
+  max-width: 78%;
+  max-height: 78%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%) !important;
+  transition: none !important;
+  overflow: hidden;
+}
+/* Intrinsic image dimensions must not participate in frame sizing. */
+.memory-album-photo-mount > .memory-album-print {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.memory-album-photo-mount .memory-album-print > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  display: block;
+  object-fit: contain;
+  object-position: 50% 50%;
+  image-rendering: auto;
+  transform: none !important;
+}
+@media (max-width: 600px) {
+  .memory-album .memory-album-sheet .memory-album-photo-mount,
+  .memory-album .memory-album-leaf-face .memory-album-photo-mount {
+    width: 84%;
+    height: 78%;
+    max-width: 84%;
+    max-height: 78%;
+  }
+}
+
+/*
+ * Mobile compositing guard: the incoming spread must remain opaque while
+ * the new stationary image decodes and paints. The v5 92ms opacity fade on
+ * the reveal can expose a one-frame blank texture in mobile Safari/WebKit.
+ */
+.memory-album-reveal.is-settling {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transition: none !important;
+  will-change: auto;
+}
+@media (hover: none), (pointer: coarse) {
+  .memory-album-reveal {
+    transition: none !important;
+  }
+}
+
+/*
+ * Prefer stable, inexpensive compositing on phone GPUs. The backdrop blur
+ * forces the entire live WebGL scene to be sampled while turning the book;
+ * disabling it only for touch/small screens reduces layer upload pressure.
+ */
+@media (max-width: 600px), (pointer: coarse) {
+  .gift-dialog.photo-dialog::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(3, 10, 23, .64);
+  }
+  .memory-album-ground-shadow {
+    filter: none;
+    background: radial-gradient(ellipse at center,
+      rgba(0, 0, 0, .52), rgba(0, 0, 0, .20) 48%, transparent 76%);
+  }
+  .memory-album-reveal {
+    will-change: auto;
+  }
+  /* Keep the moving page isolated, but don't promote static images.
+     Only the leaf (mounted during a flip) needs GPU transform work. */
+  .memory-album-sheet .memory-album-print img,
+  .memory-album-reveal .memory-album-print img {
+    will-change: auto;
+    contain: paint;
+  }
+}
+
+/*
+ * Mobile WebKit double-sided leaf correction.
+ * Safari can briefly reuse/paint the outward front image even when the
+ * rotation has carried that face behind the page (the observed "wrong
+ * photo, then snap to the correct reverse" artifact). Native backface
+ * culling is intentionally NOT used on touch screens: a small JS
+ * orientation monitor sets data-active-face from the actual interpolated
+ * rotateY matrix, and CSS gives exactly one face permission to paint.
+ * This also works for backwards turns and partially dragged corners.
+ */
+@media (max-width: 600px), (pointer: coarse) {
+  .memory-album .memory-album-leaf {
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+  }
+  .memory-album .memory-album-leaf > .memory-album-leaf-face {
+    -webkit-backface-visibility: visible !important;
+    backface-visibility: visible !important;
+  }
+  .memory-album .memory-album-leaf[data-active-face="front"] > .memory-album-leaf-front,
+  .memory-album .memory-album-leaf[data-active-face="back"] > .memory-album-leaf-back {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  .memory-album .memory-album-leaf[data-active-face="front"] > .memory-album-leaf-back,
+  .memory-album .memory-album-leaf[data-active-face="back"] > .memory-album-leaf-front,
+  .memory-album .memory-album-leaf[data-active-face="edge"] > .memory-album-leaf-face {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
