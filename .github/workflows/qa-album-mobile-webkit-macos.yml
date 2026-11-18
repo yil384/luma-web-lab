@@ -163,10 +163,9 @@ jobs:
             }
             for(const route of ['/','/christmas/','/album-preview/']){
               const response=await req.get(base+route,{timeout:50000}),source=await response.text();
-              const preview=route==='/album-preview/';
-              const js=preview?'PhotoGallery-MobileOptimized-20261117-v9.js':'PhotoGallery-AlbumMobileStable-20261117-v8.js';
-              const css=preview?'memory-album-mobile-optimized-v9.css':'memory-album-mobile-stable-v8.css';
-              check('staged WebKit target '+route,response.ok()&&
+              const js='PhotoGallery-MobileOptimized-20261117-v9.js';
+              const css='memory-album-mobile-optimized-v9.css';
+              check('production v9 WebKit target '+route,response.ok()&&
                 source.includes('/assets/'+js)&&
                 source.includes('/assets/'+css),
                 {status:response.status()});
