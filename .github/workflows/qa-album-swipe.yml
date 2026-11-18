@@ -131,7 +131,9 @@ jobs:
             await page.waitForFunction(({selector,previousSrc,expectDifferent})=>{
               const img=document.querySelector(selector);
               const src=img?.getAttribute('src')||'';
-              return !!img&&!document.querySelector('.memory-album-leaf')&&
+              return !!img&&document.querySelector('.memory-album-book')?.dataset.bookPhase==='ready'&&
+                !document.querySelector('.memory-album-leaf')&&
+                !document.querySelector('.memory-album-reveal')&&
                 img.complete&&img.naturalWidth>0&&
                 (expectDifferent?src!==previousSrc:src===previousSrc);
             },{selector:left,previousSrc,expectDifferent},{timeout:25000,polling:100});
