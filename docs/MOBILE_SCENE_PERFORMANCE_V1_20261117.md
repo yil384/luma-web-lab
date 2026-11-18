@@ -76,11 +76,17 @@ and is **not a controlled steady-state iPhone FPS benchmark**.
 A different preview run gave 23→17 ms p50. CPU-side loading stutters
 still occur, and the scene has not been measured on a physical iPhone.
 
-## Verification/rollback
+## Production release, verification and rollback
 
-Preview: `https://tanchensiyi.com/mobile-perf-preview/`.
+The optimized App is now published on `https://tanchensiyi.com/` and
+`https://tanchensiyi.com/christmas/`. The independent stage remains at
+`https://tanchensiyi.com/mobile-perf-preview/`. Published status metadata:
+`https://tanchensiyi.com/mobile-performance-status.json`.
 
-For production, `index.html` and `christmas/index.html` should map
+The live macOS WebKit and Chromium interaction test passed 23 checks:
+https://github.com/yil384/luma-web-lab/actions/runs/44260526535
+
+The `index.html` and `christmas/index.html` entrypoints map
 `/assets/App-AlbumSwipe-20261117-v5.js` to
 `/assets/App-MobileSmooth-20261117-v2.js`.
 `/letter/` must keep its own route and player.
