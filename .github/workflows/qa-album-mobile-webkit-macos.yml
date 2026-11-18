@@ -195,13 +195,30 @@ jobs:
               check(asset+' is published',r.ok(),{status:r.status(),bytes:(await r.body()).length});
             }
             for(const route of ['/','/christmas/','/album-preview/']){
-              const response=await req.get(base+route,{timeout:50000}),source=await response.text();
               const js='PhotoGallery-FlipFaces-20261117-v10.js';
               const css='memory-album-flip-faces-v10.css';
-              check('production v10 WebKit target '+route,response.ok()&&
-                source.includes('/assets/'+js)&&
-                source.includes('/assets/'+css),
-                {status:response.status()});
+              let response,source='',attempt=0,firstHadV10=false;
+              // GitHub Pages CDN can serve a stale HTML entrypoint immediately
+              // after release even though versioned JS/CSS are already live.
+              // Check the plain URL first, then validate with cache-busting
+              // query parameters before reporting a release regression.
+              for(;attempt<5;attempt++){
+                const fresh=attempt?'?albumFaceCheck=v10-'+attempt:'';
+                response=await req.get(base+route+fresh,{
+                  timeout:50000,headers:{'Cache-Control':'no-cache'}});
+                source=await response.text();
+                const matched=response.ok()&&source.includes('/assets/'+js)&&
+                  source.includes('/assets/'+css);
+                if(attempt===0) firstHadV10=matched;
+                if(matched) break;
+                await new Promise(resolve=>setTimeout(resolve,500));
+              }
+              const matched=response.ok()&&source.includes('/assets/'+js)&&
+                source.includes('/assets/'+css);
+              check('production v10 WebKit target '+route,matched,{
+                status:response.status(),attempt,firstHadV10,
+                activeJs:(source.match(/PhotoGallery-[^"]+\.js/g)||[]).slice(0,2)
+              });
             }
             await req.dispose();
             await run('macos-webkit-iphone-emulation',webkit,{});
