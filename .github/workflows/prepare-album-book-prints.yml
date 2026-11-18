@@ -1,0 +1,74 @@
+name: Prepare mobile-friendly album book prints
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/prepare-album-book-prints.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: prepare-album-book-prints
+  cancel-in-progress: false
+jobs:
+  book-images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - name: Check out image preparation script
+        uses: actions/checkout@v4
+        with:
+          path: tooling
+          persist-credentials: false
+      - name: Check out existing published photos without replacing the site
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+          fetch-depth: 0
+          sparse-checkout: |
+            generated/photos
+            generated/photo-manifest.json
+            generated/book-photo-report.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tooling/package-lock.json
+      - name: Install image tooling
+        run: npm ci --ignore-scripts=false
+        working-directory: tooling
+      - name: Generate aspect-ratio-preserving 1280px book assets
+        run: node ../tooling/scripts/generate-album-book-images.mjs .
+        working-directory: pages
+      - name: Upload book report for audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: album-book-print-report
+          path: pages/generated/book-photo-report.json
+          retention-days: 14
+      - name: Commit ONLY new book images and report to published branch
+        shell: bash
+        working-directory: pages
+        run: |
+          set -euo pipefail
+          git add --sparse generated/photos/*-book.webp generated/book-photo-report.json
+          if git diff --cached --quiet; then
+            echo 'All optimized book images are already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'perf(album): add 1280px aspect-preserving book photos without changing original assets'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then
+              echo 'Published optimized book assets to gh-pages.'
+              exit 0
+            fi
+            git pull --rebase origin gh-pages
+            sleep 3
+          done
+          echo 'Could not publish after 3 attempts' >&2
+          exit 1
