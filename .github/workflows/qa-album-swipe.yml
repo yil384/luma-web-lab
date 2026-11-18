@@ -253,13 +253,12 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // v9 is initially staged only in preview for safety.
+            // v9 is released to all public entrypoints.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const isPreview=route==='/album-preview/';
-              const expectedCss=isPreview?'memory-album-mobile-optimized-v9.css':'memory-album-mobile-stable-v8.css';
-              const expectedJs=isPreview?'PhotoGallery-MobileOptimized-20261117-v9.js':'PhotoGallery-AlbumMobileStable-20261117-v8.js';
-              check('expected staged mobile optimized CSS and JS '+route,r.status()===200&&
+              const expectedCss='memory-album-mobile-optimized-v9.css';
+              const expectedJs='PhotoGallery-MobileOptimized-20261117-v9.js';
+              check('production v9 book JS and CSS '+route,r.status()===200&&
                 html.includes('/assets/'+expectedJs)&&
                 html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
             }
