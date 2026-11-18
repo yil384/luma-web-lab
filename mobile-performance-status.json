@@ -1,0 +1,47 @@
+{
+  "version": "MobileSceneSmooth-20261117-v2",
+  "production": true,
+  "scope": [
+    "/",
+    "/christmas/"
+  ],
+  "preservedRoutes": [
+    "/letter/",
+    "/album-preview/"
+  ],
+  "appModule": "/assets/App-MobileSmooth-20261117-v2.js",
+  "treeModule": "/assets/TreeScene-MobileSmooth-20261117-v2.js",
+  "albumModule": "/assets/PhotoGallery-FlipFaces-20261117-v10.js",
+  "changes": [
+    "Touch-screen mobile scene DPR capped at 1.65 with 1.1M-pixel raster budget",
+    "Mobile skips full-resolution HDR bloom/postprocessing; ACES tone mapping retained",
+    "Phone landscape uses compact particles and object presets",
+    "3D render loop suspended while film dialog plays",
+    "Desktop Bloom/DPR/graphics and native-resolution photo viewer unchanged"
+  ],
+  "browserMeasurements": {
+    "testViewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 3
+    },
+    "beforeCanvasPixels": 2962440,
+    "afterCanvasPixels": 895056,
+    "rasterPixelReductionPercent": 69.8,
+    "webkitRafMedianMs": {
+      "before": 26,
+      "after": 17
+    },
+    "caution": "Browser-emulation results, not measured FPS or confirmed improvement on a specific iPhone."
+  },
+  "qas": {
+    "performance": "https://github.com/yil384/luma-web-lab/actions/runs/44259431402",
+    "interactions": "https://github.com/yil384/luma-web-lab/actions/runs/44260526535",
+    "baseBuild": "https://github.com/yil384/luma-web-lab/actions/runs/44259431439"
+  },
+  "rollback": {
+    "homeAndChristmasOnly": "Remove /assets/App-AlbumSwipe-20261117-v5.js import-map override from index.html and christmas/index.html",
+    "oldApp": "/assets/App-AlbumSwipe-20261117-v5.js",
+    "oldTree": "/assets/TreeScene-SparkleCamera-20261117-v2.js"
+  }
+}
