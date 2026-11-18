@@ -81,6 +81,27 @@ jobs:
               stable&&style.hover&&style.transform!=='none'&&frames.length===2&&frames.every(x=>x.ok),
               {before,after,style,frames});
           }
+          async function checkStableFocus(page,side){
+            await page.mouse.move(4,4);
+            const print=page.locator('.memory-album-spread > .memory-album-sheet--'+side+' button.memory-album-photo-mount');
+            const before=await print.boundingBox();
+            // Force keyboard modality before focusing to exercise :focus-visible.
+            await page.keyboard.press('Tab');
+            await print.focus();
+            await page.waitForTimeout(80);
+            const after=await print.boundingBox();
+            const state=await print.evaluate(el=>({
+              focus:document.activeElement===el,
+              focusVisible:el.matches(':focus-visible'),
+              transform:getComputedStyle(el).transform
+            }));
+            const unchanged=!!before&&!!after&&Math.abs(before.x-after.x)<1&&
+              Math.abs(before.y-after.y)<1&&Math.abs(before.width-after.width)<1&&
+              Math.abs(before.height-after.height)<1;
+            check('keyboard focus does not displace '+side+' photo',unchanged&&state.focus&&
+              state.focusVisible&&state.transform!=='none',{before,after,state});
+            await print.evaluate(el=>el.blur());
+          }
           async function open(page){
             let res;
             for(let attempt=1;attempt<=4;attempt++){
@@ -90,6 +111,12 @@ jobs:
             }
             await page.locator('.memory-album-book').waitFor({timeout:70000});
             await page.locator(left).waitFor({timeout:25000});
+            // A DOM-mounted <img> is not necessarily decoded (especially on
+            // cold mobile CI). Wait for BOTH actual original-resolution prints.
+            await page.waitForFunction(()=>{
+              const imgs=[...document.querySelectorAll('.memory-album-spread > .memory-album-sheet img')];
+              return imgs.length===2&&imgs.every(img=>img.complete&&img.naturalWidth>=800);
+            },null,{timeout:60000,polling:100});
             return res;
           }
           async function waitCommitted(page,previousSrc,expectDifferent=true){
@@ -122,6 +149,8 @@ jobs:
             check('book image ready and uses original HD source',original.complete&&original.naturalWidth>=800&&original.src.includes('/generated/photos/')&&!original.src.includes('-thumb.'),original);
             await checkStableHover(page,'left');
             await checkStableHover(page,'right');
+            await checkStableFocus(page,'left');
+            await checkStableFocus(page,'right');
             const nextBtn='.memory-album-turn--next';
             await page.locator(nextBtn).click({force:true});
             await page.waitForTimeout(380);
