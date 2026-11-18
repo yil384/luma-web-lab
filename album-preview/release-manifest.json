@@ -1,14 +1,13 @@
 {
   "preview": true,
-  "version": "AlbumHD-20261117-v6",
+  "version": "AlbumHD-HoverStable-20261117-v7",
   "previousCommit": "60b15a73aff8618036acf18ddd35a2579b825b38",
   "fixes": [
-    "book prints now render original-resolution photos (not 600x600 square thumbnails)",
-    "photo frames stay centered in both sheets and turning leaves",
-    "landscape and portrait photo aspect ratio is preserved, without cropping",
-    "nearby original images are predecoded before page flips",
-    "left-page reveal, mouse drag, mobile swipes and HD viewer remain intact"
+    "hover/focus/active photo frames remain centered without 50% jump",
+    "keep all original-resolution files and native aspect ratios",
+    "predecoded neighboring pages, no flip flashes",
+    "desktop mouse drag, mobile left/right touch swipes unchanged"
   ],
-  "isolation": "production home and /christmas/ use the same isolated verified HD v6 module via importmap; original media and V73 runtime unchanged",
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44207386021"
+  "isolation": "v7 CSS is applied to the production and preview entrypoints, no new runtime JS or media changes",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44209868560"
 }
