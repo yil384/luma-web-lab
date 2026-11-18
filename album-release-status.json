@@ -1,12 +1,13 @@
 {
   "hosting": "GitHub Pages",
-  "version": "AlbumHD-HoverStable-20261117-v7",
+  "version": "AlbumMobileStable-20261117-v8",
   "production": true,
   "changes": [
-    "preserves v6 original-resolution book prints and centered frames",
-    "fixes CSS specificity conflict: hover/focus-visible no longer overrides translate(-50%,-50%)",
-    "turning page leaf, desktop drag, touch swipe and zoom unchanged",
-    "both home and /christmas/ now use /assets/memory-album-hd-v7.css"
+    "Decode both destination original-resolution photos before each page turn",
+    "Keep newly revealed page mounted over stationary sheet while new images decode and paint",
+    "Remove leaf on settle, then remove reveal only after three browser rendering frames",
+    "Disable fragile reveal-opacity fade on coarse/mobile pointers",
+    "Preserve v6 HD photos, v7 hover/focus centering, left-right touch swipe and mouse drag"
   ],
   "preserved": [
     "V73 princess holding kitten",
@@ -17,18 +18,20 @@
     "film",
     "/letter/"
   ],
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44209868560",
-  "previousPagesCommit": "c8a03f0a07acd0fde1e741bcde2fa99189c634e0",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44246919627",
+  "previousPagesCommit": "5c5f77f5bf72f56be71703eb7375d12c1d152367",
   "previousHomeBlob": "e74745205ace8d8a6827c81be53ff912eaba6894",
   "pathsChanged": [
     "index.html",
     "christmas/index.html",
     "album-preview/index.html",
-    "assets/memory-album-hd-v7.css",
+    "assets/PhotoGallery-AlbumMobileStable-20261117-v8.js",
+    "assets/memory-album-mobile-stable-v8.css",
     "album-release-status.json"
   ],
-  "css": "/assets/memory-album-hd-v7.css",
-  "bookJs": "/assets/PhotoGallery-AlbumHD-20261117-v6.js",
+  "css": "/assets/memory-album-mobile-stable-v8.css",
+  "bookJs": "/assets/PhotoGallery-AlbumMobileStable-20261117-v8.js",
   "originalMediaChanged": false,
-  "previousVersion": "AlbumHD-20261117-v6"
+  "previousVersion": "AlbumHD-HoverStable-20261117-v7",
+  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44247264061"
 }
