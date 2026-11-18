@@ -48,7 +48,7 @@ jobs:
                 const errors=[];
                 page.on('pageerror',e=>errors.push(e.message));
                 try{
-                  const url=base+(variant==='live'?'/':'/mobile-perf-preview/')+'?perfqa=v1';
+                  const url=base+(variant==='live'?'/':'/mobile-perf-preview/')+'?perfqa=v2';
                   const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
                   check(name+' '+variant+' HTML 200',response?.status()===200,{status:response?.status()});
                   await page.locator('.tree-stage canvas').waitFor({timeout:90000});
@@ -74,6 +74,7 @@ jobs:
                     const sorted=frames.slice(2).sort((a,b)=>a-b);
                     const p=q=>sorted[Math.min(sorted.length-1,Math.floor(sorted.length*q))]||0;
                     return {initial,after:dims(),mode:document.documentElement.dataset.mobileSceneMode||'legacy',
+                      bloom:document.documentElement.dataset.sceneBloom||'legacy',
                       sceneDpr:document.documentElement.dataset.sceneDpr||null,
                       cameraMode:document.documentElement.dataset.cameraMode||null,
                       princess:document.documentElement.dataset.princessV73||null,
@@ -86,6 +87,7 @@ jobs:
                   check(name+' '+variant+' no runtime errors',errors.length===0,errors.slice(0,6));
                   if(variant==='optimized'){
                     check(name+' optimized scene DPR <=1.7',metrics.after.effectiveDpr<=1.7&&metrics.after.effectiveDpr>=1,metrics);
+                    check(name+' mobile HDR bloom removed',metrics.bloom==='off',metrics.bloom);
                     check(name+' optimized pixel budget <=1.11M',
                       metrics.after.physicalPixels<=1110000,metrics.after);
                     check(name+' optimized active camera',metrics.cameraMode==='pinch-anywhere',metrics.cameraMode);
@@ -101,16 +103,38 @@ jobs:
           }
           async function main(){
             const req=await request.newContext();
-            for(const name of ['TreeScene-MobileSmooth-20261117-v1.js','App-MobileSmooth-20261117-v1.js']){
+            for(const name of ['TreeScene-MobileSmooth-20261117-v2.js','App-MobileSmooth-20261117-v2.js']){
               const response=await req.get(base+'/assets/'+name,{timeout:45000});
               check('staged module '+name,response.ok(),{status:response.status(),bytes:(await response.body()).length});
             }
             const html=await req.get(base+'/mobile-perf-preview/',{timeout:45000});
             const src=await html.text();
-            check('preview routes to optimized App',html.ok()&&src.includes('/assets/App-MobileSmooth-20261117-v1.js'),{status:html.status()});
+            check('preview routes to optimized App',html.ok()&&src.includes('/assets/App-MobileSmooth-20261117-v2.js'),{status:html.status()});
             await req.dispose();
             await run(chromium,'chromium');
             await run(webkit,'webkit');
+            // Verify that ordinary desktop retains full resolution and
+            // original bloom pipeline (mobile-only optimization).
+            const desktopBrowser=await chromium.launch({headless:true,args:[
+              '--enable-webgl','--use-gl=angle','--use-angle=swiftshader',
+              '--enable-unsafe-swiftshader','--disable-dev-shm-usage'
+            ]});
+            const desktop=await desktopBrowser.newContext({viewport:{width:1100,height:760},deviceScaleFactor:1,
+              hasTouch:false,isMobile:false,serviceWorkers:'block'});
+            try{
+              const page=await desktop.newPage();
+              const res=await page.goto(base+'/mobile-perf-preview/?perfqa=desktop',{waitUntil:'domcontentloaded',timeout:90000});
+              await page.locator('.tree-stage canvas').waitFor({timeout:90000});
+              await page.waitForFunction(()=>document.documentElement.dataset.sceneBloom!==undefined,null,{timeout:15000});
+              const state=await page.evaluate(()=>({
+                mode:document.documentElement.dataset.mobileSceneMode,
+                bloom:document.documentElement.dataset.sceneBloom,
+                dpr:document.documentElement.dataset.sceneDpr,
+                width:document.querySelector('canvas')?.width
+              }));
+              check('desktop quality remains unchanged',res.status()===200&&
+                state.mode==='desktop'&&state.bloom==='on'&&+state.dpr>=1,state);
+            }finally{await desktop.close();await desktopBrowser.close();}
             const pairs=['chromium','webkit'].map(engine=>{
               const live=measurements.find(x=>x.engine===engine&&x.variant==='live');
               const optimized=measurements.find(x=>x.engine===engine&&x.variant==='optimized');
