@@ -1,13 +1,12 @@
 {
   "hosting": "GitHub Pages",
-  "version": "AlbumHD-20261117-v6",
+  "version": "AlbumHD-HoverStable-20261117-v7",
   "production": true,
   "changes": [
-    "book spreads and turning leaves use original-resolution 810–2338px-wide photo assets instead of 600px square thumbnails",
-    "desktop and mobile photo mounts anchored at the geometric center of each page",
-    "original aspect ratios preserved with contain, no stretch or clipping",
-    "nearby original photos predecoded before turning; no mid-flip left reveal",
-    "touch swipe, mouse drag, HD viewer, other routes preserved"
+    "preserves v6 original-resolution book prints and centered frames",
+    "fixes CSS specificity conflict: hover/focus-visible no longer overrides translate(-50%,-50%)",
+    "turning page leaf, desktop drag, touch swipe and zoom unchanged",
+    "both home and /christmas/ now use /assets/memory-album-hd-v7.css"
   ],
   "preserved": [
     "V73 princess holding kitten",
@@ -18,19 +17,18 @@
     "film",
     "/letter/"
   ],
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44207386021",
-  "previousPagesCommit": "091f43a1594daa3819a01886c6ac851ebe4f8b79",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44209868560",
+  "previousPagesCommit": "c8a03f0a07acd0fde1e741bcde2fa99189c634e0",
   "previousHomeBlob": "e74745205ace8d8a6827c81be53ff912eaba6894",
   "pathsChanged": [
     "index.html",
     "christmas/index.html",
     "album-preview/index.html",
-    "assets/PhotoGallery-AlbumHD-20261117-v6.js",
-    "assets/memory-album-hd-v6.css",
+    "assets/memory-album-hd-v7.css",
     "album-release-status.json"
   ],
-  "css": "/assets/memory-album-hd-v6.css",
+  "css": "/assets/memory-album-hd-v7.css",
   "bookJs": "/assets/PhotoGallery-AlbumHD-20261117-v6.js",
   "originalMediaChanged": false,
-  "previousVersion": "AlbumSwipe-20261117-v5"
+  "previousVersion": "AlbumHD-20261117-v6"
 }
