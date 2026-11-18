@@ -1,4 +1,4 @@
-name: QA album HD v6 centered prints, flicker and swipes (GitHub Pages)
+name: QA album hover-stable HD prints and swipes (GitHub Pages)
 on:
   push:
     branches: [main]
@@ -63,6 +63,24 @@ jobs:
                 printWidth:Math.round(b.width),printHeight:Math.round(b.height)};
             });
           });
+          async function checkStableHover(page, side, suffix=''){
+            // Move away first so the before box is genuinely non-hovered.
+            await page.mouse.move(4,4);
+            const print=page.locator('.memory-album-spread > .memory-album-sheet--'+side+' button.memory-album-photo-mount');
+            const before=await print.boundingBox();
+            await print.hover({force:true,timeout:10000});
+            await page.waitForTimeout(100);
+            const after=await print.boundingBox();
+            const style=await print.evaluate(el=>({hover:el.matches(':hover'),focusVisible:el.matches(':focus-visible'),
+              transform:getComputedStyle(el).transform,transition:getComputedStyle(el).transition}));
+            const frames=await layout(page);
+            const stable=!!before&&!!after&&
+              Math.abs(before.x-after.x)<1&&Math.abs(before.y-after.y)<1&&
+              Math.abs(before.width-after.width)<1&&Math.abs(before.height-after.height)<1;
+            check('photo does not jump on '+side+' hover'+suffix,
+              stable&&style.hover&&style.transform!=='none'&&frames.length===2&&frames.every(x=>x.ok),
+              {before,after,style,frames});
+          }
           async function open(page){
             let res;
             for(let attempt=1;attempt<=4;attempt++){
@@ -102,6 +120,8 @@ jobs:
             const initialLayout=await layout(page);
             check('both desktop HD photos centered and fully inside pages',initialLayout.length===2&&initialLayout.every(x=>x.ok),initialLayout);
             check('book image ready and uses original HD source',original.complete&&original.naturalWidth>=800&&original.src.includes('/generated/photos/')&&!original.src.includes('-thumb.'),original);
+            await checkStableHover(page,'left');
+            await checkStableHover(page,'right');
             const nextBtn='.memory-album-turn--next';
             await page.locator(nextBtn).click({force:true});
             await page.waitForTimeout(380);
@@ -117,6 +137,8 @@ jobs:
             const back=await read(page);
             const backLayout=await layout(page);
             check('previous spread stays centered',backLayout.length===2&&backLayout.every(x=>x.ok),backLayout);
+            await checkStableHover(page,'left',' after backward flip');
+            await checkStableHover(page,'right',' after backward flip');
             check('backward flip returns original ready left',back.src===original.src&&back.complete&&back.naturalWidth>0,back);
             // Desktop click-and-drag horizontally should turn pages as well.
             const rect=await page.locator('.memory-album-book').boundingBox();
@@ -171,17 +193,18 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // Production entrypoints must route to the same verified HD v6
-            // dynamic chunk, not a cached thumbnail-only gallery.
+            // Preview stages the hover-specificity fix; production still uses v6 until
+            // the preview's browser checks pass. Both use the unchanged HD JS.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              check('HD v6 HTML deployed '+route,r.status()===200&&
+              const expectedCss=route==='/album-preview/'?'memory-album-hd-v7.css':'memory-album-hd-v6.css';
+              check('staged HD hover CSS '+route,r.status()===200&&
                 html.includes('/assets/PhotoGallery-AlbumHD-20261117-v6.js')&&
-                html.includes('/assets/memory-album-hd-v6.css'),{status:r.status(),mapped:html.includes('PhotoGallery-AlbumHD-20261117-v6.js')});
+                html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss});
             }
-            for(const name of ['PhotoGallery-AlbumHD-20261117-v6.js','memory-album-hd-v6.css']){
+            for(const name of ['PhotoGallery-AlbumHD-20261117-v6.js','memory-album-hd-v7.css']){
               const r=await req.get(base+'/assets/'+name,{timeout:60000});
-              check('HD v6 asset served '+name,r.status()===200,{status:r.status(),length:(await r.body()).length});
+              check('HD hover asset served '+name,r.status()===200,{status:r.status(),length:(await r.body()).length});
             }
             await req.dispose();
             writeFileSync(out+'/results.json',JSON.stringify({checks,samples,timestamp:new Date().toISOString()},null,2));
