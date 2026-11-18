@@ -1,0 +1,138 @@
+name: Mobile scene performance preview QA (Chromium + WebKit)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-mobile-performance-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile-performance:
+    runs-on: macos-15
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install mobile browser engines
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/mobile-scene-qa"
+          cd "$RUNNER_TEMP/mobile-scene-qa"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund --no-save playwright@1.55.1
+          npx playwright install chromium webkit
+      - name: Compare current and optimized mobile scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/mobile-scene-qa"
+          cat > qa.cjs <<'NODE'
+          const {chromium,webkit,request}=require('playwright');
+          const fs=require('node:fs');
+          const base='https://tanchensiyi.com';
+          const out=process.env.GITHUB_WORKSPACE+'/mobile-scene-qa';
+          fs.mkdirSync(out,{recursive:true});
+          const checks=[],measurements=[];
+          function check(name,pass,details){checks.push({name,pass:!!pass,details}); console.log((pass?'PASS ':'FAIL ')+name+' '+JSON.stringify(details||null));}
+          async function run(engine,name){
+            const launchOpts={headless:true};
+            if(name==='chromium')launchOpts.args=['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'];
+            const browser=await engine.launch(launchOpts);
+            try{
+              for(const variant of ['live','optimized']){
+                const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block',reducedMotion:'no-preference'});
+                const page=await context.newPage();
+                const errors=[];
+                page.on('pageerror',e=>errors.push(e.message));
+                try{
+                  const url=base+(variant==='live'?'/':'/mobile-perf-preview/')+'?perfqa=v1';
+                  const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+                  check(name+' '+variant+' HTML 200',response?.status()===200,{status:response?.status()});
+                  await page.locator('.tree-stage canvas').waitFor({timeout:90000});
+                  // Let the scene settle past its first paint and orientation.
+                  await page.waitForTimeout(1800);
+                  const metrics=await page.evaluate(async()=>{
+                    const canvas=document.querySelector('.tree-stage canvas');
+                    const dims=()=>({cssWidth:canvas?.clientWidth||0,cssHeight:canvas?.clientHeight||0,
+                      width:canvas?.width||0,height:canvas?.height||0,
+                      physicalPixels:(canvas?.width||0)*(canvas?.height||0),
+                      effectiveDpr:+(((canvas?.width||0)/Math.max(1,canvas?.clientWidth||1))).toFixed(3)});
+                    const initial=dims();
+                    const frames=[];
+                    await new Promise(resolve=>{
+                      let last=performance.now(),start=last;
+                      function tick(now){
+                        frames.push(now-last);last=now;
+                        if(now-start>=3200){resolve();return;}
+                        requestAnimationFrame(tick);
+                      }
+                      requestAnimationFrame(tick);
+                    });
+                    const sorted=frames.slice(2).sort((a,b)=>a-b);
+                    const p=q=>sorted[Math.min(sorted.length-1,Math.floor(sorted.length*q))]||0;
+                    return {initial,after:dims(),mode:document.documentElement.dataset.mobileSceneMode||'legacy',
+                      sceneDpr:document.documentElement.dataset.sceneDpr||null,
+                      cameraMode:document.documentElement.dataset.cameraMode||null,
+                      princess:document.documentElement.dataset.princessV73||null,
+                      princessHeldKitten:document.documentElement.dataset.princessHeldKitten||null,
+                      raf:{samples:frames.length,p50:+p(.5).toFixed(2),p95:+p(.95).toFixed(2),
+                        p99:+p(.99).toFixed(2),over34:sorted.filter(t=>t>34).length,
+                        over50:sorted.filter(t=>t>50).length,max:+(sorted.at(-1)||0).toFixed(2)}};
+                  });
+                  check(name+' '+variant+' canvas active',metrics.after.width>0&&metrics.after.height>0,metrics);
+                  check(name+' '+variant+' no runtime errors',errors.length===0,errors.slice(0,6));
+                  if(variant==='optimized'){
+                    check(name+' optimized scene DPR <=1.7',metrics.after.effectiveDpr<=1.7&&metrics.after.effectiveDpr>=1,metrics);
+                    check(name+' optimized pixel budget <=1.11M',
+                      metrics.after.physicalPixels<=1110000,metrics.after);
+                    check(name+' optimized active camera',metrics.cameraMode==='pinch-anywhere',metrics.cameraMode);
+                    check(name+' optimized princess remains present',metrics.princess==='ready'||metrics.princess==='loading',metrics.princess);
+                  }
+                  const file=name+'-'+variant+'.png';
+                  await page.screenshot({path:out+'/'+file,fullPage:false,timeout:25000});
+                  measurements.push({engine:name,variant,...metrics,errors});
+                }catch(e){check(name+' '+variant+' browser task',false,String(e));}
+                finally{await context.close();}
+              }
+            }finally{await browser.close();}
+          }
+          async function main(){
+            const req=await request.newContext();
+            for(const name of ['TreeScene-MobileSmooth-20261117-v1.js','App-MobileSmooth-20261117-v1.js']){
+              const response=await req.get(base+'/assets/'+name,{timeout:45000});
+              check('staged module '+name,response.ok(),{status:response.status(),bytes:(await response.body()).length});
+            }
+            const html=await req.get(base+'/mobile-perf-preview/',{timeout:45000});
+            const src=await html.text();
+            check('preview routes to optimized App',html.ok()&&src.includes('/assets/App-MobileSmooth-20261117-v1.js'),{status:html.status()});
+            await req.dispose();
+            await run(chromium,'chromium');
+            await run(webkit,'webkit');
+            const pairs=['chromium','webkit'].map(engine=>{
+              const live=measurements.find(x=>x.engine===engine&&x.variant==='live');
+              const optimized=measurements.find(x=>x.engine===engine&&x.variant==='optimized');
+              if(!live||!optimized)return {engine,missing:true};
+              const reduction=1-optimized.after.physicalPixels/Math.max(1,live.after.physicalPixels);
+              check(engine+' GPU pixel workload reduced >=50%',reduction>=.5,{
+                oldPixels:live.after.physicalPixels,newPixels:optimized.after.physicalPixels,
+                reductionPct:+(reduction*100).toFixed(1)});
+              return {engine,live:live.after,optimized:optimized.after,pixelReductionPercent:+(reduction*100).toFixed(1),
+                liveRaf:live.raf,optimizedRaf:optimized.raf};
+            });
+            fs.writeFileSync(out+'/results.json',JSON.stringify({checks,measurements,pairs,at:new Date().toISOString()},null,2));
+            if(checks.some(c=>!c.pass))process.exitCode=1;
+          }
+          main().then(()=>process.exit(process.exitCode||0)).catch(e=>{console.error('MOBILE_SCENE_QA_FATAL',e);process.exit(1)});
+          NODE
+          node qa.cjs
+      - name: Upload QA screenshots and performance metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-scene-performance-comparison
+          path: mobile-scene-qa/
+          retention-days: 14
+          if-no-files-found: warn
