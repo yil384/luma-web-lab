@@ -1,13 +1,14 @@
 {
   "hosting": "GitHub Pages",
-  "version": "AlbumMobileStable-20261117-v8",
+  "version": "AlbumMobileOptimized-20261117-v9",
   "production": true,
   "changes": [
-    "Decode both destination original-resolution photos before each page turn",
-    "Keep newly revealed page mounted over stationary sheet while new images decode and paint",
-    "Remove leaf on settle, then remove reveal only after three browser rendering frames",
-    "Disable fragile reveal-opacity fade on coarse/mobile pointers",
-    "Preserve v6 HD photos, v7 hover/focus centering, left-right touch swipe and mouse drag"
+    "95 aspect-preserving book-only WebP assets generated at max 1280px long edge, quality 88",
+    "book source download bytes reduced 63.1% (35.2MB -> 13.0MB) and decoded pixels reduced 57.1% across the 95 source photos",
+    "stable left and right stationary sheet and image DOM nodes are reused across flips",
+    "only 4 book images predecoded on mobile, with 6-entry desktop cache and original fallback if book image unavailable",
+    "mobile backdrop blur and excess static compositing disabled to reduce WebGL + album GPU workload",
+    "original-resolution PhotoViewer, touch swipes, desktop drag, delayed overlay removal, hover/focus centering preserved"
   ],
   "preserved": [
     "V73 princess holding kitten",
@@ -18,20 +19,24 @@
     "film",
     "/letter/"
   ],
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44246919627",
-  "previousPagesCommit": "5c5f77f5bf72f56be71703eb7375d12c1d152367",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44250051766",
+  "previousPagesCommit": "c629ef7dc8b9d0a023459cc7739ad6011a178e84",
   "previousHomeBlob": "e74745205ace8d8a6827c81be53ff912eaba6894",
   "pathsChanged": [
     "index.html",
     "christmas/index.html",
     "album-preview/index.html",
-    "assets/PhotoGallery-AlbumMobileStable-20261117-v8.js",
-    "assets/memory-album-mobile-stable-v8.css",
+    "assets/PhotoGallery-MobileOptimized-20261117-v9.js",
+    "assets/memory-album-mobile-optimized-v9.css",
+    "generated/photos/*-book.webp",
+    "generated/book-photo-report.json",
     "album-release-status.json"
   ],
-  "css": "/assets/memory-album-mobile-stable-v8.css",
-  "bookJs": "/assets/PhotoGallery-AlbumMobileStable-20261117-v8.js",
+  "css": "/assets/memory-album-mobile-optimized-v9.css",
+  "bookJs": "/assets/PhotoGallery-MobileOptimized-20261117-v9.js",
   "originalMediaChanged": false,
-  "previousVersion": "AlbumHD-HoverStable-20261117-v7",
-  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44247264061"
+  "previousVersion": "AlbumMobileStable-20261117-v8",
+  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44250119451",
+  "assetBuildRun": "https://github.com/yil384/luma-web-lab/actions/runs/44249497730",
+  "bookReport": "/generated/book-photo-report.json"
 }
