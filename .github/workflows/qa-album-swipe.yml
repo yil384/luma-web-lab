@@ -253,14 +253,12 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // Stage the double-sided photo correction in preview only,
-            // preserve currently released v9 home/Christmas until WebKit QA.
+            // All public routes now serve the tested v10 two-sided page mask.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const preview=route==='/album-preview/';
-              const expectedCss=preview?'memory-album-flip-faces-v10.css':'memory-album-mobile-optimized-v9.css';
-              const expectedJs=preview?'PhotoGallery-FlipFaces-20261117-v10.js':'PhotoGallery-MobileOptimized-20261117-v9.js';
-              check('staged v10 book JS and CSS '+route,r.status()===200&&
+              const expectedCss='memory-album-flip-faces-v10.css';
+              const expectedJs='PhotoGallery-FlipFaces-20261117-v10.js';
+              check('production v10 book JS and CSS '+route,r.status()===200&&
                 html.includes('/assets/'+expectedJs)&&
                 html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
             }
