@@ -2,6 +2,7 @@
   "hosting": "GitHub Pages",
   "version": "AlbumFlipFaces-20261117-v10",
   "production": true,
+  "productionVerified": true,
   "changes": [
     "Mobile touch devices explicitly mask the non-facing page photo; no dependency on WebKit 3D backface culling",
     "The actual interpolated 3D rotateY matrix determines the visible front/back face, with both hidden only near the edge-on transition",
@@ -18,7 +19,7 @@
     "film",
     "/letter/"
   ],
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44257073230",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44257395270",
   "previousPagesCommit": "0c391efe80658512a803d88043a1be941e4e8b01",
   "previousHomeBlob": "e74745205ace8d8a6827c81be53ff912eaba6894",
   "pathsChanged": [
@@ -33,7 +34,7 @@
   "bookJs": "/assets/PhotoGallery-FlipFaces-20261117-v10.js",
   "originalMediaChanged": false,
   "previousVersion": "AlbumMobileOptimized-20261117-v9",
-  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44257068206",
+  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44257389635",
   "assetBuildRun": "https://github.com/yil384/luma-web-lab/actions/runs/44249497730",
   "bookReport": "/generated/book-photo-report.json"
 }
