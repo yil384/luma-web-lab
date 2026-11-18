@@ -1,13 +1,15 @@
 {
   "preview": true,
-  "version": "AlbumHD-HoverStable-20261117-v7",
+  "version": "AlbumMobileStable-20261117-v8",
   "previousCommit": "60b15a73aff8618036acf18ddd35a2579b825b38",
   "fixes": [
-    "hover/focus/active photo frames remain centered without 50% jump",
-    "keep all original-resolution files and native aspect ratios",
-    "predecoded neighboring pages, no flip flashes",
-    "desktop mouse drag, mobile left/right touch swipes unchanged"
+    "decode destination HD source images before turn begins",
+    "keep incoming layer opaque until destination book images are decoded and painted",
+    "three requestAnimationFrame commits keep left page from flashing on mobile WebKit",
+    "disable reveal opacity fade for coarse pointers",
+    "retain native-resolution photos, centered hover-stable frames and touch swipes"
   ],
-  "isolation": "v7 CSS is applied to the production and preview entrypoints, no new runtime JS or media changes",
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44209868560"
+  "isolation": "Production /, /christmas/, /album-preview/ use same v8 JS and CSS; other routes/media untouched",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44246919627",
+  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44247264061"
 }
