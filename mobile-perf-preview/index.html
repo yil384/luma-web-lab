@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#15203b" />
+    <meta name="description" content="送给集美小喵的圣诞魔法：童话城堡、雪中的小猫与一棵照片圣诞树。" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta property="og:title" content="集美小喵的圣诞魔法" />
+    <meta property="og:description" content="送给集美小喵的圣诞魔法：童话城堡、雪中的小猫与一棵照片圣诞树。" />
+    <meta property="og:image" content="https://tanchensiyi.com/film/starlight-return-poster.webp" />
+    <meta property="og:url" content="https://tanchensiyi.com/" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/xiaomiao-cat-transparent-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/xiaomiao-cat-transparent-512.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>手机性能优化预览 · 集美小喵</title>
+    <style>html,body{margin:0;background:#080e25;color:#fff0d5}#root:empty{min-height:100svh;display:grid;place-items:center}#root:empty::before{content:'';width:48px;height:48px;background:url('/icons/xiaomiao-cat-transparent-512.png') center/contain no-repeat}</style>
+    <script type="importmap">{"imports":{"/assets/index-CJX_PAH8.js":"/assets/index-AlbumSwipe-20261117-v5.js","/assets/App-AlbumSwipe-20261117-v5.js":"/assets/App-MobileSmooth-20261117-v1.js","/assets/PhotoGallery-AlbumSwipe-20261117-v5.js":"/assets/PhotoGallery-FlipFaces-20261117-v10.js"}}</script>
+    <script data-princess-prefetch="v73-fast">
+    (function(){
+      let pending=null;
+      const raw="/princess/luma-princess-hug-v73.glb";
+      const compressed=raw+".gz";
+      async function bytes(){
+        if(typeof DecompressionStream==="function"){
+          try{
+            const response=await fetch(compressed,{priority:"low",cache:"force-cache"});
+            if(!response.ok)throw Error("V73 gzip "+response.status);
+            let data=await response.arrayBuffer();
+            const signature=new Uint8Array(data,0,Math.min(data.byteLength,4));
+            if(signature.length===4&&signature[0]===103&&signature[1]===108&&signature[2]===84&&signature[3]===70){
+              document.documentElement.dataset.princessTransport="http-decompressed";
+            }else{
+              data=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+              document.documentElement.dataset.princessTransport="gzip";
+            }
+            if(data.byteLength!==15329160)throw Error("V73 decoded binary length mismatch");
+            return data;
+          }catch(error){console.warn("V73 compressed preload fell back",error);}
+        }
+        const response=await fetch(raw,{priority:"low",cache:"force-cache"});
+        if(!response.ok)throw Error("V73 source "+response.status);
+        document.documentElement.dataset.princessTransport="original";
+        return await response.arrayBuffer();
+      }
+      window.__v73GetModelBytes=()=>pending||(pending=bytes());
+      window.__v73ReleaseModelBytes=()=>{pending=null};
+      const kick=()=>{window.__v73GetModelBytes().catch(()=>{})};
+      if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(kick,180),{once:true});
+      else setTimeout(kick,180);
+    })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-AlbumSwipe-20261117-v5.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BbhkVABR.css">
+    <link rel="stylesheet" href="/assets/memory-album-v5.css">
+    <link rel="stylesheet" href="/assets/memory-album-flip-faces-v10.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript><main style="padding:20vh 8vw;text-align:center"><h1>集美小喵的圣诞魔法</h1><p>请启用 JavaScript 来打开照片圣诞树。</p></main></noscript>
+  </body>
+</html>
