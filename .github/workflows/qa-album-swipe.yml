@@ -1,4 +1,4 @@
-name: QA mobile v9 optimized book assets, stable pages, and swipes
+name: QA album v10 correct double-sided pages and touch swipes
 on:
   push:
     branches: [main]
@@ -253,12 +253,14 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
-            // v9 is released to all public entrypoints.
+            // Stage the double-sided photo correction in preview only,
+            // preserve currently released v9 home/Christmas until WebKit QA.
             for(const route of ['/','/christmas/','/album-preview/']){
               const r=await req.get(base+route,{timeout:60000}),html=await r.text();
-              const expectedCss='memory-album-mobile-optimized-v9.css';
-              const expectedJs='PhotoGallery-MobileOptimized-20261117-v9.js';
-              check('production v9 book JS and CSS '+route,r.status()===200&&
+              const preview=route==='/album-preview/';
+              const expectedCss=preview?'memory-album-flip-faces-v10.css':'memory-album-mobile-optimized-v9.css';
+              const expectedJs=preview?'PhotoGallery-FlipFaces-20261117-v10.js':'PhotoGallery-MobileOptimized-20261117-v9.js';
+              check('staged v10 book JS and CSS '+route,r.status()===200&&
                 html.includes('/assets/'+expectedJs)&&
                 html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
             }
@@ -271,7 +273,7 @@ jobs:
                 sourceBytes:report.sourceBytes,bookBytes:report.bookBytes,
                 decodedPixels:report.bookDecodedPixels,sourcePixels:report.sourceDecodedPixels
               });
-            for(const name of ['PhotoGallery-MobileOptimized-20261117-v9.js','memory-album-mobile-optimized-v9.css']){
+            for(const name of ['PhotoGallery-FlipFaces-20261117-v10.js','memory-album-flip-faces-v10.css']){
               const r=await req.get(base+'/assets/'+name,{timeout:60000});
               check('HD hover asset served '+name,r.status()===200,{status:r.status(),length:(await r.body()).length});
             }
