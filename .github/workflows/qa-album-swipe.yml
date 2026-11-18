@@ -171,6 +171,18 @@ jobs:
               const r=await req.get(base+route,{timeout:60000});
               check('preserved '+route,r.status()===200,r.status());
             }
+            // Production entrypoints must route to the same verified HD v6
+            // dynamic chunk, not a cached thumbnail-only gallery.
+            for(const route of ['/','/christmas/','/album-preview/']){
+              const r=await req.get(base+route,{timeout:60000}),html=await r.text();
+              check('HD v6 HTML deployed '+route,r.status()===200&&
+                html.includes('/assets/PhotoGallery-AlbumHD-20261117-v6.js')&&
+                html.includes('/assets/memory-album-hd-v6.css'),{status:r.status(),mapped:html.includes('PhotoGallery-AlbumHD-20261117-v6.js')});
+            }
+            for(const name of ['PhotoGallery-AlbumHD-20261117-v6.js','memory-album-hd-v6.css']){
+              const r=await req.get(base+'/assets/'+name,{timeout:60000});
+              check('HD v6 asset served '+name,r.status()===200,{status:r.status(),length:(await r.body()).length});
+            }
             await req.dispose();
             writeFileSync(out+'/results.json',JSON.stringify({checks,samples,timestamp:new Date().toISOString()},null,2));
             if(checks.some(x=>!x.pass))process.exitCode=1;
