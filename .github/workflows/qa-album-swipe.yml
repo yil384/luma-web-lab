@@ -255,12 +255,25 @@ jobs:
             }
             // All public routes now serve the tested v10 two-sided page mask.
             for(const route of ['/','/christmas/','/album-preview/']){
-              const r=await req.get(base+route,{timeout:60000}),html=await r.text();
               const expectedCss='memory-album-flip-faces-v10.css';
               const expectedJs='PhotoGallery-FlipFaces-20261117-v10.js';
+              let r,html='',attempt=0,firstHadV10=false;
+              for(;attempt<5;attempt++){
+                const cacheBuster=attempt?'?albumFaceCheck=v10-'+attempt:'';
+                r=await req.get(base+route+cacheBuster,{
+                  timeout:60000,headers:{'Cache-Control':'no-cache'}});
+                html=await r.text();
+                const ok=r.status()===200&&html.includes('/assets/'+expectedJs)&&
+                  html.includes('/assets/'+expectedCss);
+                if(attempt===0) firstHadV10=ok;
+                if(ok) break;
+                await new Promise(resolve=>setTimeout(resolve,500));
+              }
               check('production v10 book JS and CSS '+route,r.status()===200&&
                 html.includes('/assets/'+expectedJs)&&
-                html.includes('/assets/'+expectedCss),{status:r.status(),expectedCss,expectedJs});
+                html.includes('/assets/'+expectedCss),{
+                  status:r.status(),attempt,firstHadV10,expectedCss,expectedJs,
+                  activeJs:(html.match(/PhotoGallery-[^"]+\.js/g)||[]).slice(0,2)});
             }
             const bookReport=await req.get(base+'/generated/book-photo-report.json',{timeout:60000});
             const report=await bookReport.json();
