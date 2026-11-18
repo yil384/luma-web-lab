@@ -1,15 +1,17 @@
 {
   "preview": true,
-  "version": "AlbumMobileStable-20261117-v8",
+  "version": "AlbumMobileOptimized-20261117-v9",
   "previousCommit": "60b15a73aff8618036acf18ddd35a2579b825b38",
   "fixes": [
-    "decode destination HD source images before turn begins",
-    "keep incoming layer opaque until destination book images are decoded and painted",
-    "three requestAnimationFrame commits keep left page from flashing on mobile WebKit",
-    "disable reveal opacity fade for coarse pointers",
-    "retain native-resolution photos, centered hover-stable frames and touch swipes"
+    "95 aspect-preserving book-only WebP assets generated at max 1280px long edge, quality 88",
+    "book source download bytes reduced 63.1% (35.2MB -> 13.0MB) and decoded pixels reduced 57.1% across the 95 source photos",
+    "stable left and right stationary sheet and image DOM nodes are reused across flips",
+    "only 4 book images predecoded on mobile, with 6-entry desktop cache and original fallback if book image unavailable",
+    "mobile backdrop blur and excess static compositing disabled to reduce WebGL + album GPU workload",
+    "original-resolution PhotoViewer, touch swipes, desktop drag, delayed overlay removal, hover/focus centering preserved"
   ],
-  "isolation": "Production /, /christmas/, /album-preview/ use same v8 JS and CSS; other routes/media untouched",
-  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44246919627",
-  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44247264061"
+  "isolation": "All public routes use v9 gallery module and mobile CSS; originals, V73 scene, films, and letter route untouched",
+  "qaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44250051766",
+  "webkitQaRun": "https://github.com/yil384/luma-web-lab/actions/runs/44250119451",
+  "assetBuildRun": "https://github.com/yil384/luma-web-lab/actions/runs/44249497730"
 }
