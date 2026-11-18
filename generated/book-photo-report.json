@@ -1,0 +1,962 @@
+{
+  "version": "album-book-webp-1280-q88-v1",
+  "maxEdge": 1280,
+  "quality": 88,
+  "photoCount": 95,
+  "sourceBytes": 35232248,
+  "bookBytes": 13011378,
+  "sourceDecodedPixels": 242593303,
+  "bookDecodedPixels": 104122560,
+  "photos": [
+    {
+      "id": "0c343238ba52e4e60c84",
+      "book": "generated/photos/0c343238ba52e4e60c84-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 216580,
+      "bookBytes": 66678
+    },
+    {
+      "id": "3d69805b6446f4af921f",
+      "book": "generated/photos/3d69805b6446f4af921f-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 291872,
+      "bookBytes": 118858
+    },
+    {
+      "id": "7b892cbb5dc4d07ca44f",
+      "book": "generated/photos/7b892cbb5dc4d07ca44f-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 399202,
+      "bookBytes": 152568
+    },
+    {
+      "id": "de96183d672058ad7c42",
+      "book": "generated/photos/de96183d672058ad7c42-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 297602,
+      "bookBytes": 118060
+    },
+    {
+      "id": "a6738cb4cdcf1d5777e7",
+      "book": "generated/photos/a6738cb4cdcf1d5777e7-book.webp",
+      "width": 961,
+      "height": 1280,
+      "sourcePixels": 2763360,
+      "bookPixels": 1230080,
+      "sourceBytes": 217026,
+      "bookBytes": 80368
+    },
+    {
+      "id": "6357065b58c848ed0142",
+      "book": "generated/photos/6357065b58c848ed0142-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2766240,
+      "bookPixels": 1228800,
+      "sourceBytes": 253414,
+      "bookBytes": 95096
+    },
+    {
+      "id": "0c952c3fe8d6d67588d0",
+      "book": "generated/photos/0c952c3fe8d6d67588d0-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 356374,
+      "bookBytes": 138444
+    },
+    {
+      "id": "8dc4b145ea92b897f9fa",
+      "book": "generated/photos/8dc4b145ea92b897f9fa-book.webp",
+      "width": 961,
+      "height": 1280,
+      "sourcePixels": 2763360,
+      "bookPixels": 1230080,
+      "sourceBytes": 581634,
+      "bookBytes": 221230
+    },
+    {
+      "id": "b5a0596fb5038a75a0c1",
+      "book": "generated/photos/b5a0596fb5038a75a0c1-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2766240,
+      "bookPixels": 1228800,
+      "sourceBytes": 338000,
+      "bookBytes": 127622
+    },
+    {
+      "id": "93478ac188b113898561",
+      "book": "generated/photos/93478ac188b113898561-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 507144,
+      "bookBytes": 203212
+    },
+    {
+      "id": "688d8b0f109f61afc1b1",
+      "book": "generated/photos/688d8b0f109f61afc1b1-book.webp",
+      "width": 961,
+      "height": 1280,
+      "sourcePixels": 2763360,
+      "bookPixels": 1230080,
+      "sourceBytes": 398862,
+      "bookBytes": 145848
+    },
+    {
+      "id": "d9d86e9d27988be9e526",
+      "book": "generated/photos/d9d86e9d27988be9e526-book.webp",
+      "width": 1280,
+      "height": 864,
+      "sourcePixels": 1399680,
+      "bookPixels": 1105920,
+      "sourceBytes": 336208,
+      "bookBytes": 204960
+    },
+    {
+      "id": "9a9f55333d846052dd80",
+      "book": "generated/photos/9a9f55333d846052dd80-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 651904,
+      "bookBytes": 195520
+    },
+    {
+      "id": "76c23230f26736c7f911",
+      "book": "generated/photos/76c23230f26736c7f911-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 507716,
+      "bookBytes": 165970
+    },
+    {
+      "id": "b91ec8d403f3d4e2adc6",
+      "book": "generated/photos/b91ec8d403f3d4e2adc6-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 383286,
+      "bookBytes": 130304
+    },
+    {
+      "id": "8142bfbeb48ebf6c6747",
+      "book": "generated/photos/8142bfbeb48ebf6c6747-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 542390,
+      "bookBytes": 165216
+    },
+    {
+      "id": "bf91c290b699b53ab6e6",
+      "book": "generated/photos/bf91c290b699b53ab6e6-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 543236,
+      "bookBytes": 173076
+    },
+    {
+      "id": "1480d101bb389997a6d5",
+      "book": "generated/photos/1480d101bb389997a6d5-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 472982,
+      "bookBytes": 171496
+    },
+    {
+      "id": "1dda4b5ca6144d42621f",
+      "book": "generated/photos/1dda4b5ca6144d42621f-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 352642,
+      "bookBytes": 149478
+    },
+    {
+      "id": "353255f8291d870b4cf6",
+      "book": "generated/photos/353255f8291d870b4cf6-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2766240,
+      "bookPixels": 1228800,
+      "sourceBytes": 211148,
+      "bookBytes": 88054
+    },
+    {
+      "id": "e59c7ac775c3906f2969",
+      "book": "generated/photos/e59c7ac775c3906f2969-book.webp",
+      "width": 961,
+      "height": 1280,
+      "sourcePixels": 2763360,
+      "bookPixels": 1230080,
+      "sourceBytes": 288622,
+      "bookBytes": 116988
+    },
+    {
+      "id": "2712f1c749215c576cee",
+      "book": "generated/photos/2712f1c749215c576cee-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 203122,
+      "bookBytes": 62456
+    },
+    {
+      "id": "89db81e21287c5456075",
+      "book": "generated/photos/89db81e21287c5456075-book.webp",
+      "width": 1280,
+      "height": 723,
+      "sourcePixels": 3086160,
+      "bookPixels": 925440,
+      "sourceBytes": 232502,
+      "bookBytes": 74044
+    },
+    {
+      "id": "b08afb20b494d15d2c06",
+      "book": "generated/photos/b08afb20b494d15d2c06-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 495702,
+      "bookBytes": 193874
+    },
+    {
+      "id": "f2bd6231a63a997c6011",
+      "book": "generated/photos/f2bd6231a63a997c6011-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2764800,
+      "bookPixels": 1228800,
+      "sourceBytes": 362486,
+      "bookBytes": 143522
+    },
+    {
+      "id": "f41fffd0fda45a6bfe2e",
+      "book": "generated/photos/f41fffd0fda45a6bfe2e-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2766240,
+      "bookPixels": 1228800,
+      "sourceBytes": 506728,
+      "bookBytes": 193040
+    },
+    {
+      "id": "116b48b3213a2968bce9",
+      "book": "generated/photos/116b48b3213a2968bce9-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 2766240,
+      "bookPixels": 1228800,
+      "sourceBytes": 251570,
+      "bookBytes": 97006
+    },
+    {
+      "id": "620c1d1a8f79cc8d0a2b",
+      "book": "generated/photos/620c1d1a8f79cc8d0a2b-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 265494,
+      "bookBytes": 86264
+    },
+    {
+      "id": "428c68e08a4c967d1e3e",
+      "book": "generated/photos/428c68e08a4c967d1e3e-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 220274,
+      "bookBytes": 71094
+    },
+    {
+      "id": "e06b6a1b7cfb42416e81",
+      "book": "generated/photos/e06b6a1b7cfb42416e81-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 3110400,
+      "bookPixels": 1091840,
+      "sourceBytes": 281434,
+      "bookBytes": 89416
+    },
+    {
+      "id": "2bdba87df7b226d9c1a0",
+      "book": "generated/photos/2bdba87df7b226d9c1a0-book.webp",
+      "width": 1152,
+      "height": 1280,
+      "sourcePixels": 1817459,
+      "bookPixels": 1474560,
+      "sourceBytes": 213214,
+      "bookBytes": 115748
+    },
+    {
+      "id": "7fc3a5f482b381bcb9d7",
+      "book": "generated/photos/7fc3a5f482b381bcb9d7-book.webp",
+      "width": 936,
+      "height": 1280,
+      "sourcePixels": 1595160,
+      "bookPixels": 1198080,
+      "sourceBytes": 274400,
+      "bookBytes": 161780
+    },
+    {
+      "id": "ef34065649869492ab6f",
+      "book": "generated/photos/ef34065649869492ab6f-book.webp",
+      "width": 894,
+      "height": 1280,
+      "sourcePixels": 1670760,
+      "bookPixels": 1144320,
+      "sourceBytes": 253270,
+      "bookBytes": 134680
+    },
+    {
+      "id": "dc1a1d244391bc8073d8",
+      "book": "generated/photos/dc1a1d244391bc8073d8-book.webp",
+      "width": 928,
+      "height": 1280,
+      "sourcePixels": 1609200,
+      "bookPixels": 1187840,
+      "sourceBytes": 212484,
+      "bookBytes": 116658
+    },
+    {
+      "id": "f6103c41d92300401700",
+      "book": "generated/photos/f6103c41d92300401700-book.webp",
+      "width": 944,
+      "height": 1280,
+      "sourcePixels": 1581120,
+      "bookPixels": 1208320,
+      "sourceBytes": 176424,
+      "bookBytes": 102392
+    },
+    {
+      "id": "6014ce0fb7728798b721",
+      "book": "generated/photos/6014ce0fb7728798b721-book.webp",
+      "width": 851,
+      "height": 1280,
+      "sourcePixels": 1753920,
+      "bookPixels": 1089280,
+      "sourceBytes": 241034,
+      "bookBytes": 119852
+    },
+    {
+      "id": "a48b58634319b90f7ac6",
+      "book": "generated/photos/a48b58634319b90f7ac6-book.webp",
+      "width": 927,
+      "height": 1280,
+      "sourcePixels": 1610280,
+      "bookPixels": 1186560,
+      "sourceBytes": 180146,
+      "bookBytes": 101454
+    },
+    {
+      "id": "05048e5e96b316e32410",
+      "book": "generated/photos/05048e5e96b316e32410-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 1555200,
+      "bookPixels": 1228800,
+      "sourceBytes": 274012,
+      "bookBytes": 157522
+    },
+    {
+      "id": "aa929792dd9d740003b8",
+      "book": "generated/photos/aa929792dd9d740003b8-book.webp",
+      "width": 919,
+      "height": 1280,
+      "sourcePixels": 1625400,
+      "bookPixels": 1176320,
+      "sourceBytes": 298600,
+      "bookBytes": 159974
+    },
+    {
+      "id": "e92aebcdb7eea56b8382",
+      "book": "generated/photos/e92aebcdb7eea56b8382-book.webp",
+      "width": 893,
+      "height": 1280,
+      "sourcePixels": 1671840,
+      "bookPixels": 1143040,
+      "sourceBytes": 302638,
+      "bookBytes": 165738
+    },
+    {
+      "id": "fbdffbd99964972206c8",
+      "book": "generated/photos/fbdffbd99964972206c8-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4915200,
+      "bookPixels": 1228800,
+      "sourceBytes": 906212,
+      "bookBytes": 280878
+    },
+    {
+      "id": "5404219dc47f94d2111d",
+      "book": "generated/photos/5404219dc47f94d2111d-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4945968,
+      "bookPixels": 1228800,
+      "sourceBytes": 502064,
+      "bookBytes": 150312
+    },
+    {
+      "id": "8ebee04a00ce25a7860d",
+      "book": "generated/photos/8ebee04a00ce25a7860d-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4915200,
+      "bookPixels": 1228800,
+      "sourceBytes": 1129442,
+      "bookBytes": 333230
+    },
+    {
+      "id": "8440800a1c6c04a9d934",
+      "book": "generated/photos/8440800a1c6c04a9d934-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4945968,
+      "bookPixels": 1228800,
+      "sourceBytes": 538284,
+      "bookBytes": 159040
+    },
+    {
+      "id": "b0ab6f8ae686575d47cb",
+      "book": "generated/photos/b0ab6f8ae686575d47cb-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4915200,
+      "bookPixels": 1228800,
+      "sourceBytes": 1322044,
+      "bookBytes": 382128
+    },
+    {
+      "id": "64f2b9d497a62960862f",
+      "book": "generated/photos/64f2b9d497a62960862f-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4915200,
+      "bookPixels": 1228800,
+      "sourceBytes": 1343942,
+      "bookBytes": 384644
+    },
+    {
+      "id": "e46f11379bf934338f4c",
+      "book": "generated/photos/e46f11379bf934338f4c-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4915200,
+      "bookPixels": 1228800,
+      "sourceBytes": 1009354,
+      "bookBytes": 319858
+    },
+    {
+      "id": "b28c43564b2069dcfe8f",
+      "book": "generated/photos/b28c43564b2069dcfe8f-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4945968,
+      "bookPixels": 1228800,
+      "sourceBytes": 641644,
+      "bookBytes": 197754
+    },
+    {
+      "id": "1992c64f8193c731d093",
+      "book": "generated/photos/1992c64f8193c731d093-book.webp",
+      "width": 960,
+      "height": 1280,
+      "sourcePixels": 4945968,
+      "bookPixels": 1228800,
+      "sourceBytes": 724540,
+      "bookBytes": 234238
+    },
+    {
+      "id": "bd65ac19db8f1c2d1371",
+      "book": "generated/photos/bd65ac19db8f1c2d1371-book.webp",
+      "width": 1280,
+      "height": 969,
+      "sourcePixels": 1540080,
+      "bookPixels": 1240320,
+      "sourceBytes": 205654,
+      "bookBytes": 127216
+    },
+    {
+      "id": "d1c913920ef41da24ae8",
+      "book": "generated/photos/d1c913920ef41da24ae8-book.webp",
+      "width": 1080,
+      "height": 1080,
+      "sourcePixels": 1166400,
+      "bookPixels": 1166400,
+      "sourceBytes": 162262,
+      "bookBytes": 120398
+    },
+    {
+      "id": "73dc1a487507c920275d",
+      "book": "generated/photos/73dc1a487507c920275d-book.webp",
+      "width": 1280,
+      "height": 953,
+      "sourcePixels": 1567080,
+      "bookPixels": 1219840,
+      "sourceBytes": 164936,
+      "bookBytes": 100920
+    },
+    {
+      "id": "b07dbb315b84c1a5ca03",
+      "book": "generated/photos/b07dbb315b84c1a5ca03-book.webp",
+      "width": 854,
+      "height": 1280,
+      "sourcePixels": 1748520,
+      "bookPixels": 1093120,
+      "sourceBytes": 216234,
+      "bookBytes": 117288
+    },
+    {
+      "id": "735b0909609c472b5f85",
+      "book": "generated/photos/735b0909609c472b5f85-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 207420,
+      "bookBytes": 107168
+    },
+    {
+      "id": "e9e07eb9b26e5cde79f2",
+      "book": "generated/photos/e9e07eb9b26e5cde79f2-book.webp",
+      "width": 886,
+      "height": 1280,
+      "sourcePixels": 1684800,
+      "bookPixels": 1134080,
+      "sourceBytes": 228098,
+      "bookBytes": 123940
+    },
+    {
+      "id": "546feeb545de1ef2531e",
+      "book": "generated/photos/546feeb545de1ef2531e-book.webp",
+      "width": 1280,
+      "height": 854,
+      "sourcePixels": 1748520,
+      "bookPixels": 1093120,
+      "sourceBytes": 231768,
+      "bookBytes": 123884
+    },
+    {
+      "id": "4020f5d4624df755c48f",
+      "book": "generated/photos/4020f5d4624df755c48f-book.webp",
+      "width": 950,
+      "height": 1280,
+      "sourcePixels": 1560200,
+      "bookPixels": 1216000,
+      "sourceBytes": 195350,
+      "bookBytes": 121502
+    },
+    {
+      "id": "dd3a5893937d26d1fb7f",
+      "book": "generated/photos/dd3a5893937d26d1fb7f-book.webp",
+      "width": 854,
+      "height": 1280,
+      "sourcePixels": 1748520,
+      "bookPixels": 1093120,
+      "sourceBytes": 247732,
+      "bookBytes": 135622
+    },
+    {
+      "id": "bbf11ee15289663e9ab1",
+      "book": "generated/photos/bbf11ee15289663e9ab1-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 169662,
+      "bookBytes": 91696
+    },
+    {
+      "id": "724a422524890e02e378",
+      "book": "generated/photos/724a422524890e02e378-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 234070,
+      "bookBytes": 119930
+    },
+    {
+      "id": "0aa3359abadc65ab0c87",
+      "book": "generated/photos/0aa3359abadc65ab0c87-book.webp",
+      "width": 847,
+      "height": 1280,
+      "sourcePixels": 1763640,
+      "bookPixels": 1084160,
+      "sourceBytes": 241592,
+      "bookBytes": 122948
+    },
+    {
+      "id": "7c47ffbe7127611edcef",
+      "book": "generated/photos/7c47ffbe7127611edcef-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 217176,
+      "bookBytes": 114710
+    },
+    {
+      "id": "6b558d7ba3953b9e6677",
+      "book": "generated/photos/6b558d7ba3953b9e6677-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 251652,
+      "bookBytes": 130628
+    },
+    {
+      "id": "9509f33a5e279bf7fa71",
+      "book": "generated/photos/9509f33a5e279bf7fa71-book.webp",
+      "width": 810,
+      "height": 1216,
+      "sourcePixels": 984960,
+      "bookPixels": 984960,
+      "sourceBytes": 151484,
+      "bookBytes": 109220
+    },
+    {
+      "id": "a5daf0ccbeea98da97f0",
+      "book": "generated/photos/a5daf0ccbeea98da97f0-book.webp",
+      "width": 850,
+      "height": 1280,
+      "sourcePixels": 1756080,
+      "bookPixels": 1088000,
+      "sourceBytes": 125812,
+      "bookBytes": 69074
+    },
+    {
+      "id": "dcb4dc05d9e07ec489f0",
+      "book": "generated/photos/dcb4dc05d9e07ec489f0-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 137960,
+      "bookBytes": 73844
+    },
+    {
+      "id": "d3d485a8c5a82af42650",
+      "book": "generated/photos/d3d485a8c5a82af42650-book.webp",
+      "width": 811,
+      "height": 1280,
+      "sourcePixels": 1841400,
+      "bookPixels": 1038080,
+      "sourceBytes": 199888,
+      "bookBytes": 100918
+    },
+    {
+      "id": "8d2dd7e437a9bc3c7bb1",
+      "book": "generated/photos/8d2dd7e437a9bc3c7bb1-book.webp",
+      "width": 761,
+      "height": 1280,
+      "sourcePixels": 1977216,
+      "bookPixels": 974080,
+      "sourceBytes": 464734,
+      "bookBytes": 226492
+    },
+    {
+      "id": "fd279c63fe91c77ef9b2",
+      "book": "generated/photos/fd279c63fe91c77ef9b2-book.webp",
+      "width": 767,
+      "height": 1280,
+      "sourcePixels": 1954092,
+      "bookPixels": 981760,
+      "sourceBytes": 294232,
+      "bookBytes": 136238
+    },
+    {
+      "id": "99db4829ef8871ac579a",
+      "book": "generated/photos/99db4829ef8871ac579a-book.webp",
+      "width": 821,
+      "height": 1280,
+      "sourcePixels": 1817640,
+      "bookPixels": 1050880,
+      "sourceBytes": 291654,
+      "bookBytes": 148252
+    },
+    {
+      "id": "4036f1d35adaa706b1e4",
+      "book": "generated/photos/4036f1d35adaa706b1e4-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 1166400,
+      "bookPixels": 921600,
+      "sourceBytes": 153582,
+      "bookBytes": 94174
+    },
+    {
+      "id": "52d1bc32672a69ae0e4c",
+      "book": "generated/photos/52d1bc32672a69ae0e4c-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 279868,
+      "bookBytes": 112708
+    },
+    {
+      "id": "29295e148fabb60e97bb",
+      "book": "generated/photos/29295e148fabb60e97bb-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 311230,
+      "bookBytes": 132586
+    },
+    {
+      "id": "e6849bb0d32f98979bbd",
+      "book": "generated/photos/e6849bb0d32f98979bbd-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 323580,
+      "bookBytes": 139558
+    },
+    {
+      "id": "5be97fa577372f680dd6",
+      "book": "generated/photos/5be97fa577372f680dd6-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 313616,
+      "bookBytes": 137084
+    },
+    {
+      "id": "1c1edaf7b7a27fc9bce4",
+      "book": "generated/photos/1c1edaf7b7a27fc9bce4-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 206668,
+      "bookBytes": 83588
+    },
+    {
+      "id": "01144e6f9dac0699402e",
+      "book": "generated/photos/01144e6f9dac0699402e-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 310370,
+      "bookBytes": 122270
+    },
+    {
+      "id": "f85141a02a20e6048604",
+      "book": "generated/photos/f85141a02a20e6048604-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 289630,
+      "bookBytes": 108878
+    },
+    {
+      "id": "33c10976d4c223936ab2",
+      "book": "generated/photos/33c10976d4c223936ab2-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 227882,
+      "bookBytes": 88288
+    },
+    {
+      "id": "d063bb65cac3b599ef89",
+      "book": "generated/photos/d063bb65cac3b599ef89-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 363432,
+      "bookBytes": 132162
+    },
+    {
+      "id": "3648b58b2e3066f5e3e1",
+      "book": "generated/photos/3648b58b2e3066f5e3e1-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 348084,
+      "bookBytes": 139624
+    },
+    {
+      "id": "6d8adf1cbbc10126c0dd",
+      "book": "generated/photos/6d8adf1cbbc10126c0dd-book.webp",
+      "width": 720,
+      "height": 1280,
+      "sourcePixels": 2072520,
+      "bookPixels": 921600,
+      "sourceBytes": 182090,
+      "bookBytes": 74412
+    },
+    {
+      "id": "f825a08b3bcd9019456c",
+      "book": "generated/photos/f825a08b3bcd9019456c-book.webp",
+      "width": 360,
+      "height": 1280,
+      "sourcePixels": 4137965,
+      "bookPixels": 460800,
+      "sourceBytes": 864092,
+      "bookBytes": 122638
+    },
+    {
+      "id": "cbe86cef0fc96ca326d4",
+      "book": "generated/photos/cbe86cef0fc96ca326d4-book.webp",
+      "width": 360,
+      "height": 1280,
+      "sourcePixels": 4135807,
+      "bookPixels": 460800,
+      "sourceBytes": 766242,
+      "bookBytes": 115516
+    },
+    {
+      "id": "71883737e751114b31c2",
+      "book": "generated/photos/71883737e751114b31c2-book.webp",
+      "width": 120,
+      "height": 1280,
+      "sourcePixels": 10949172,
+      "bookPixels": 153600,
+      "sourceBytes": 1952184,
+      "bookBytes": 43614
+    },
+    {
+      "id": "f0c860ae8f0ded880306",
+      "book": "generated/photos/f0c860ae8f0ded880306-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 190864,
+      "bookBytes": 88212
+    },
+    {
+      "id": "9f2da57488a8c8afc08e",
+      "book": "generated/photos/9f2da57488a8c8afc08e-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 202536,
+      "bookBytes": 93240
+    },
+    {
+      "id": "476f325aa996136b6f42",
+      "book": "generated/photos/476f325aa996136b6f42-book.webp",
+      "width": 1280,
+      "height": 853,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 137500,
+      "bookBytes": 60410
+    },
+    {
+      "id": "ac9271c23132b2c0571f",
+      "book": "generated/photos/ac9271c23132b2c0571f-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 266726,
+      "bookBytes": 130254
+    },
+    {
+      "id": "68d5fe98e295b53ab9ff",
+      "book": "generated/photos/68d5fe98e295b53ab9ff-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 244188,
+      "bookBytes": 112054
+    },
+    {
+      "id": "f46065936453c73307b3",
+      "book": "generated/photos/f46065936453c73307b3-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 258930,
+      "bookBytes": 125876
+    },
+    {
+      "id": "098df15708f3cf5e1bd6",
+      "book": "generated/photos/098df15708f3cf5e1bd6-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 232080,
+      "bookBytes": 107720
+    },
+    {
+      "id": "3c0f8a426c3358b1b76d",
+      "book": "generated/photos/3c0f8a426c3358b1b76d-book.webp",
+      "width": 853,
+      "height": 1280,
+      "sourcePixels": 1749600,
+      "bookPixels": 1091840,
+      "sourceBytes": 191790,
+      "bookBytes": 86340
+    },
+    {
+      "id": "14446726c607b35d402d",
+      "book": "generated/photos/14446726c607b35d402d-book.webp",
+      "width": 768,
+      "height": 1280,
+      "sourcePixels": 1944000,
+      "bookPixels": 983040,
+      "sourceBytes": 295428,
+      "bookBytes": 124798
+    },
+    {
+      "id": "dba992a59dc06d722a0f",
+      "book": "generated/photos/dba992a59dc06d722a0f-book.webp",
+      "width": 1280,
+      "height": 960,
+      "sourcePixels": 1555200,
+      "bookPixels": 1228800,
+      "sourceBytes": 169382,
+      "bookBytes": 95844
+    }
+  ]
+}
