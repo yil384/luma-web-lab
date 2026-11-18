@@ -1,0 +1,79 @@
+/* Album HD v7: the actual source photo is displayed in every printed book page.
+   Keep paper dimensions independent of the images' intrinsic aspect ratios. */
+.memory-album-spread {
+  display: block;
+}
+.memory-album-spread > .memory-album-sheet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.memory-album-spread > .memory-album-sheet--left {
+  left: 0;
+}
+.memory-album-spread > .memory-album-sheet--right {
+  right: 0;
+}
+.memory-album-reveal > .memory-album-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* The extra .memory-album ancestor intentionally outranks legacy v5
+   button.memory-album-photo-mount:is(:hover,:focus-visible) { transform:none !important; }.
+   Without it, hover/focus removes the -50% translation, shifting a print
+   right/down by half its width/height. State-invariant positioning below. */
+.memory-album .memory-album-sheet .memory-album-photo-mount,
+.memory-album .memory-album-leaf-face .memory-album-photo-mount {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 78%;
+  height: 78%;
+  max-width: 78%;
+  max-height: 78%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%) !important;
+  transition: none !important;
+  overflow: hidden;
+}
+/* Intrinsic image dimensions must not participate in frame sizing. */
+.memory-album-photo-mount > .memory-album-print {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.memory-album-photo-mount .memory-album-print > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  display: block;
+  object-fit: contain;
+  object-position: 50% 50%;
+  image-rendering: auto;
+  transform: none !important;
+}
+@media (max-width: 600px) {
+  .memory-album .memory-album-sheet .memory-album-photo-mount,
+  .memory-album .memory-album-leaf-face .memory-album-photo-mount {
+    width: 84%;
+    height: 78%;
+    max-width: 84%;
+    max-height: 78%;
+  }
+}
