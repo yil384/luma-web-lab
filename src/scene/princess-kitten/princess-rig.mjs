@@ -2,6 +2,9 @@
  * Real arm and eyelid skin adapter for luma-princess-rigged-v77.glb.
  * Deliberately imports no Three.js: it operates on the loaded scene's instances.
  * The high-poly face, hair, gown and original eyeballs stay completely static.
+ * update(..., {deferMatrices: true}) leaves final matrix/skin uploads to the
+ * renderer and avoids rewriting an unchanged idle pose. CPU callers keep the
+ * synchronous default, including explicit rest-pose restoration on each call.
  */
 const ARM_BONES = ['upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R'];
 const LID_BONES = ['eyelid_upper_L', 'eyelid_lower_L', 'eyelid_upper_R', 'eyelid_lower_R'];
@@ -86,11 +89,14 @@ export function bindPrincessRig(root) {
   let holdAnchor = null;
   let anchorRest = null;
   let disposed = false;
+  let poseValid = false;
+  let lastArm = null, lastAmount = NaN, lastStroke = NaN, lastBlink = NaN;
 
   function setHoldAnchor(anchor) {
     if (holdAnchor && anchorRest) holdAnchor.position.copy(anchorRest);
     holdAnchor = anchor ?? null;
     anchorRest = anchor?.position?.clone() ?? null;
+    poseValid = false;
   }
 
   function reset() {
@@ -112,20 +118,30 @@ export function bindPrincessRig(root) {
     bone.quaternion.normalize();
   }
 
-  function update(clock, action, reducedMotion = false) {
+  function update(clock, action, reducedMotion = false, renderOptions) {
     if (disposed) return;
-    reset();
     const time = Number.isFinite(clock) ? Math.max(0, clock) : 0;
     const duration = Number.isFinite(action?.duration) && action.duration > 0 ? action.duration : 1;
     const elapsed = Number.isFinite(action?.elapsed) ? Math.max(0, action.elapsed) : 0;
     const progress = elapsed / duration;
-    const amount = reducedMotion ? 0 : envelope(progress) * clamp01(action?.intensity ?? 1);
+    const arm = capabilities.canUseArmPose && !reducedMotion
+      && (action?.id === 'princess.pet_cat' || action?.id === 'princess.adjust_hold' || action?.id === 'pair.cuddle_response') ? action.id : null;
+    const amount = arm ? envelope(progress) * clamp01(action?.intensity ?? 1) : 0;
+    const stroke = arm === 'princess.pet_cat' ? (0.10 + 0.06 * Math.sin(progress * Math.PI * 4)) * amount : 0;
+    const blink = !capabilities.canBlink || reducedMotion ? 0 : action?.id === 'princess.blink'
+      ? blinkAmount(elapsed, duration)
+      : action?.id === 'pair.cuddle_response'
+        ? blinkAmount(elapsed - 0.35)
+        : blinkAmount(time % 4.9 - 4.3);
+    const deferred = Boolean(renderOptions?.deferMatrices);
+    if (deferred && poseValid && arm === lastArm && amount === lastAmount && stroke === lastStroke && blink === lastBlink) return false;
+    reset();
     if (capabilities.canUseArmPose && !reducedMotion) {
       if (action?.id === 'princess.pet_cat') {
         // Right hand remains at its exact support pose. Only the left elbow and
         // wrist lift and make two soft strokes over the kitten.
         rotate('forearm_L', -0.08 * amount, 0, -0.32 * amount);
-        rotate('hand_L', (0.10 + 0.06 * Math.sin(progress * Math.PI * 4)) * amount, -0.08 * amount, 0);
+        rotate('hand_L', stroke, -0.08 * amount, 0);
       } else if (action?.id === 'princess.adjust_hold') {
         rotate('forearm_L', 0, 0, -0.05 * amount);
         rotate('forearm_R', 0, 0, 0.05 * amount);
@@ -139,11 +155,6 @@ export function bindPrincessRig(root) {
       }
     }
     if (capabilities.canBlink) {
-      const blink = reducedMotion ? 0 : action?.id === 'princess.blink'
-        ? blinkAmount(elapsed, duration)
-        : action?.id === 'pair.cuddle_response'
-          ? blinkAmount(elapsed - 0.35)
-          : blinkAmount(time % 4.9 - 4.3);
       const open = 1 - blink;
       for (const { bone, bind, dy, dz } of lidBindings) {
         bone.position.copy(bind);
@@ -153,8 +164,13 @@ export function bindPrincessRig(root) {
         bone.position.z += dz * open ** 6;
       }
     }
-    root.updateWorldMatrix(true, true);
-    for (const skeleton of skeletons) skeleton.update();
+    poseValid = true;
+    lastArm = arm; lastAmount = amount; lastStroke = stroke; lastBlink = blink;
+    if (!deferred) {
+      root.updateWorldMatrix(true, true);
+      for (const skeleton of skeletons) skeleton.update();
+    }
+    return true;
   }
 
   function dispose() {

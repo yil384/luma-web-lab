@@ -1,0 +1,30 @@
+{
+  "revision": "d7fb0d3524841207d8620ac21e8f9510761d80ec",
+  "assetPath": "princess/luma-princess-rigged-v77.glb",
+  "assetSha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0",
+  "threeRevision": "169",
+  "input": {
+    "meshes": 10,
+    "triangles": 336832,
+    "skinnedTriangles": 9440
+  },
+  "scenario": "Body-intersecting ray, recursive group hit-test, same real geometry and bone transforms",
+  "baseline": {
+    "samples": 60,
+    "hitCount": 1,
+    "medianMs": 15.3504,
+    "p95Ms": 19.8058,
+    "minMs": 13.0508
+  },
+  "candidate": {
+    "samples": 60,
+    "hitCount": 1,
+    "medianMs": 0.0178,
+    "p95Ms": 0.0512,
+    "minMs": 0.0122,
+    "proxyRegions": 3,
+    "proxyTriangles": 36
+  },
+  "medianCpuReductionPercent": 99.88,
+  "limitation": "Node CPU benchmark only. Texture maps omitted for decoding; no GPU render or physical-phone FPS measured."
+}

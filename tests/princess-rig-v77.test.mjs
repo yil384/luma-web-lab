@@ -5,6 +5,7 @@ import { after, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Raycaster, Texture, Vector3 } from 'three';
+import { WebGLObjects } from 'three/src/renderers/webgl/WebGLObjects.js';
 import { bindPrincessRig } from '../src/scene/princess-kitten/princess-rig.mjs';
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -167,4 +168,48 @@ test('cuddle produces a real wrist response; reduced motion and repeated updates
   assert.deepEqual(positions(arms), rest);
   assert.deepEqual(positions(lids[0]), lidRest);
   assert.equal(anchor.position.y, 2.95);
+});
+
+test('deferred arm and eyelid poses equal the synchronous skin after the actual renderer update stage', () => {
+  const renderOptions = { deferMatrices: true };
+  const info = { render: { frame: 0 } };
+  const objects = WebGLObjects({}, { get: (_, geometry) => geometry, update() {} }, { update() {} }, info);
+  const skeleton = arms.skeleton, originalUpdate = skeleton.update;
+  let uploads = 0;
+  skeleton.update = function () { uploads++; return originalUpdate.call(this); };
+  try {
+    for (const action of [
+      { id: 'princess.pet_cat', elapsed: 1.2, duration: 2.4 },
+      { id: 'princess.adjust_hold', elapsed: 1.1, duration: 2.2 },
+      { id: 'pair.cuddle_response', elapsed: .458, duration: 1.2 },
+      { id: 'princess.blink', elapsed: .108, duration: .26 },
+    ]) {
+      rig.update(2, action, false);
+      const expected = skins.map(mesh => positions(mesh));
+      const anchorY = anchor.position.y;
+      rig.update(0, null, true);
+      uploads = 0;
+      rig.update(2, action, false, renderOptions);
+      assert.equal(uploads, 0, 'The rig must leave skin updates to the renderer');
+      assert.equal(anchor.position.y, anchorY, 'The hold anchor must move in the same frame as the wrists');
+      gltf.scene.updateMatrixWorld();
+      info.render.frame++;
+      for (const mesh of skins) objects.update(mesh);
+      assert.equal(uploads, 1, 'Seven meshes sharing one skin only require one renderer upload');
+      for (let index = 0; index < skins.length; index++) assert(maxDelta(positions(skins[index]), expected[index]) < 2e-7);
+    }
+  } finally { skeleton.update = originalUpdate; }
+});
+
+test('the deferred idle rig skips unchanged bone writes while retaining a full natural blink', () => {
+  const renderOptions = { deferMatrices: true };
+  let evaluations = 0, closed = false;
+  const lid = bones.get('eyelid_upper_L'), openY = lid.position.y;
+  for (let frame = 0; frame < 300; frame++) {
+    if (rig.update(frame / 60, null, false, renderOptions)) evaluations++;
+    if (Math.abs(lid.position.y - openY) > .01) closed = true;
+  }
+  assert(evaluations > 10 && evaluations < 25, 'A five-second idle period should only write the changing blink frames');
+  assert(closed, 'Skipping idle work must retain actual eyelid closure');
+  assert(Math.abs(lid.position.y - openY) < 1e-12, 'The eyes reopen after their blink');
 });

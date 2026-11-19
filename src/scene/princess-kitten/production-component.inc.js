@@ -1,7 +1,18 @@
-/* Inserted into the pinned production TreeScene by build-princess-v77-release.mjs.
+/* Inserted into the pinned production TreeScene by the versioned release builder.
  * React, R3F and Three aliases come from that same production module.
  * The existing mobile camera, album, film and photo code is left byte-for-byte intact.
  */
+const ignoreCharacterRaycastV78 = () => {};
+function configureCharacterHitProxyV78(root) {
+  root?.traverse(node => { if (node.isMesh) node.raycast = ignoreCharacterRaycastV78; });
+}
+function CharacterHitBoxV78({name, position, size}) {
+  // Three's Raycaster includes invisible meshes. These proxies never draw and
+  // only their 12 box triangles participate in picking; visual meshes do not.
+  return fe.jsxs('mesh', {name, position, visible: false, children: [
+    fe.jsx('boxGeometry', {args: size}), fe.jsx('meshBasicMaterial', {})
+  ]});
+}
 function GeminiKittenCradleV77({cat, anchorRef, onTapCat, onInteract}) {
   return fe.jsx("group", {
     ref: anchorRef,
@@ -15,7 +26,11 @@ function GeminiKittenCradleV77({cat, anchorRef, onTapCat, onInteract}) {
       e.stopPropagation(); e.nativeEvent?.stopPropagation?.();
       if (e.delta <= 6) onTapCat?.();
     },
-    children: cat && fe.jsx("primitive", {object: cat, dispose: null})
+    children: cat && fe.jsxs(fe.Fragment, {children: [
+      fe.jsx("primitive", {object: cat, dispose: null}),
+      fe.jsx(CharacterHitBoxV78, {name: 'held-kitten-hit-head', position: [-.04728, .99108, .63134], size: [.98, 1.05, .91]}),
+      fe.jsx(CharacterHitBoxV78, {name: 'held-kitten-hit-body', position: [-.00044, .47419, -.10806], size: [.86, 1.11, 1.56]})
+    ]})
   });
 }
 
@@ -46,6 +61,7 @@ function GeminiPrincessV77({active = true, paused = false, reducedMotion = false
   // Opt-in DOM evidence for browser integration tests; no extra scene or controls.
   const qaProbe = U.useRef({enabled: new URLSearchParams(location.search).has('rigqa'), bones: null, heldBody: null, point: new J()});
   const {gl, invalidate} = $e();
+  const hover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   U.useEffect(() => {
     let disposed = false, ownedScene = null, ownedCats = null, pendingCat = null, readyModel = null, catSettled = false;
     const abort = new AbortController(), startMs = performance.now();
@@ -85,6 +101,7 @@ function GeminiPrincessV77({active = true, paused = false, reducedMotion = false
       if (!gltf) return;
       if (disposed) { disposePrincessV77(gltf.scene); return; }
       ownedScene = readyModel = gltf.scene;
+      configureCharacterHitProxyV78(readyModel);
       const adapter = bindPrincessRigV77(readyModel);
       if (!adapter.capabilities.canUseArmPose || !adapter.capabilities.canBlink) {
         throw new Error("V77 model is missing its required arm or eyelid skin");
@@ -113,6 +130,7 @@ function GeminiPrincessV77({active = true, paused = false, reducedMotion = false
       ownedCats = {module, trio};
       const chosen = trio.cats.find(cat => cat.id === "cream") || trio.cats[0];
       pendingCat = chosen?.group ?? null;
+      configureCharacterHitProxyV78(pendingCat);
       if (chosen) characterRuntime.setHeldCat(chosen);
       qaProbe.current.heldBody = chosen?.body ?? null;
       dataset.princessHeldKitten = pendingCat ? "ready" : "failed";
@@ -167,13 +185,18 @@ function GeminiPrincessV77({active = true, paused = false, reducedMotion = false
     onPointerDown: e => { onInteract?.(); e.stopPropagation(); e.nativeEvent?.stopPropagation?.(); },
     onPointerUp: e => { e.stopPropagation(); e.nativeEvent?.stopPropagation?.(); },
     onClick: e => { e.stopPropagation(); e.nativeEvent?.stopPropagation?.(); if (e.delta <= 6) tap("princess"); },
-    onPointerOver: e => { e.stopPropagation(); gl.domElement.style.cursor = "pointer"; },
-    onPointerOut: () => { gl.domElement.style.cursor = ""; },
+    onPointerOver: hover ? e => { e.stopPropagation(); gl.domElement.style.cursor = "pointer"; } : undefined,
+    onPointerOut: hover ? () => { gl.domElement.style.cursor = ""; } : undefined,
     children: [
       fe.jsx("pointLight", {position: [-1.65, 4.3, 2.7], intensity: 29, distance: 9, decay: 2, color: "#fff0e5"}),
       fe.jsx("pointLight", {position: [1.8, 3.8, 1.4], intensity: 15, distance: 8, decay: 2, color: "#dfebff"}),
       fe.jsx("pointLight", {position: [.35, 4, -1.5], intensity: 11, distance: 7, decay: 2, color: "#ffe1ce"}),
       fe.jsx("primitive", {object: bundle.model, position: [0, 2.558, 0], scale: [5.12, 5.12, 5.12], dispose: null}),
+      fe.jsxs('group', {position: [0, 2.558, 0], scale: [5.12, 5.12, 5.12], children: [
+        fe.jsx(CharacterHitBoxV78, {name: 'princess-hit-head', position: [-.00020, .39015, -.04219], size: [.292, .235, .253]}),
+        fe.jsx(CharacterHitBoxV78, {name: 'princess-hit-torso', position: [.00111, .16000, -.01842], size: [.488, .255, .384]}),
+        fe.jsx(CharacterHitBoxV78, {name: 'princess-hit-skirt', position: [.00048, -.22978, -.00067], size: [.703, .555, .772]})
+      ]}),
       fe.jsx(GeminiKittenCradleV77, {cat: bundle.cat, anchorRef: holdAnchor, onTapCat: () => tap("held-cat"), onInteract})
     ]
   })});

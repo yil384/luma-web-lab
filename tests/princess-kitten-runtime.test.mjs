@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
+import { WebGLObjects } from 'three/src/renderers/webgl/WebGLObjects.js';
 import { createCharacterInteractionRuntime } from '../src/scene/princess-kitten/runtime.mjs';
 import { createInteractionScheduler, canExecuteAction } from '../src/scene/princess-kitten/interaction-scheduler.mjs';
 import { createHeldKittenPose, evaluateHeldKittenAdditivePose } from '../src/scene/princess-kitten/held-kitten-rig.mjs';
@@ -201,4 +202,83 @@ test('ground additive frames do not accumulate when the native rig resets its po
   const expected = cat.head.quaternion.clone();
   for (let i = 0; i < 600; i++) { runtime.step(0); restoreNative(cat); runtime.applyGround(); }
   assert.ok(cat.head.quaternion.angleTo(expected) < 1e-7);
+});
+
+test('renderer-owned matrices produce the same skinned vertices and held anchor with zero extra runtime uploads', () => {
+  function fixture(deferMatrices) {
+    const scene = new THREE.Scene(), pivot = new THREE.Group(), anchor = new THREE.Group();
+    const held = catFixture('cream'), ground = catFixture('black');
+    pivot.position.set(4.6, -20.42, 9.35); pivot.rotation.y = -.24;
+    anchor.position.set(0, 2.95, .77); anchor.scale.setScalar(.46);
+    scene.add(pivot, ground.group); pivot.add(anchor); anchor.add(held.group);
+    const runtime = createCharacterInteractionRuntime({ deferMatrices });
+    runtime.setHeldCat(held); runtime.setGroundTrio({ cats: [ground] });
+    runtime.setPrincessRig({ capabilities, update(clock, action) {
+      anchor.position.y = 2.95 + (action?.id === 'princess.adjust_hold' ? Math.sin(Math.PI * action.elapsed / action.duration) ** 2 * .0295 : 0);
+    } });
+    runtime.dispatch({ type: 'request-action', actor: 'princess', actionId: 'princess.adjust_hold' });
+    runtime.dispatch({ type: 'request-action', actor: 'ground-black', actionId: 'cat.head_tilt' });
+    let uploads = 0, runtimeWalks = 0;
+    for (const cat of [held, ground]) {
+      const update = cat.meshes[0].skeleton.update;
+      cat.meshes[0].skeleton.update = function () { uploads++; return update.call(this); };
+      const walk = cat.group.updateMatrixWorld;
+      cat.group.updateMatrixWorld = function (...args) { runtimeWalks++; return walk.apply(this, args); };
+    }
+    // The real renderer's WebGLObjects updates each skeleton once per render,
+    // after WebGLRenderer has updated the scene's world matrices.
+    const info = { render: { frame: 0 } };
+    const objects = WebGLObjects({}, { get: (_, geometry) => geometry, update() {} }, { update() {} }, info);
+    return { scene, held, ground, anchor, runtime, info, objects,
+      counters: () => ({ uploads, runtimeWalks }), resetCounters: () => { uploads = 0; runtimeWalks = 0; } };
+  }
+  const synchronous = fixture(false), deferred = fixture(true);
+  for (let frame = 0; frame < 40; frame++) {
+    for (const entry of [synchronous, deferred]) {
+      entry.runtime.step(.025);
+      restoreNative(entry.ground);
+      entry.ground.head.rotation.y = .11;
+      const leg = entry.ground.rest.find(binding => binding.bone.name === 'black__LF_upper').bone;
+      leg.rotation.z = .23;
+      // Intermediate native IK matrices are intentionally retained.
+      entry.ground.group.updateMatrixWorld(true);
+      entry.resetCounters();
+      entry.runtime.applyGround(); entry.runtime.applyHeld();
+      assert.deepEqual(entry.counters(), entry === deferred ? { uploads: 0, runtimeWalks: 0 } : { uploads: 2, runtimeWalks: 2 });
+      assert.ok(Math.abs(leg.rotation.z - .23) < 1e-12, 'Final matrix ownership must not change native foot/leg poses');
+      entry.resetCounters();
+      entry.scene.updateMatrixWorld();
+      entry.info.render.frame++;
+      for (const cat of [entry.held, entry.ground]) {
+        for (const mesh of cat.meshes) { entry.objects.update(mesh); entry.objects.update(mesh); }
+      }
+      assert.equal(entry.counters().uploads, 2, 'The actual renderer code deduplicates each skeleton within a frame');
+    }
+    for (const actor of ['held', 'ground']) {
+      assert.deepEqual(deferred[actor].meshes[0].skeleton.boneMatrices, synchronous[actor].meshes[0].skeleton.boneMatrices);
+      const expected = synchronous[actor].meshes[0].applyBoneTransform(1, new THREE.Vector3(.1, 0, 0));
+      const actual = deferred[actor].meshes[0].applyBoneTransform(1, new THREE.Vector3(.1, 0, 0));
+      assert.ok(actual.distanceTo(expected) < 1e-9);
+    }
+    assert.deepEqual(deferred.anchor.getWorldPosition(new THREE.Vector3()), synchronous.anchor.getWorldPosition(new THREE.Vector3()));
+  }
+});
+
+test('the deferred held path retains its baked leg pose while only moving expressive joints', () => {
+  const held = catFixture('cream');
+  const runtime = createCharacterInteractionRuntime({ deferMatrices: true });
+  runtime.setHeldCat(held); runtime.tap('held-cat'); runtime.step(.05); runtime.applyHeld();
+  const legs = held.rest.filter(binding => /__(LF|RF|LH|RH)_/.test(binding.bone.name));
+  const initial = legs.map(binding => binding.bone.quaternion.clone());
+  let writes = 0;
+  for (const binding of legs) {
+    const copy = binding.bone.quaternion.copy;
+    binding.bone.quaternion.copy = function (...args) { writes++; return copy.apply(this, args); };
+  }
+  for (let frame = 0; frame < 200; frame++) { runtime.step(.025); runtime.applyHeld(); }
+  assert.equal(writes, 0, 'Constant held legs need no per-frame pose rewrite');
+  for (let index = 0; index < legs.length; index++) assert.ok(legs[index].bone.quaternion.angleTo(initial[index]) < 1e-7);
+  runtime.dispatch({ type: 'reduced-motion', enabled: true });
+  held.group.updateMatrixWorld(true); held.meshes[0].skeleton.update();
+  assert.ok(held.meshes[0].skeleton.boneMatrices.every(Number.isFinite));
 });

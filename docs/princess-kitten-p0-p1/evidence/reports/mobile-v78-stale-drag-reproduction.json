@@ -1,0 +1,83 @@
+{
+  "sourceCommit": "d840ec761b36cfa3eb87305eda12a68958969e4b",
+  "workflowRun": "https://github.com/yil384/luma-web-lab/actions/runs/44497508979",
+  "environment": "Headless Chrome 157 / SwiftShader; software rendering, not physical-phone performance",
+  "observedProblem": "A 650ms long-press action opens the album before a mouse move generated 0.4ms after pointerdown is delivered during software-rendering congestion. This event trace does not establish the actual timer callback lateness.",
+  "photoDrags": [
+    {
+      "mode": "desktop",
+      "target": {
+        "x": 803.4849042012788,
+        "y": 563.0722359523351,
+        "index": 13
+      },
+      "cameraBefore": "-2.94,-2.07,48.91",
+      "events": [
+        {
+          "type": "pointermove",
+          "pointerId": 1,
+          "pointerType": "mouse",
+          "buttons": 0,
+          "button": -1,
+          "x": 803.4849243164062,
+          "y": 563.072265625,
+          "receivedMs": 1470.4000000000233,
+          "eventTime": 42660.600000000035,
+          "isTrusted": true,
+          "target": "CANVAS",
+          "inScene": true
+        },
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "pointerType": "mouse",
+          "buttons": 1,
+          "button": 0,
+          "x": 803.4849243164062,
+          "y": 563.072265625,
+          "receivedMs": 1475.2000000000116,
+          "eventTime": 44131.80000000005,
+          "isTrusted": true,
+          "target": "CANVAS",
+          "inScene": true
+        },
+        {
+          "type": "pointermove",
+          "pointerId": 1,
+          "pointerType": "mouse",
+          "buttons": 1,
+          "button": -1,
+          "x": 765.4849243164062,
+          "y": 539.072265625,
+          "receivedMs": 4475.5,
+          "eventTime": 44132.20000000001,
+          "isTrusted": true,
+          "target": "IMG",
+          "inScene": false
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "pointerType": "mouse",
+          "buttons": 0,
+          "button": 0,
+          "x": 765.4849243164062,
+          "y": 539.072265625,
+          "receivedMs": 24480.70000000001,
+          "eventTime": 67139.40000000002,
+          "isTrusted": true,
+          "target": "IMG",
+          "inScene": false
+        }
+      ],
+      "failure": "TimeoutError: page.waitForFunction: Timeout 20000ms exceeded.",
+      "after": {
+        "camera": "-3.07,-2.07,48.90",
+        "manual": "false",
+        "dialogs": [
+          "gift-dialog photo-dialog"
+        ]
+      }
+    }
+  ]
+}

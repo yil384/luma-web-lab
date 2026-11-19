@@ -33,9 +33,16 @@ export function useSecretInteractions(options: SecretInteractionOptions) {
   useEffect(() => {
     const cancel = () => controller.cancel();
     const onVisibility = () => { if (document.hidden) cancel(); };
+    // Raw input can arrive before a frame-coalesced pointermove. Only cancel
+    // stale click/hold intent here; ordinary camera/R3F input stays unchanged.
+    const onRawMove = (event: Event) => {
+      if (latest.current.enabled) controller.pointerMove(event as PointerEvent);
+    };
+    window.addEventListener('pointerrawupdate', onRawMove, { capture: true, passive: true });
     window.addEventListener('blur', cancel);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
+      window.removeEventListener('pointerrawupdate', onRawMove, { capture: true });
       window.removeEventListener('blur', cancel);
       document.removeEventListener('visibilitychange', onVisibility);
       // cancel, rather than permanently disposing, also supports StrictMode's
@@ -87,5 +94,5 @@ export function useSecretInteractions(options: SecretInteractionOptions) {
     if (latest.current.enabled) controller.pickPhoto(index);
   }, [controller]);
 
-  return { bind, onPhotoPress, cancel: controller.cancel };
+  return { bind, onPhotoPress, cancel: controller.cancelIntent };
 }

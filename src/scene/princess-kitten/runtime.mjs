@@ -7,6 +7,10 @@
  *   syncChonkyTrio(trio, runtime.composeGroundSnapshot(behavior.update(delta)), delta, opts)
  *   runtime.applyGround()                    // additive head/ears/tail only, after IK
  *   runtime.applyHeld()                      // princess skin, then held kitten (never ground IK)
+ *
+ * Pass {deferMatrices: true} inside R3F: its renderer updates world matrices and
+ * each skeleton once after all useFrame callbacks. Native ground IK still owns
+ * its intermediate matrices. The default remains synchronous for CPU callers.
  */
 import { createInteractionScheduler, DEFAULT_CAPABILITIES } from './interaction-scheduler.mjs';
 import { HELD_KITTEN_BASE_POSE, createHeldKittenPose, evaluateHeldKittenAdditivePose } from './held-kitten-rig.mjs';
@@ -15,6 +19,7 @@ import { createGroundCatPose, evaluateGroundCatAdditivePose } from './ground-cat
 const GROUND_ROLES = new Set(['head', 'ear_L', 'ear_R', 'tail_0', 'tail_1', 'tail_2', 'tail_3', 'tail_4']);
 const roleOf = bone => { const index = bone.name.lastIndexOf('__'); return index < 0 ? bone.name : bone.name.slice(index + 2); };
 const isVigorous = id => id === 'cat.one_paw_reach' || id === 'cat.crouch_pounce';
+const ROTATION_AXES = Object.freeze({ x: { x: 1, y: 0, z: 0 }, y: { x: 0, y: 1, z: 0 }, z: { x: 0, y: 0, z: 1 } });
 
 function addRotation(bone, delta) {
   if (!delta) return;
@@ -30,6 +35,18 @@ function updateMatrices(cat) {
   for (const mesh of cat.meshes) mesh.skeleton.update();
 }
 
+function heldBaseQuaternion(rest, base) {
+  const quaternion = rest.quaternion.clone();
+  if (!base) return quaternion;
+  const offset = quaternion.clone();
+  // The cradle pose is constant. Bake its YXZ quaternion once per binding,
+  // rather than repeating its trigonometry and joint rotations every frame.
+  if (base[1]) quaternion.multiply(offset.setFromAxisAngle(ROTATION_AXES.y, base[1]));
+  if (base[0]) quaternion.multiply(offset.setFromAxisAngle(ROTATION_AXES.x, base[0]));
+  if (base[2]) quaternion.multiply(offset.setFromAxisAngle(ROTATION_AXES.z, base[2]));
+  return quaternion.normalize();
+}
+
 function bindCat(cat, held = false, basePose = HELD_KITTEN_BASE_POSE) {
   if (!cat || !Array.isArray(cat.rest) || !cat.rest.length || !cat.meshes?.length) {
     throw new Error('Character interactions require a loaded, skinned Chonky cat record.');
@@ -37,14 +54,18 @@ function bindCat(cat, held = false, basePose = HELD_KITTEN_BASE_POSE) {
   const pose = held ? createHeldKittenPose() : createGroundCatPose();
   const bindings = cat.rest.map(rest => {
     const role = roleOf(rest.bone);
-    return { ...rest, role, base: held ? basePose[role] : null,
+    return { ...rest, role, heldQuaternion: held ? heldBaseQuaternion(rest, basePose[role]) : null,
       additive: pose[role], lastBase: rest.quaternion.clone() };
   });
-  return { cat, pose, bindings: held ? bindings : bindings.filter(binding => GROUND_ROLES.has(binding.role)), applied: false };
+  return { cat, pose, bindings: held ? bindings : bindings.filter(binding => GROUND_ROLES.has(binding.role)),
+    animatedBindings: held ? bindings.filter(binding => binding.additive) : null,
+    initialized: false, poseClock: NaN, poseAction: null, poseReducedMotion: false, applied: false };
 }
 
 export function createCharacterInteractionRuntime(options = {}) {
   const scheduler = createInteractionScheduler(options);
+  const deferMatrices = Boolean(options.deferMatrices);
+  const rigFrameOptions = Object.freeze({ deferMatrices });
   let princess = null;
   let held = null;
   let grounds = [];
@@ -84,7 +105,7 @@ export function createCharacterInteractionRuntime(options = {}) {
       if (!record.applied) continue;
       for (const binding of record.bindings) binding.bone.quaternion.copy(binding.lastBase);
       record.applied = false;
-      updateMatrices(record.cat);
+      if (!deferMatrices) updateMatrices(record.cat);
     }
   }
 
@@ -118,20 +139,28 @@ export function createCharacterInteractionRuntime(options = {}) {
   function applyHeld(force = false) {
     if (disposed || heldFrame === frameNumber || (snapshot.frozen && !force)) return;
     heldFrame = frameNumber;
-    princess?.update(snapshot.clock, snapshot.actions.princess, snapshot.reducedMotion);
+    princess?.update(snapshot.clock, snapshot.actions.princess, snapshot.reducedMotion, rigFrameOptions);
     if (!held) return;
     const { cat, pose, bindings } = held;
+    const action = snapshot.actions['held-cat'];
+    if (deferMatrices && held.initialized && held.poseClock === snapshot.clock
+      && held.poseAction === action && held.poseReducedMotion === snapshot.reducedMotion) return;
     evaluateHeldKittenAdditivePose(snapshot.clock, snapshot.actions['held-cat'], snapshot.reducedMotion, pose);
-    for (const binding of bindings) {
+    // Held legs/root never enter native ground IK. Their constant cradle pose
+    // only needs an initial write in the renderer-owned production path.
+    for (const binding of deferMatrices && held.initialized ? held.animatedBindings : bindings) {
       const { bone } = binding;
       bone.position.copy(binding.position);
-      bone.quaternion.copy(binding.quaternion);
+      bone.quaternion.copy(binding.heldQuaternion);
       bone.scale.copy(binding.scale);
-      addRotation(bone, binding.base);
       addRotation(bone, binding.additive);
       if (binding.role === 'body') bone.position.y += pose.bodyLiftY;
     }
-    updateMatrices(cat);
+    held.initialized = true;
+    held.poseClock = snapshot.clock;
+    held.poseAction = action;
+    held.poseReducedMotion = snapshot.reducedMotion;
+    if (!deferMatrices) updateMatrices(cat);
   }
 
   /**
@@ -186,7 +215,7 @@ export function createCharacterInteractionRuntime(options = {}) {
         addRotation(binding.bone, binding.additive);
       }
       record.applied = true;
-      updateMatrices(cat);
+      if (!deferMatrices) updateMatrices(cat);
     }
   }
 

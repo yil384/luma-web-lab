@@ -40,8 +40,19 @@ function setup() {
     }
     now = until;
   };
+  const stall = duration => {
+    // Unlike advance(), time passes while the main thread cannot execute any
+    // callbacks. Drain overdue timers at the actual late delivery time.
+    now += duration;
+    while (true) {
+      const next = Array.from(tasks).sort((a, b) => a[1].at - b[1].at || a[0] - b[0]).find(([, task]) => task.at <= now);
+      if (!next) break;
+      tasks.delete(next[0]);
+      next[1].callback();
+    }
+  };
   const point = (overrides = {}) => ({ pointerId: 1, pointerType: 'mouse', clientX: 100, clientY: 100, button: 0, ...overrides });
-  return { controller, events, advance, point, tasks };
+  return { controller, events, advance, stall, point, tasks };
 }
 
 for (const pointerType of ['mouse', 'touch']) {
@@ -110,7 +121,7 @@ for (const pointerType of ['mouse', 'touch']) {
     const catPress = point({ pointerType });
     // Stage capture runs first; the R3F cat hit then explicitly claims the press.
     controller.pointerDown(catPress);
-    controller.cancel();
+    controller.cancelIntent();
     advance(timing.longPressDelay + 100);
     // React's stage pointer-up capture can still run before the cat's handler.
     controller.pointerUp(catPress);
@@ -169,6 +180,30 @@ test('two-finger zoom cancels all secret actions until all contacts have ended',
   assert.deepEqual(events, [{ type: 'tap' }]);
 });
 
+test('a character claiming the first finger does not turn a slow pinch into a share hold', () => {
+  const { controller, events, advance, point, tasks } = setup();
+  const first = point({ pointerType: 'touch', pointerId: 1 });
+  const second = point({ pointerType: 'touch', pointerId: 2, clientX: 134 });
+  controller.pointerDown(first);
+  controller.cancelIntent(); // Princess/kitten claims this press after capture.
+  controller.pointerDown(second); // The second finger lands outside the actor.
+  controller.pointerMove(point({ ...second, clientX: 138, clientY: 103 }));
+  advance(timing.longPressDelay + 500);
+  assert.deepEqual(events, [], 'A stationary or slow two-finger gesture must never open Share.');
+  controller.pointerUp(first);
+  advance(timing.longPressDelay + 100);
+  controller.pointerUp(second);
+  advance(timing.tapDelay + 100);
+  assert.deepEqual(events, []);
+  assert.equal(tasks.size, 0);
+  const next=point({ pointerType: 'touch', pointerId: 3 });
+  controller.pointerDown(next);
+  controller.pickPhoto(7);
+  controller.pointerUp(next);
+  advance(timing.tapDelay);
+  assert.deepEqual(events, [{type:'photo',photo:7}], 'The next independent tap still works.');
+});
+
 test('holding a photo opens that exact photo once and does not also tap on release', () => {
   const { controller, events, advance, point, tasks } = setup();
   controller.pickPhoto(99); // A stale R3F event outside a press cannot select a photo.
@@ -184,6 +219,54 @@ test('holding a photo opens that exact photo once and does not also tap on relea
   advance(timing.longPressDelay);
   assert.equal(events.length, 1);
   assert.equal(tasks.size, 0);
+});
+
+test('long presses keep the 650 ms deadline, allow 250 ms delivery grace, and reject a 901 ms callback', () => {
+  assert.equal(timing.longPressDelay, 650);
+  assert.equal(timing.longPressMaxLateness, 250);
+  for (const elapsed of [650, 900, 901]) for (const photo of [null, 7]) {
+    const { controller, events, advance, stall, point, tasks } = setup();
+    advance(137); // The deadline belongs to this press, not the page clock.
+    const press = point();
+    controller.pointerDown(press);
+    if (photo !== null) controller.pickPhoto(photo);
+    stall(elapsed);
+    const expected = elapsed <= 900 ? [{ type: 'hold', photo }] : [];
+    assert.deepEqual(events, expected, `Delivered ${elapsed} ms after press`);
+    controller.pointerUp(press);
+    advance(timing.tapDelay + 1);
+    assert.deepEqual(events, expected, 'An expired hold must not become a tap on release');
+    assert.equal(tasks.size, 0);
+    controller.pointerDown(press);
+    controller.pickPhoto(18);
+    controller.pointerUp(press);
+    advance(timing.tapDelay);
+    assert.deepEqual(events, [...expected, { type: 'photo', photo: 18 }], 'A new independent tap still works');
+  }
+});
+
+test('a three-second input backlog cancels stale hold intent while retaining live contacts until release', () => {
+  const { controller, events, advance, stall, point, tasks } = setup();
+  const first = point({ pointerType: 'touch' });
+  const second = point({ pointerType: 'touch', pointerId: 2, clientX: 140 });
+  controller.pointerDown(first);
+  controller.pickPhoto(3);
+  stall(3000); // Timer is delivered before the already queued drag movement.
+  assert.deepEqual(events, []);
+  controller.pointerMove(point({ ...first, clientX: 130 }));
+  controller.pointerDown(second);
+  advance(timing.longPressDelay + 1);
+  assert.deepEqual(events, [], 'The second live finger must not start a fresh share hold');
+  controller.pointerUp(first);
+  controller.pointerUp(second);
+  advance(timing.tapDelay + 1);
+  assert.deepEqual(events, []);
+  assert.equal(tasks.size, 0);
+  const next = point({ pointerType: 'touch', pointerId: 3 });
+  controller.pointerDown(next);
+  controller.pointerUp(next);
+  advance(timing.tapDelay);
+  assert.deepEqual(events, [{ type: 'tap' }]);
 });
 
 test('cancelling one finger of a pinch keeps the remaining live contacts blocked', () => {

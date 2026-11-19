@@ -1,0 +1,762 @@
+{
+  "reportVersion": 1,
+  "productionCommit": "d7fb0d3524841207d8620ac21e8f9510761d80ec",
+  "method": "Read GLB JSON/binary accessors and embedded images; held-cat bounds use Three GLTFLoader and actual runtime base pose. No production asset modified. Texture memory is RGBA8 plus approximate full mip chain, not measured GPU allocation.",
+  "princess": {
+    "bytes": 15727656,
+    "sha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0",
+    "meshCount": 10,
+    "materialCount": 5,
+    "skinCount": 1,
+    "jointsPerSkin": [
+      12
+    ],
+    "skinnedMeshCount": 7,
+    "triangles": 336832,
+    "vertices": 315834,
+    "meshes": [
+      {
+        "meshIndex": 0,
+        "primitiveIndex": 0,
+        "name": "geometry_0",
+        "vertices": 287940,
+        "triangles": 282648,
+        "skinned": false,
+        "materialIndex": 0,
+        "localBounds": {
+          "min": [
+            -0.34351134300231934,
+            -0.4995468854904175,
+            -0.378720223903656
+          ],
+          "max": [
+            0.34446895122528076,
+            0.5003050565719604,
+            0.3773803412914276
+          ],
+          "center": [
+            0.0004788041114807129,
+            0.0003790855407714844,
+            -0.0006699413061141968
+          ],
+          "size": [
+            0.6879802942276001,
+            0.9998519420623779,
+            0.7561005353927612
+          ],
+          "vertexCount": 287940
+        }
+      },
+      {
+        "meshIndex": 1,
+        "primitiveIndex": 0,
+        "name": "Eye insert 0",
+        "vertices": 11400,
+        "triangles": 22372,
+        "skinned": false,
+        "materialIndex": 1,
+        "localBounds": {
+          "min": [
+            -0.034699998795986176,
+            0.3651009202003479,
+            0.0433351993560791
+          ],
+          "max": [
+            -0.013227845542132854,
+            0.38481414318084717,
+            0.0513535737991333
+          ],
+          "center": [
+            -0.023963922634720802,
+            0.37495753169059753,
+            0.0473443865776062
+          ],
+          "size": [
+            0.021472152322530746,
+            0.019713222980499268,
+            0.0080183744430542
+          ],
+          "vertexCount": 11400
+        }
+      },
+      {
+        "meshIndex": 2,
+        "primitiveIndex": 0,
+        "name": "Eye insert 1",
+        "vertices": 11400,
+        "triangles": 22372,
+        "skinned": false,
+        "materialIndex": 2,
+        "localBounds": {
+          "min": [
+            0.013227845542132854,
+            0.3651009202003479,
+            0.043263036757707596
+          ],
+          "max": [
+            0.034699998795986176,
+            0.38481414318084717,
+            0.051874808967113495
+          ],
+          "center": [
+            0.023963922634720802,
+            0.37495753169059753,
+            0.047568924725055695
+          ],
+          "size": [
+            0.021472152322530746,
+            0.019713222980499268,
+            0.008611772209405899
+          ],
+          "vertexCount": 11400
+        }
+      },
+      {
+        "meshIndex": 3,
+        "primitiveIndex": 0,
+        "name": "CradleArmsV75",
+        "vertices": 2798,
+        "triangles": 5440,
+        "skinned": true,
+        "materialIndex": 3,
+        "localBounds": {
+          "min": [
+            -0.14681945741176605,
+            0.06738734990358353,
+            -0.018048832193017006
+          ],
+          "max": [
+            0.14779601991176605,
+            0.16403602063655853,
+            0.17256514728069305
+          ],
+          "center": [
+            0.00048828125,
+            0.11571168899536133,
+            0.0772581547498703
+          ],
+          "size": [
+            0.2946154773235321,
+            0.096648670732975,
+            0.1906139850616455
+          ],
+          "vertexCount": 2798
+        }
+      },
+      {
+        "meshIndex": 4,
+        "primitiveIndex": 0,
+        "name": "V77 eyelid_upper_L",
+        "vertices": 533,
+        "triangles": 960,
+        "skinned": true,
+        "materialIndex": 2,
+        "localBounds": {
+          "min": [
+            0.012713922187685966,
+            0.37244999408721924,
+            0.04224671795964241
+          ],
+          "max": [
+            0.03521392121911049,
+            0.38545000553131104,
+            0.051667653024196625
+          ],
+          "center": [
+            0.023963920772075653,
+            0.37894999980926514,
+            0.04695718735456467
+          ],
+          "size": [
+            0.022499999031424522,
+            0.013000011444091797,
+            0.009420935064554214
+          ],
+          "vertexCount": 533
+        }
+      },
+      {
+        "meshIndex": 5,
+        "primitiveIndex": 0,
+        "name": "V77 lash_L",
+        "vertices": 82,
+        "triangles": 80,
+        "skinned": true,
+        "materialIndex": 4,
+        "localBounds": {
+          "min": [
+            0.012713922187685966,
+            0.37226998805999756,
+            0.04238671809434891
+          ],
+          "max": [
+            0.03521392121911049,
+            0.37514999508857727,
+            0.05047305300831795
+          ],
+          "center": [
+            0.023963920772075653,
+            0.3737099766731262,
+            0.04642988741397858
+          ],
+          "size": [
+            0.022499999031424522,
+            0.002880007028579712,
+            0.00808633491396904
+          ],
+          "vertexCount": 82
+        }
+      },
+      {
+        "meshIndex": 6,
+        "primitiveIndex": 0,
+        "name": "V77 eyelid_lower_L",
+        "vertices": 533,
+        "triangles": 960,
+        "skinned": true,
+        "materialIndex": 2,
+        "localBounds": {
+          "min": [
+            0.012713922187685966,
+            0.3648500144481659,
+            0.04224671795964241
+          ],
+          "max": [
+            0.03521392121911049,
+            0.37514999508857727,
+            0.050287000834941864
+          ],
+          "center": [
+            0.023963920772075653,
+            0.3700000047683716,
+            0.046266861259937286
+          ],
+          "size": [
+            0.022499999031424522,
+            0.010299980640411377,
+            0.008040282875299454
+          ],
+          "vertexCount": 533
+        }
+      },
+      {
+        "meshIndex": 7,
+        "primitiveIndex": 0,
+        "name": "V77 eyelid_upper_R",
+        "vertices": 533,
+        "triangles": 960,
+        "skinned": true,
+        "materialIndex": 1,
+        "localBounds": {
+          "min": [
+            -0.03521392121911049,
+            0.37244999408721924,
+            0.042319994419813156
+          ],
+          "max": [
+            -0.012713922187685966,
+            0.38545000553131104,
+            0.05111895129084587
+          ],
+          "center": [
+            -0.023963920772075653,
+            0.37894999980926514,
+            0.046719472855329514
+          ],
+          "size": [
+            0.022499999031424522,
+            0.013000011444091797,
+            0.008798956871032715
+          ],
+          "vertexCount": 533
+        }
+      },
+      {
+        "meshIndex": 8,
+        "primitiveIndex": 0,
+        "name": "V77 lash_R",
+        "vertices": 82,
+        "triangles": 80,
+        "skinned": true,
+        "materialIndex": 4,
+        "localBounds": {
+          "min": [
+            -0.03521392121911049,
+            0.37226998805999756,
+            0.04245999455451965
+          ],
+          "max": [
+            -0.012713922187685966,
+            0.37514999508857727,
+            0.05039042979478836
+          ],
+          "center": [
+            -0.023963920772075653,
+            0.3737099766731262,
+            0.04642521217465401
+          ],
+          "size": [
+            0.022499999031424522,
+            0.002880007028579712,
+            0.007930435240268707
+          ],
+          "vertexCount": 82
+        }
+      },
+      {
+        "meshIndex": 9,
+        "primitiveIndex": 0,
+        "name": "V77 eyelid_lower_R",
+        "vertices": 533,
+        "triangles": 960,
+        "skinned": true,
+        "materialIndex": 1,
+        "localBounds": {
+          "min": [
+            -0.03521392121911049,
+            0.3648500144481659,
+            0.042319994419813156
+          ],
+          "max": [
+            -0.012713922187685966,
+            0.37514999508857727,
+            0.050206370651721954
+          ],
+          "center": [
+            -0.023963920772075653,
+            0.3700000047683716,
+            0.046263180673122406
+          ],
+          "size": [
+            0.022499999031424522,
+            0.010299980640411377,
+            0.007886376231908798
+          ],
+          "vertexCount": 533
+        }
+      }
+    ],
+    "images": [
+      {
+        "index": 0,
+        "name": null,
+        "mimeType": "image/webp",
+        "bytes": 600630,
+        "width": 2048,
+        "height": 2048,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 22369621
+      },
+      {
+        "index": 1,
+        "name": null,
+        "mimeType": "image/webp",
+        "bytes": 249288,
+        "width": 2048,
+        "height": 2048,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 22369621
+      },
+      {
+        "index": 2,
+        "name": "Eye paint 0",
+        "mimeType": "image/webp",
+        "bytes": 15918,
+        "width": 512,
+        "height": 512,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 1398101
+      },
+      {
+        "index": 3,
+        "name": "Eye paint 1",
+        "mimeType": "image/webp",
+        "bytes": 16120,
+        "width": 512,
+        "height": 512,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 1398101
+      },
+      {
+        "index": 4,
+        "name": "CradleArmsSkinV75",
+        "mimeType": "image/webp",
+        "bytes": 624,
+        "width": 256,
+        "height": 256,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 349525
+      }
+    ],
+    "rgba8WithMipsEstimatedBytes": 47884969,
+    "staticMainMeshLocalBands": {
+      "head": {
+        "yRange": [
+          0.28,
+          1
+        ],
+        "min": [
+          -0.13893406093120575,
+          0.2800004482269287,
+          -0.1611921191215515
+        ],
+        "max": [
+          0.13853061199188232,
+          0.5003050565719604,
+          0.07681796699762344
+        ],
+        "center": [
+          -0.00020172446966171265,
+          0.3901527523994446,
+          -0.042187076061964035
+        ],
+        "size": [
+          0.27746468782424927,
+          0.22030460834503174,
+          0.23801007866859436
+        ],
+        "vertexCount": 30163
+      },
+      "torso": {
+        "yRange": [
+          0.04,
+          0.28
+        ],
+        "min": [
+          -0.23538297414779663,
+          0.040001280605793,
+          -0.2026430368423462
+        ],
+        "max": [
+          0.23759616911411285,
+          0.27999967336654663,
+          0.16579949855804443
+        ],
+        "center": [
+          0.0011065974831581116,
+          0.16000047326087952,
+          -0.01842176914215088
+        ],
+        "size": [
+          0.4729791283607483,
+          0.23999840021133423,
+          0.3684425354003906
+        ],
+        "vertexCount": 60780
+      },
+      "skirt": {
+        "yRange": [
+          -1,
+          0.04
+        ],
+        "min": [
+          -0.34351134300231934,
+          -0.4995468854904175,
+          -0.378720223903656
+        ],
+        "max": [
+          0.34446895122528076,
+          0.03998393565416336,
+          0.3773803412914276
+        ],
+        "center": [
+          0.0004788041114807129,
+          -0.22978147864341736,
+          -0.0006699413061141968
+        ],
+        "size": [
+          0.6879802942276001,
+          0.5395308136940002,
+          0.7561005353927612
+        ],
+        "vertexCount": 196997
+      }
+    },
+    "coordinateSystem": "Unscaled model space. Production primitive position=[0,2.558,0], scale=[5.12,5.12,5.12] within the princess pivot. Band bounds select geometry_0 vertices by Y; head includes hair."
+  },
+  "groundCatTrio": {
+    "bytes": 2288908,
+    "sha256": "cb5e0add4626689f82477cdf196be19ab5d0f3ac3487fed366e2909296493b4f",
+    "meshCount": 3,
+    "materialCount": 3,
+    "skinCount": 3,
+    "jointsPerSkin": [
+      24,
+      24,
+      24
+    ],
+    "skinnedMeshCount": 3,
+    "triangles": 16314,
+    "vertices": 9471,
+    "meshes": [
+      {
+        "meshIndex": 0,
+        "primitiveIndex": 0,
+        "name": "black__original_neutral_mesh",
+        "vertices": 3157,
+        "triangles": 5438,
+        "skinned": true,
+        "materialIndex": 0,
+        "localBounds": {
+          "min": [
+            -0.3946729600429535,
+            0.0,
+            -1.5746150016784668
+          ],
+          "max": [
+            0.39467281103134155,
+            1.4499999284744263,
+            1.0111342668533325
+          ],
+          "center": [
+            -7.450580596923828e-08,
+            0.7249999642372131,
+            -0.28174036741256714
+          ],
+          "size": [
+            0.7893457412719727,
+            1.4499999284744263,
+            2.5857491493225098
+          ],
+          "vertexCount": 3157
+        }
+      },
+      {
+        "meshIndex": 1,
+        "primitiveIndex": 0,
+        "name": "cream__original_neutral_mesh",
+        "vertices": 3157,
+        "triangles": 5438,
+        "skinned": true,
+        "materialIndex": 1,
+        "localBounds": {
+          "min": [
+            -0.3946729600429535,
+            0.0,
+            -1.5746150016784668
+          ],
+          "max": [
+            0.39467281103134155,
+            1.4499999284744263,
+            1.0111342668533325
+          ],
+          "center": [
+            -7.450580596923828e-08,
+            0.7249999642372131,
+            -0.28174036741256714
+          ],
+          "size": [
+            0.7893457412719727,
+            1.4499999284744263,
+            2.5857491493225098
+          ],
+          "vertexCount": 3157
+        }
+      },
+      {
+        "meshIndex": 2,
+        "primitiveIndex": 0,
+        "name": "calico__original_neutral_mesh",
+        "vertices": 3157,
+        "triangles": 5438,
+        "skinned": true,
+        "materialIndex": 2,
+        "localBounds": {
+          "min": [
+            -0.3946729600429535,
+            0.0,
+            -1.5746150016784668
+          ],
+          "max": [
+            0.39467281103134155,
+            1.4499999284744263,
+            1.0111342668533325
+          ],
+          "center": [
+            -7.450580596923828e-08,
+            0.7249999642372131,
+            -0.28174036741256714
+          ],
+          "size": [
+            0.7893457412719727,
+            1.4499999284744263,
+            2.5857491493225098
+          ],
+          "vertexCount": 3157
+        }
+      }
+    ],
+    "images": [
+      {
+        "index": 0,
+        "name": "original-coat-2-1024",
+        "mimeType": "image/png",
+        "bytes": 356079,
+        "width": 1024,
+        "height": 1024,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 5592405
+      },
+      {
+        "index": 1,
+        "name": "original-coat-0-1024",
+        "mimeType": "image/png",
+        "bytes": 668070,
+        "width": 1024,
+        "height": 1024,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 5592405
+      },
+      {
+        "index": 2,
+        "name": "original-coat-1-1024",
+        "mimeType": "image/png",
+        "bytes": 698325,
+        "width": 1024,
+        "height": 1024,
+        "channels": "RGB",
+        "rgba8WithMipsEstimatedBytes": 5592405
+      }
+    ],
+    "rgba8WithMipsEstimatedBytes": 16777215,
+    "creamGroupBounds": {
+      "coordinateSystem": "chosen.group local; no holdAnchor scale/rotation applied",
+      "nativeRest": {
+        "min": [
+          -0.394672951169759,
+          -1.2715862134468543e-07,
+          -1.5746154644943964
+        ],
+        "max": [
+          0.39467280290599227,
+          1.4499997356107293,
+          1.0111342408866577
+        ],
+        "center": [
+          -7.413188335414489e-08,
+          0.7249998042260539,
+          -0.28174061180386933
+        ],
+        "size": [
+          0.7893457540757512,
+          1.4499998627693507,
+          2.585749705381054
+        ]
+      },
+      "heldBasePose": {
+        "min": [
+          -0.5258008697242518,
+          -0.06907939023688775,
+          -1.5690096781294156
+        ],
+        "max": [
+          0.4312395845571663,
+          1.5048527111262842,
+          1.0740050265990426
+        ],
+        "center": [
+          -0.047280642583542726,
+          0.7178866604446982,
+          -0.2475023257651865
+        ],
+        "size": [
+          0.9570404542814182,
+          1.573932101363172,
+          2.6430147047284582
+        ]
+      },
+      "heldBaseDominantBoneBounds": {
+        "tail": {
+          "min": [
+            -0.26518353967334884,
+            0.35847229624649135,
+            -1.5690096781294156
+          ],
+          "max": [
+            0.160833198467336,
+            0.8656583536026956,
+            -0.4491813614497203
+          ],
+          "center": [
+            -0.052175170603006416,
+            0.6120653249245935,
+            -1.009095519789568
+          ],
+          "size": [
+            0.42601673814068486,
+            0.5071860573562043,
+            1.1198283166796954
+          ]
+        },
+        "head": {
+          "min": [
+            -0.5258008697242518,
+            0.47730709102566315,
+            0.18867742801693424
+          ],
+          "max": [
+            0.4312395845571663,
+            1.5048527111262842,
+            1.0740050265990426
+          ],
+          "center": [
+            -0.047280642583542726,
+            0.9910799010759737,
+            0.6313412273079885
+          ],
+          "size": [
+            0.9570404542814182,
+            1.027545620100621,
+            0.8853275985821084
+          ]
+        },
+        "body": {
+          "min": [
+            -0.4172508413917331,
+            -0.06907939023688775,
+            -0.8771486918763217
+          ],
+          "max": [
+            0.4163761444032531,
+            1.0174522146894798,
+            0.661029914280515
+          ],
+          "center": [
+            -0.00043734849423998634,
+            0.474186412226296,
+            -0.10805938879790333
+          ],
+          "size": [
+            0.8336269857949862,
+            1.0865316049263676,
+            1.5381786061568368
+          ]
+        }
+      },
+      "restBodyJoint": [
+        -7.381104438763941e-08,
+        0.8089277744293213,
+        -0.34560373425483704
+      ]
+    }
+  },
+  "decision": "V78 keeps the original V77 geometry and texture bytes. Optimize hit testing, touch routing, rendering budget, and duplicated frame work first.",
+  "offlineLodExploration": {
+    "applied": false,
+    "algorithm": "existing meshoptimizer simplify, LockBorder; only index buffers evaluated in memory",
+    "fullBodyError0001": {
+      "bodyTriangles": 175004,
+      "original": 282648
+    },
+    "headPreservedAboveY022Error0001": {
+      "untouchedHeadTriangles": 50000,
+      "totalBodyTriangles": 194018,
+      "entireCharacterTrianglesKeepingOriginalEyesAndSkin": 248202
+    },
+    "eyesTargetQuarterTriangles": [
+      5592,
+      5592
+    ],
+    "reasonNotApplied": "Geometry or texture reduction needs separate visual acceptance. Original face, garment, eyes, all skinned arms/lids, and coats remain exact for this performance release."
+  }
+}
