@@ -49,6 +49,58 @@ async function capture(page, name) {
     report.screenshots.push({name,captured:false,detail:String(error)});
   }
 }
+async function checkV78PhotoInput(page,context,mode) {
+  if(!await page.evaluate(()=>document.documentElement.dataset.scenePerformance==='v78'))return;
+  await page.waitForFunction(()=>typeof window.__lumaPhotoTargetsQA==='function'&&window.__lumaPhotoTargetsQA().length>0,null,{timeout:45000});
+  const dialog=page.locator('dialog.photo-dialog[open]');
+  let selected=null;
+  // Re-read each projection immediately before input. A previous missed target
+  // may have moved as the real default camera animation advanced.
+  for(let attempt=0;attempt<3;attempt++) {
+    const targets=await page.evaluate(()=>window.__lumaPhotoTargetsQA());
+    const target=targets[Math.min(attempt,targets.length-1)];
+    if(!target)continue;
+    if(mode.mobile)await page.touchscreen.tap(target.x,target.y);
+    else await page.mouse.click(target.x,target.y);
+    try {
+      await dialog.waitFor({timeout:6000});
+      selected=target;
+      break;
+    } catch { /* Try another genuinely selectable face, never invoke app callbacks. */ }
+  }
+  check(mode.name+' V78 real photo click opens album',selected!==null,selected);
+  await page.locator('dialog.photo-dialog[open] .photo-viewer').waitFor({timeout:20000});
+  await page.locator('dialog.photo-dialog[open] .dialog-close').click({timeout:15000});
+  await dialog.waitFor({state:'detached',timeout:15000});
+  check(mode.name+' V78 photo album closes back to scene',await dialog.count()===0);
+  await page.waitForFunction(()=>window.__lumaPhotoTargetsQA().length>0,null,{timeout:30000});
+  const target=await page.evaluate(()=>window.__lumaPhotoTargetsQA()[0]);
+  const cameraBefore=await page.evaluate(()=>document.documentElement.dataset.cameraPosition);
+  const dx=target.x>mode.width/2?-38:38,dy=target.y>mode.height/2?-24:24;
+  if(mode.mobile) {
+    const cdp=await context.newCDPSession(page);
+    const point=(x,y)=>({x,y,id:1,radiusX:2,radiusY:2,force:1});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point(target.x,target.y)]});
+    try {
+      // The first move already exceeds the controller's drag threshold, before
+      // any intentional wait can be mistaken for a long press on slow CI GPUs.
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point(target.x+dx*.7,target.y+dy*.7)]});
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point(target.x+dx,target.y+dy)]});
+    } finally {
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }
+    await cdp.detach();
+  } else {
+    await page.mouse.move(target.x,target.y);
+    await page.mouse.down();
+    try {await page.mouse.move(target.x+dx,target.y+dy);}
+    finally {await page.mouse.up();}
+  }
+  await delay(800);
+  const cameraAfter=await page.evaluate(()=>document.documentElement.dataset.cameraPosition);
+  check(mode.name+' V78 drag starting on photo moves camera',cameraBefore!==cameraAfter,{target,before:cameraBefore,after:cameraAfter});
+  check(mode.name+' V78 photo drag does not open album',await dialog.count()===0);
+}
 async function main() {
   const browser=await chromium.launch({headless:true,args:[
     '--enable-webgl','--use-gl=angle','--use-angle=swiftshader',
@@ -110,6 +162,7 @@ async function main() {
         await page.locator('dialog.film-dialog .dialog-close').click({force:true,timeout:15000});
         await page.waitForFunction(c=>Number(document.documentElement.dataset.characterClock)>c,frozen,{timeout:20000});
         check(mode.name+' returns from film',!(await page.locator('dialog.film-dialog[open]').count()));
+        await checkV78PhotoInput(page,context,mode);
         await page.emulateMedia({reducedMotion:'reduce'});
         await page.waitForFunction(()=>{
           const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
