@@ -346,6 +346,17 @@ async function runV78StationaryHold(page,cdp,version) {
 }
 async function runV78PausedCamera(page,cdp,version) {
   await page.locator('.tree-stage').focus();
+  const entry=await readState(page);
+  // The published App intentionally uses the first blank/Space action after a
+  // manual camera gesture to release its hold and resume roaming. Only the next
+  // action toggles user pause. Exercise that supported entry contract explicitly.
+  if(entry.manual==='true'&&entry.rotation==='playing') {
+    await page.keyboard.press('Space');
+    await page.waitForFunction(()=>document.documentElement.dataset.cameraManualHold==='false'&&document.querySelector('.tree-stage')?.dataset.rotation==='playing',null,{timeout:10000});
+    const resumed=await readState(page);
+    check('v78 first Space releases the existing manual camera hold',resumed.manual==='false'&&resumed.rotation==='playing',resumed);
+    version.lifecycle.pauseEntry={before:entry,afterManualHoldRelease:resumed};
+  }
   await page.keyboard.press('Space');
   await page.waitForFunction(()=>document.querySelector('.tree-stage')?.dataset.rotation==='paused',null,{timeout:10000});
   const before=await readState(page),first=point(before,'empty'),second={x:first.x+34,y:first.y+6},acknowledgements=[];

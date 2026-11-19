@@ -81,8 +81,13 @@ jobs:
           python -m http.server 4174 --bind 127.0.0.1 --directory baseline > "$RUNNER_TEMP/v77-baseline-server.log" 2>&1 &
           baseline_pid=$!
           trap 'kill "$candidate_pid" "$baseline_pid"' EXIT
-          node source/scripts/qa-mobile-performance-v78.cjs
-          node source/scripts/qa-princess-v77.cjs
+          performance_status=0
+          character_status=0
+          node source/scripts/qa-mobile-performance-v78.cjs || performance_status=$?
+          node source/scripts/qa-princess-v77.cjs || character_status=$?
+          if [ "$performance_status" -ne 0 ] || [ "$character_status" -ne 0 ]; then
+            exit 1
+          fi
       - name: Record verified candidate branch
         working-directory: pages
         env:
