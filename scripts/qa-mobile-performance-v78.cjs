@@ -210,6 +210,16 @@ function summarizePhase(raw) {
   };
 }
 function distance(a,b) {return Math.hypot(...a.map((v,i)=>v-b[i]));}
+async function waitForCameraDelta(page,before,field) {
+  // CDP acknowledgement does not promise that the renderer has already handled
+  // the corresponding pointer event. Wait for the actual OrbitControls result,
+  // with the same 20-second ceiling used by the other rendered-scene gates.
+  await page.waitForFunction(({before,field})=>{
+    const data=document.documentElement.dataset;
+    const current=(field==='target'?data.cameraTarget:data.cameraPosition)?.split(',').map(Number)||[];
+    return current.length===3&&current.every(Number.isFinite)&&Math.hypot(...current.map((value,index)=>value-before[index]))>.01;
+  },{before,field},{timeout:20000});
+}
 function point(state, target) {
   const r=state.rect;
   if(!r)throw new Error('Missing scene canvas');
@@ -320,6 +330,7 @@ async function runV78StationaryHold(page,cdp,version) {
   await page.evaluate(()=>window.__mobilePerfQA.begin('stationary-two-fingers-on-character'));
   try {
     await dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
+    await page.waitForFunction(()=>window.__mobilePerfQA.peek().activePointerIds.length===2,null,{timeout:20000});
     await delay(900);
     const held=await readState(page),input=await page.evaluate(()=>window.__mobilePerfQA.peek());
     const downIds=[...new Set(input.nativeInput.filter(event=>event.type==='pointerdown').map(event=>event.pointerId))];
@@ -343,6 +354,7 @@ async function runV78PausedCamera(page,cdp,version) {
     const start=dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
     const move=dispatchTouch(cdp,'touchMove',[{x:first.x+24,y:first.y-16},{x:second.x+24,y:second.y-16}],acknowledgements);
     await Promise.all([start,move]);
+    await waitForCameraDelta(page,before.camera.target,'target');
     const during=await readState(page);
     check('v78 user pause still permits native camera pan',distance(before.camera.target,during.camera.target)>.01,{before:before.camera,after:during.camera});
     check('v78 manual pan does not clear user pause',during.rotation==='paused'&&during.dialogs.length===0,during);
@@ -377,6 +389,7 @@ async function runV78Lifecycle(page,cdp,version) {
     // probe, then verify that the app actually receives pointerup as well.
     if(version.touchReleaseProtocol.mode==='active-list')await dispatchTouch(cdp,'touchMove',[remaining],acknowledgements);
     else await dispatchTouch(cdp,'touchEnd',[{x:second.x+8,y:second.y-3,id:2}],acknowledgements);
+    await page.waitForFunction(()=>window.__mobilePerfQA.peek().eventCounts.pointerup>=1,null,{timeout:20000});
     const partialEvents=await page.evaluate(()=>window.__mobilePerfQA.peek().eventCounts);
     check('v78 partial release produces a native pointerup',(partialEvents.pointerup||0)>=1,partialEvents);
     const partial=await readState(page);
@@ -385,6 +398,7 @@ async function runV78Lifecycle(page,cdp,version) {
     // incorrectly schedules restoration when only the first finger is lifted.
     await delay(600);
     await dispatchTouch(cdp,'touchMove',[{x:remaining.x+18,y:remaining.y-9}],acknowledgements);
+    await waitForCameraDelta(page,partial.camera.position,'position');
     const continued=await readState(page);
     check('v78 remaining finger continues at gesture quality',continued.quality==='gesture',continued.quality);
     check('v78 remaining finger continues to move the camera',distance(partial.camera.position,continued.camera.position)>.01,{before:partial.camera,after:continued.camera});
@@ -399,8 +413,10 @@ async function runV78Lifecycle(page,cdp,version) {
   try {
     await dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
     await dispatchTouch(cdp,'touchMove',[{x:first.x+10,y:first.y},{x:second.x+10,y:second.y}],acknowledgements);
+    await page.waitForFunction(()=>document.documentElement.dataset.sceneQuality==='gesture',null,{timeout:20000});
     check('v78 cancel test starts in gesture quality',(await readState(page)).quality==='gesture');
     await dispatchTouch(cdp,'touchCancel',[],acknowledgements);
+    await page.waitForFunction(()=>window.__mobilePerfQA.peek().eventCounts.pointercancel>=1,null,{timeout:20000});
     const cancelEvents=await page.evaluate(()=>window.__mobilePerfQA.peek().eventCounts);
     check('v78 receives native pointercancel',(cancelEvents.pointercancel||0)>=1,cancelEvents);
   } finally {

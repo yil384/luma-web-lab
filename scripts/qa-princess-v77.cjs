@@ -69,7 +69,12 @@ async function checkV78PhotoInput(page,context,mode) {
     } catch { /* Try another genuinely selectable face, never invoke app callbacks. */ }
   }
   check(mode.name+' V78 real photo click opens album',selected!==null,selected);
-  await page.locator('dialog.photo-dialog[open] .photo-viewer').waitFor({timeout:20000});
+  // The current production Gallery-v10 opens the book first. PhotoViewer is
+  // mounted only after a second click on a print inside that book.
+  await page.locator('dialog.photo-dialog[open] .memory-album-book').waitFor({timeout:20000});
+  await page.waitForFunction(()=>[...document.querySelectorAll('dialog.photo-dialog[open] .memory-album-spread .memory-album-print img')]
+    .some(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
+  check(mode.name+' V78 opened album displays a loaded photo',true);
   await page.locator('dialog.photo-dialog[open] .dialog-close').click({timeout:15000});
   await dialog.waitFor({state:'detached',timeout:15000});
   check(mode.name+' V78 photo album closes back to scene',await dialog.count()===0);
@@ -80,20 +85,26 @@ async function checkV78PhotoInput(page,context,mode) {
   if(mode.mobile) {
     const cdp=await context.newCDPSession(page);
     const point=(x,y)=>({x,y,id:1,radiusX:2,radiusY:2,force:1});
-    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point(target.x,target.y)]});
+    const start=cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point(target.x,target.y)]});
     try {
       // The first move already exceeds the controller's drag threshold, before
-      // any intentional wait can be mistaken for a long press on slow CI GPUs.
-      await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point(target.x+dx*.7,target.y+dy*.7)]});
+      // a slow GPU acknowledgement can turn a queued drag into a long press.
+      const moving=cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point(target.x+dx*.7,target.y+dy*.7)]});
+      await Promise.all([start,moving]);
       await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point(target.x+dx,target.y+dy)]});
+      await page.waitForFunction(before=>document.documentElement.dataset.cameraPosition&&document.documentElement.dataset.cameraPosition!==before,cameraBefore,{timeout:20000});
     } finally {
       await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     }
     await cdp.detach();
   } else {
     await page.mouse.move(target.x,target.y);
-    await page.mouse.down();
-    try {await page.mouse.move(target.x+dx,target.y+dy);}
+    const pressed=page.mouse.down();
+    try {
+      const moving=page.mouse.move(target.x+dx,target.y+dy);
+      await Promise.all([pressed,moving]);
+      await page.waitForFunction(before=>document.documentElement.dataset.cameraPosition&&document.documentElement.dataset.cameraPosition!==before,cameraBefore,{timeout:20000});
+    }
     finally {await page.mouse.up();}
   }
   await delay(800);
