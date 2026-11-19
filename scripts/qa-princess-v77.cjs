@@ -83,20 +83,22 @@ async function main() {
         check(mode.name+' actual V77 WebGL scene',state.canvas===1&&!state.fallback&&state.model==='ready'&&
           state.held==='ready'&&state.arms==='true'&&state.eyelids==='true'&&state.runtime==='v77',state);
         const lidY=state.pose.upperLidY;
+        // SwiftShader advances capped simulation time slowly. Trigger a real
+        // cuddle blink with input, instead of assuming 50 wall seconds reaches
+        // the next four-second natural blink on a sub-one-FPS software renderer.
+        await tapActor(page,'held-cat',mode.mobile);
+        check(mode.name+' held kitten owns its click', (await readState(page)).lastTap==='held-cat');
         await page.waitForFunction(y=>{
           const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
           return p&&Math.abs(p.upperLidY-y)>0.0001;
-        },lidY,{timeout:50000});
+        },lidY,{timeout:90000});
         check(mode.name+' real eyelid bones animate',true,{from:lidY,to:(await readState(page)).pose.upperLidY});
         await tapActor(page,'princess',mode.mobile);
         await page.waitForFunction(()=>{
           const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
           return p&&p.leftArm.slice(0,3).some(v=>Math.abs(v)>0.002);
-        },null,{timeout:15000});
+        },null,{timeout:90000});
         check(mode.name+' tap drives actual arm bones',true,(await readState(page)).pose);
-        await delay(2300);
-        await tapActor(page,'held-cat',mode.mobile);
-        check(mode.name+' held kitten owns its click', (await readState(page)).lastTap==='held-cat');
         await capture(page,mode.name+'-v77-scene');
         await page.locator('.greeting-gate').click({force:true,timeout:15000});
         await page.locator('dialog.film-dialog[open]').waitFor({timeout:20000});
@@ -111,7 +113,7 @@ async function main() {
         await page.emulateMedia({reducedMotion:'reduce'});
         await page.waitForFunction(()=>{
           const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
-          return p&&p.leftArm.slice(0,3).every(v=>Math.abs(v)<1e-7)&&p.rightArm.slice(0,3).every(v=>Math.abs(v)<1e-7);
+          return document.documentElement.dataset.characterReducedMotion==='true'&&p&&p.leftArm.slice(0,3).every(v=>Math.abs(v)<1e-7)&&p.rightArm.slice(0,3).every(v=>Math.abs(v)<1e-7);
         },null,{timeout:15000});
         check(mode.name+' reduced motion restores arm pose',true,(await readState(page)).pose);
         check(mode.name+' no JavaScript errors',report.errors.filter(e=>e.mode===mode.name).length===0,report.errors);

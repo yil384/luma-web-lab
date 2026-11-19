@@ -44,7 +44,7 @@ function GeminiPrincessV77({active = true, paused = false, reducedMotion = false
   const [bundle, setBundle] = U.useState(null), [failed, setFailed] = U.useState(false);
   const pivot = U.useRef(null), holdAnchor = U.useRef(null), adapterRef = U.useRef(null);
   // Opt-in DOM evidence for browser integration tests; no extra scene or controls.
-  const qaProbe = U.useRef({enabled: new URLSearchParams(location.search).has('rigqa'), tick: 0, bones: null, heldBody: null, point: new J()});
+  const qaProbe = U.useRef({enabled: new URLSearchParams(location.search).has('rigqa'), bones: null, heldBody: null, point: new J()});
   const {gl, invalidate} = $e();
   U.useEffect(() => {
     let disposed = false, ownedScene = null, ownedCats = null, pendingCat = null, readyModel = null, catSettled = false;
@@ -142,7 +142,7 @@ function GeminiPrincessV77({active = true, paused = false, reducedMotion = false
     if (!active || paused) return;
     characterRuntime.applyHeld();
     const probe = qaProbe.current;
-    if (!probe.enabled || !bundle || !probe.bones || (++probe.tick % 4 && !reducedMotion)) return;
+    if (!probe.enabled || !bundle || !probe.bones) return;
     const rect = gl.domElement.getBoundingClientRect();
     const screenPoint = point => ({x: rect.left + (point.x + 1) * rect.width / 2, y: rect.top + (1 - point.y) * rect.height / 2});
     const princessPoint = screenPoint(probe.point.set(0, .28, .055).applyMatrix4(bundle.model.matrixWorld).project(camera));
