@@ -1,6 +1,9 @@
 export const SCENE_GESTURE_TIMING = {
   tapDelay: 330,
   longPressDelay: 650,
+  // A blocked render can deliver this timer before older queued pointer moves.
+  // Discard stale intent instead of opening a dialog from that input backlog.
+  longPressMaxLateness: 250,
   dragDistance: 8,
   doubleTapDistance: 32,
 } as const;
@@ -38,6 +41,7 @@ interface CompletedTap {
 
 interface Press {
   id: number;
+  startedAt: number;
   x: number;
   y: number;
   pointerType: string;
@@ -113,6 +117,7 @@ export function createSceneGestureController(callbacks: SceneGestureCallbacks, c
 
       const current: Press = {
         id: point.pointerId,
+        startedAt: clock.now(),
         x: point.clientX,
         y: point.clientY,
         pointerType: point.pointerType,
@@ -140,6 +145,10 @@ export function createSceneGestureController(callbacks: SceneGestureCallbacks, c
       holdTimer = clock.setTimeout(() => {
         holdTimer = null;
         if (press !== current || current.cancelled || current.held || pointers.size !== 1) return;
+        if (clock.now() - current.startedAt > SCENE_GESTURE_TIMING.longPressDelay + SCENE_GESTURE_TIMING.longPressMaxLateness) {
+          cancelPress();
+          return;
+        }
         current.held = true;
         current.previousTap = null;
         clearTap();

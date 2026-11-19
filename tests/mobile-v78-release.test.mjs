@@ -96,6 +96,43 @@ test('V78 patches the real V77 entry and preserves existing content', {skip:!bas
     assert.deepEqual(events,[],'Stationary pinch must not open a share/photo dialog or toggle orbit.');
     assert.match(source,/return\{bind:c,onPhotoPress:l,cancel:r\.cancelIntent\}/);
   });
+  await t.test('the actual patched App rejects stale holds but preserves timely holds, contacts, and the next tap',async()=>{
+    const source=await readFile(path.join(dir,newApp),'utf8');
+    const start=source.indexOf('const D={tapDelay:'),end=source.indexOf('function de(o)',start);
+    assert.ok(start>=0&&end>start);
+    const create=vm.runInContext(source.slice(start,end)+';ue',vm.createContext({}));
+    for(const elapsed of [650,900,901,3000])for(const photo of [null,7]){
+      let now=137,sequence=0;
+      const timers=new Map(),events=[];
+      const controller=create({onTap:()=>events.push('tap'),onPhotoTap:index=>events.push('photo:'+index),
+        onDoubleTap:()=>events.push('double'),onLongPress:index=>events.push('hold:'+index)},
+      {now:()=>now,setTimeout:(callback,delay)=>{timers.set(++sequence,{callback,at:now+delay});return sequence;},clearTimeout:id=>timers.delete(id)});
+      const deliverLate=duration=>{
+        now+=duration;
+        for(const [id,timer] of [...timers])if(timer.at<=now){timers.delete(id);timer.callback();}
+      };
+      const first={pointerId:1,pointerType:'touch',clientX:100,clientY:100,button:0};
+      controller.pointerDown(first);
+      if(photo!==null)controller.pickPhoto(photo);
+      deliverLate(elapsed);
+      const expected=elapsed<=900?['hold:'+photo]:[];
+      assert.deepEqual(events,expected,`Actual App hold delivered at ${elapsed} ms`);
+      if(elapsed>900){
+        // The overdue callback can arrive before a queued move. It must cancel
+        // intent while retaining the first contact for the following finger.
+        controller.pointerMove({...first,clientX:130});
+        const second={...first,pointerId:2,clientX:140};
+        controller.pointerDown(second);deliverLate(650);controller.pointerUp(second);
+        assert.deepEqual(events,expected,'A stale hold must not forget still-active contacts');
+      }
+      controller.pointerUp(first);deliverLate(331);
+      assert.deepEqual(events,expected,'An expired hold must not become a release tap');
+      assert.equal(timers.size,0);
+      const next={...first,pointerId:3};
+      controller.pointerDown(next);controller.pickPhoto(18);controller.pointerUp(next);deliverLate(330);
+      assert.deepEqual(events,[...expected,'photo:18'],'A fresh tap works after all contacts are released');
+    }
+  });
   await t.test('rerun is idempotent, including rollback metadata',async()=>{
     const once=await digest(dir);success(build(dir));assert.deepEqual(await digest(dir),once);
   });

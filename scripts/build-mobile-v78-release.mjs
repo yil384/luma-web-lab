@@ -43,6 +43,14 @@ const app = await readFile(path.join(target,'assets/App-MobileSmooth-20261117-v2
 if (sha256(app) !== 'f391a954f192283e227e76831f09b249ba8d11504e47073ec9b636feb6f9f432') throw new Error('The active App changed.');
 let patchedApp = app.toString('utf8');
 for (const [from,to] of [
+  ['const D={tapDelay:330,longPressDelay:650,dragDistance:8,doubleTapDistance:32}',
+    'const D={tapDelay:330,longPressDelay:650,longPressMaxLateness:250,dragDistance:8,doubleTapDistance:32}'],
+  ['const u={id:s.pointerId,x:s.clientX,y:s.clientY,pointerType:s.pointerType,cancelled:!1',
+    'const u={id:s.pointerId,startedAt:n.now(),x:s.clientX,y:s.clientY,pointerType:s.pointerType,cancelled:!1'],
+  // Keep the real App's 650 ms hold. A callback over 250 ms late can run ahead
+  // of queued moves after a blocked render; cancel its intent, not its contacts.
+  ['l=n.setTimeout(()=>{l=null,!(c!==u||u.cancelled||u.held||r.size!==1)&&(u.held=!0,u.previousTap=null,d(),o.onLongPress(u.photoIndex))},D.longPressDelay)',
+    'l=n.setTimeout(()=>{l=null;if(c!==u||u.cancelled||u.held||r.size!==1)return;if(n.now()-u.startedAt>D.longPressDelay+D.longPressMaxLateness){x();return}u.held=!0,u.previousTap=null,d(),o.onLongPress(u.photoIndex)},D.longPressDelay)'],
   ['cancel:f}}function de(o)', 'cancelIntent:x,cancel:f}}function de(o)'],
   ['return{bind:c,onPhotoPress:l,cancel:r.cancel}', 'return{bind:c,onPhotoPress:l,cancel:r.cancelIntent}'],
 ]) {
@@ -151,6 +159,7 @@ const release = {
     'Adaptive render pixel budget with immediate gesture quality and delayed idle recovery','No mobile MSAA; same original models and textures',
     'Renderer-owned final matrix updates; normal visitors do not serialize QA snapshots',
     'Character interactions retain active touch contacts so a slow pinch cannot become a share hold',
+    'Stale long-press callbacks after a blocked frame cancel intent without losing live contacts',
     'Paused automatic orbit uses demand rendering and keeps manual zoom/pan available'],
   verificationLimit:'CI compares the same software Chromium runner. Physical iPhone/Safari performance has not been measured.',
 };
