@@ -1,0 +1,39 @@
+{
+  "canUseArmPose": true,
+  "canBlink": true,
+  "bones": [
+    "root",
+    "chest",
+    "upperArm_L",
+    "forearm_L",
+    "hand_L",
+    "upperArm_R",
+    "forearm_R",
+    "hand_R",
+    "eyelid_upper_L",
+    "eyelid_lower_L",
+    "eyelid_upper_R",
+    "eyelid_lower_R"
+  ],
+  "skinnedMeshes": [
+    "CradleArmsV75",
+    "V77_eyelid_upper_L",
+    "V77_lash_L",
+    "V77_eyelid_lower_L",
+    "V77_eyelid_upper_R",
+    "V77_lash_R",
+    "V77_eyelid_lower_R"
+  ],
+  "clips": [
+    "hold_idle",
+    "pet_cat",
+    "adjust_hold",
+    "blink"
+  ],
+  "armRestMaxError": 1.4901161193847656e-8,
+  "petLeftMaxDisplacement": 0.047257912830147346,
+  "petRightMaxDisplacement": 0,
+  "adjustPalmMeanRisePivot": 0.029456922911805877,
+  "anchorRisePivot": 0.0295,
+  "staticMainMeshUnchanged": true
+}
