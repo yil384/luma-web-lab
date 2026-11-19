@@ -1,0 +1,129 @@
+name: Import verified Gemini V76 ZIP into isolated review branch
+on:
+  push:
+    branches: [feat/princess-v76-kitten-p0-p1]
+    paths: [.github/workflows/v76-import-once.yml]
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Reassemble checksum-verified ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          part="$RUNNER_TEMP/v76.b64"
+          : > "$part"
+          while IFS= read -r sha; do
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$sha" --jq .content | base64 -d >> "$part"
+          done <<'CHUNKS'
+          2ade6f8aa80976ae3934cc3f02f8d0160115a50b
+          7d8b06977ffac4edfaa42fdbebd52d62a21b8888
+          29720a63e1232b63699db450a7d038a00510320a
+          910b76a04de59aa0ce59f5959fd25e3df778d888
+          9e8bd39e77ed858c21884cdf600993c6ea539ae2
+          5465577f3eee74fd256ba072f0905a1a46b46b5d
+          1848bd3de3bfa48ea065e2a04ba03add0b4a7c3b
+          4ceeefa31c625d602cb26069e1bb610980fffa71
+          2d88161d6318933c6a334b886e20620788b97d12
+          8542e5fc7932fcf37f0336014cde49db89202acf
+          61d23c50dd998cd46bce3ca8e4ef0c385524f6d6
+          20c26973508ef6e938b6a944e0bd3c901c1774a4
+          365a9f5b6e12cf19de8eb7b603183aae3d9506c8
+          ee68ab09b04799873ae261308797ccde43b71887
+          76afb574578efb692a875cf2eaf50f48cebac97f
+          5d7e5c965fc7086726bea397b42320f648fc8de8
+          000e265e477f5113931b804f37f6332a41bb2b6b
+          3c998c88c28df985736a3c6f35d00406f060782c
+          68ff77a2e2a65bf97fb92158f828a872614b08d7
+          41a35dd1d6f7cfa946de54babd7f80e3ee26d287
+          ca027684565943cecc1b7b4c3a43048738658597
+          a2d97db8ab5eba552fd2e80dd12d2b4e2d074edb
+          2b8cfa846fc090ce684d2093a58d525a3c1f69dd
+          91e2f75cc71c60f9cc9b3a537a244b83e683fef5
+          314f817a77063a17be0f71749c24785988f1ebd6
+          CHUNKS
+          base64 -d "$part" > "$RUNNER_TEMP/luma-v76.zip"
+          printf 'ac97197b69f9cacd1e0fddc3a89faa5474c91932177a81951809ffa870721134  %s\n' "$RUNNER_TEMP/luma-v76.zip" | sha256sum -c -
+          test "$(stat -c %s "$RUNNER_TEMP/luma-v76.zip")" -eq 15878011
+          unzip -tq "$RUNNER_TEMP/luma-v76.zip"
+          echo "Verified all 25 Git blob chunks and exact source ZIP."
+      - name: Extract exactly 17 pinned deliverables
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os,hashlib
+          archive=Path(os.environ["RUNNER_TEMP"])/"luma-v76.zip"
+          mapping={
+            "assets/princess/luma-princess-hug-v76.glb": "public/princess/luma-princess-hug-v76.glb",
+            "preview/TreeScene-PrincessKitten-V76-preview.js": "docs/princess-kitten-p0-p1/TreeScene-PrincessKitten-V76-preview.js",
+            "src/scene/princess-kitten/held-pose.json": "src/scene/princess-kitten/held-pose.json",
+            "src/scene/princess-kitten/interaction-scheduler.mjs": "src/scene/princess-kitten/interaction-scheduler.mjs",
+            "src/scene/princess-kitten/held-kitten-rig.mjs": "src/scene/princess-kitten/held-kitten-rig.mjs",
+            "src/scene/princess-kitten/ground-cat-adapter.mjs": "src/scene/princess-kitten/ground-cat-adapter.mjs",
+            "tests/princess-kitten-scheduler.test.mjs": "tests/princess-kitten-scheduler.test.mjs",
+            "REVIEW_TEMPLATE.md": "docs/princess-kitten-p0-p1/REVIEW_TEMPLATE.md",
+            "POSE_REVIEW.csv": "docs/princess-kitten-p0-p1/POSE_REVIEW.csv",
+            "RIGGING_PLAN_P2.md": "docs/princess-kitten-p0-p1/RIGGING_PLAN_P2.md",
+            "princess_kitten_v75_showcase.mp4": "docs/princess-kitten-p0-p1/evidence/princess_kitten_v75_showcase.mp4",
+            "reports/princess_glb.json": "docs/princess-kitten-p0-p1/evidence/reports/princess_glb.json",
+            "reports/princess_v76_glb.json": "docs/princess-kitten-p0-p1/evidence/reports/princess_v76_glb.json",
+            "reports/cat_glb.json": "docs/princess-kitten-p0-p1/evidence/reports/cat_glb.json",
+            "reports/renders/v75_vs_v76_face_4angles.png": "docs/princess-kitten-p0-p1/evidence/reports/renders/v75_vs_v76_face_4angles.png",
+            "reports/renders/v75_vs_v76_phone_390x844.png": "docs/princess-kitten-p0-p1/evidence/reports/renders/v75_vs_v76_phone_390x844.png",
+            "reports/renders/before_after_v75_closeups.png": "docs/princess-kitten-p0-p1/evidence/reports/renders/before_after_v75_closeups.png"
+          }
+          with ZipFile(archive) as z:
+              if set(z.namelist())!=set(mapping):
+                  raise RuntimeError("ZIP listing differs from the verified 17-file manifest")
+              for source,dest in mapping.items():
+                  output=Path(dest)
+                  output.parent.mkdir(parents=True,exist_ok=True)
+                  output.write_bytes(z.read(source))
+          model=Path(mapping["assets/princess/luma-princess-hug-v76.glb"])
+          raw=model.read_bytes()
+          digest=hashlib.sha256(raw).hexdigest()
+          if len(raw)!=15485864 or digest!="fad8b2e3b63a2c9866c8d12c64a94375a2cbf4a1f6d9591c73b10e948b187189":
+              raise RuntimeError("V76 model SHA256 mismatch: "+digest)
+          print("Extracted",len(mapping),"original deliverables, V76 SHA256",digest)
+          PY
+      - name: Run P0/P1 tests and structural GLB validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/princess-kitten-scheduler.test.mjs
+          for file in src/scene/princess-kitten/*.mjs; do node --check "$file"; done
+          python - <<'PY'
+          import json,struct
+          raw=open("public/princess/luma-princess-hug-v76.glb","rb").read()
+          assert raw[:4]==b"glTF" and struct.unpack_from("<II",raw,4)==(2,len(raw))
+          length,kind=struct.unpack_from("<II",raw,12)
+          assert kind==0x4E4F534A
+          doc=json.loads(raw[20:20+length])
+          assert len(doc.get("meshes",[]))==4
+          print("Model verified:",len(doc["meshes"]),"meshes,",len(doc.get("skins",[])),"skins,",len(doc.get("animations",[])),"animations")
+          PY
+      - name: Commit V76 sources and remove temporary importer
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- public/princess/luma-princess-hug-v76.glb src/scene/princess-kitten tests/princess-kitten-scheduler.test.mjs docs/princess-kitten-p0-p1
+          git rm -- .github/workflows/v76-import-once.yml
+          git status --short
+          git diff --cached --stat
+          git commit -m "feat(scene): stage Gemini V76 princess and kitten P0/P1 for review"
+          git push origin HEAD:feat/princess-v76-kitten-p0-p1
