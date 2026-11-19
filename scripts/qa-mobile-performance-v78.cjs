@@ -53,6 +53,15 @@ function installInstrumentation() {
   const inputTypes = new Set(['pointerdown','pointermove','pointerup','pointercancel','pointerover','pointerout','touchstart','touchmove','touchend','touchcancel']);
   const nativeAdd = EventTarget.prototype.addEventListener;
   const nativeRemove = EventTarget.prototype.removeEventListener;
+  const nativePointers=new Set();
+  for(const type of ['pointerdown','pointermove','pointerup','pointercancel']) {
+    nativeAdd.call(window,type,event=>{
+      if(type==='pointerdown')nativePointers.add(event.pointerId);
+      if(type==='pointerup'||type==='pointercancel')nativePointers.delete(event.pointerId);
+      if(active)active.nativeInput.push({type,pointerId:event.pointerId,pointerType:event.pointerType,x:event.clientX,y:event.clientY,
+        atMs:performance.now()-active.start,target:event.target?.tagName||'',inScene:!!event.target?.closest?.('.tree-stage'),activePointerIds:[...nativePointers]});
+    },{capture:true,passive:true});
+  }
   const captureOf = options => typeof options === 'boolean' ? options : !!options?.capture;
   function wrappedFor(target, type, callback, capture, create) {
     let byType = originals.get(target);
@@ -68,7 +77,7 @@ function installInstrumentation() {
         if (!phase) return typeof callback==='function'?callback.call(this,event):callback.handleEvent(event);
         let sample=phase.eventMap.get(event);
         if (!sample) {
-          sample={type:event.type,pointerType:event.pointerType||'',cpuMs:0,handlers:0};
+          sample={type:event.type,pointerType:event.pointerType||'',pointerId:event.pointerId,cpuMs:0,handlers:0};
           phase.eventMap.set(event,sample);phase.events.push(sample);
         }
         const start=performance.now();
@@ -121,6 +130,7 @@ function installInstrumentation() {
     if (active) {
       const canvas=document.querySelector('.tree-stage canvas');
       active.frames.push({
+        atMs:now,
         intervalMs:active.lastFrame===null?null:now-active.lastFrame,
         drawCalls:frameDraws.calls,triangles:frameDraws.triangles,
         width:canvas?.width||0,height:canvas?.height||0,
@@ -136,18 +146,19 @@ function installInstrumentation() {
     begin(name) {
       if (active) throw new Error('Performance phase already running');
       frameDraws={calls:0,triangles:0};
-      active={name,start:performance.now(),lastFrame:null,frames:[],events:[],eventMap:new WeakMap()};
+      active={name,start:performance.now(),lastFrame:null,frames:[],events:[],nativeInput:[],eventMap:new WeakMap()};
     },
     peek() {
       const eventCounts={};
       for(const event of active?.events||[])eventCounts[event.type]=(eventCounts[event.type]||0)+1;
-      return {frames:active?.frames.length||0,drawnFrames:active?.frames.filter(f=>f.drawCalls>0).length||0,eventCounts};
+      return {frames:active?.frames.length||0,drawnFrames:active?.frames.filter(f=>f.drawCalls>0).length||0,eventCounts,
+        activePointerIds:[...nativePointers],nativeInput:active?.nativeInput||[]};
     },
     end() {
       if (!active) throw new Error('No performance phase running');
       const phase=active;active=null;
       const end=performance.now();
-      return {name:phase.name,durationMs:end-phase.start,frames:phase.frames,events:phase.events,
+      return {name:phase.name,durationMs:end-phase.start,frames:phase.frames,events:phase.events,nativeInput:phase.nativeInput,
         longTasks:longTasks.filter(task=>task.start>=phase.start&&task.start<end)};
     },
     environment() {
@@ -171,6 +182,10 @@ const readState = page => page.evaluate(()=>{
     points:JSON.parse(data.characterHitPoints||'{}'),
     camera:{position:(data.cameraPosition||'').split(',').map(Number),target:(data.cameraTarget||'').split(',').map(Number),distance:Number(data.cameraDistance)},
     manual:data.cameraManualHold,
+    clock:Number(data.characterClock),rotation:document.querySelector('.tree-stage')?.dataset.rotation,
+    pause:{character:data.characterPaused,camera:data.cameraPaused,active:data.cameraActive,visible:data.characterVisible,
+      auto:data.cameraAutoEnabled,document:document.visibilityState,focused:document.hasFocus()},
+    dialogs:[...document.querySelectorAll('dialog[open]')].map(dialog=>({className:dialog.className,label:dialog.getAttribute('aria-label')})),
     buffer:canvas?{width:canvas.width,height:canvas.height,pixels:canvas.width*canvas.height}:null,
     rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null,
     fallback:document.body.innerText.includes('当前浏览器无法显示')
@@ -179,6 +194,7 @@ const readState = page => page.evaluate(()=>{
 function summarizePhase(raw) {
   const rendered=raw.frames.filter(frame=>frame.drawCalls>0);
   const intervals=raw.frames.map(frame=>frame.intervalMs).filter(n=>Number.isFinite(n)&&n>0);
+  const renderIntervals=rendered.slice(1).map((frame,index)=>frame.atMs-rendered[index].atMs).filter(n=>Number.isFinite(n)&&n>0);
   const events={};
   for(const type of new Set(raw.events.map(event=>event.type))) {
     const samples=raw.events.filter(event=>event.type===type);
@@ -186,10 +202,11 @@ function summarizePhase(raw) {
   }
   return {
     name:raw.name,durationMs:raw.durationMs,
-    frameIntervalsMs:stats(intervals),measuredFps:intervals.length?1000/(intervals.reduce((a,b)=>a+b,0)/intervals.length):null,
+    frameIntervalsMs:stats(intervals),rafCallbackFps:intervals.length?1000/(intervals.reduce((a,b)=>a+b,0)/intervals.length):null,
+    renderedFrameIntervalsMs:stats(renderIntervals),measuredRenderFps:renderIntervals.length?1000/(renderIntervals.reduce((a,b)=>a+b,0)/renderIntervals.length):null,
     renderedFrames:rendered.length,drawCalls:stats(rendered.map(frame=>frame.drawCalls)),triangles:stats(rendered.map(frame=>frame.triangles)),
     renderPixels:stats(rendered.map(frame=>frame.width*frame.height)),qualities:[...new Set(raw.frames.map(frame=>frame.quality))],
-    inputEvents:events,longTasks:{...stats(raw.longTasks.map(task=>task.duration)),totalMs:raw.longTasks.reduce((sum,task)=>sum+task.duration,0)}
+    inputEvents:events,nativeInput:raw.nativeInput,longTasks:{...stats(raw.longTasks.map(task=>task.duration)),totalMs:raw.longTasks.reduce((sum,task)=>sum+task.duration,0)}
   };
 }
 function distance(a,b) {return Math.hypot(...a.map((v,i)=>v-b[i]));}
@@ -203,8 +220,35 @@ function point(state, target) {
 }
 async function dispatchTouch(cdp, type, points, samples) {
   const start=performance.now();
-  await cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,id)=>({...p,id:id+1,radiusX:2,radiusY:2,force:1}))});
-  samples.push({type,acknowledgementMs:performance.now()-start});
+  const nativePoints=points.map((p,index)=>({...p,id:p.id??index+1,radiusX:2,radiusY:2,force:1}));
+  await cdp.send('Input.dispatchTouchEvent',{type,touchPoints:nativePoints});
+  samples.push({type,touchPoints:nativePoints,acknowledgementMs:performance.now()-start});
+}
+async function probePartialRelease(context) {
+  // Chromium has two native CDP touch implementations. Detect their documented
+  // observable behavior on an empty page, independent of application listeners.
+  const page=await context.newPage(),samples=[];
+  try {
+    await page.setContent('<!doctype html><html><head><style>html,body{margin:0;width:100%;height:100%;touch-action:none}</style></head><body></body></html>');
+    await page.evaluate(()=>{
+      window.__nativeTouchProbe=[];
+      for(const type of ['pointerdown','pointermove','pointerup','pointercancel'])window.addEventListener(type,event=>window.__nativeTouchProbe.push({type,pointerId:event.pointerId,isTrusted:event.isTrusted}),{capture:true,passive:true});
+    });
+    const cdp=await context.newCDPSession(page);
+    await dispatchTouch(cdp,'touchStart',[{x:110,y:200,id:1},{x:150,y:200,id:2}],samples);
+    await dispatchTouch(cdp,'touchMove',[{x:111,y:200,id:1}],samples);
+    let events=await page.evaluate(()=>window.__nativeTouchProbe);
+    let mode='active-list';
+    if(!events.some(event=>event.type==='pointerup')) {
+      mode='explicit-end';
+      await dispatchTouch(cdp,'touchEnd',[{x:150,y:200,id:2}],samples);
+      events=await page.evaluate(()=>window.__nativeTouchProbe);
+    }
+    const down=events.filter(event=>event.type==='pointerdown'),up=events.filter(event=>event.type==='pointerup');
+    check('native CDP probe releases exactly the second finger',down.length===2&&up.length===1&&up[0].pointerId===down[1].pointerId&&events.every(event=>event.isTrusted),{mode,events});
+    await dispatchTouch(cdp,'touchEnd',[],samples);
+    return {mode,events,dispatches:samples};
+  } finally {await page.close();}
 }
 async function runGesture(page,cdp,version,target,kind) {
   const name=target+'-'+kind;
@@ -212,45 +256,115 @@ async function runGesture(page,cdp,version,target,kind) {
   const first=point(before,target);
   const direction=first.x+72>before.rect.x+before.rect.width?-1:1;
   const second={x:first.x+34*direction,y:first.y+6};
-  const acknowledgements=[];
+  const acknowledgements=[],checkpoints=[];
   await page.evaluate(name=>window.__mobilePerfQA.begin(name),name);
-  let during;
+  let during,after,phase,failure=null;
+  const observe=async step=>{
+    const state=await readState(page),input=await page.evaluate(()=>window.__mobilePerfQA.peek());
+    checkpoints.push({step,state,input});
+    if(state.dialogs.length||state.pause.active==='false')throw new Error(name+' stopped rendering behind an overlay: '+JSON.stringify({step,dialogs:state.dialogs,pause:state.pause}));
+    return state;
+  };
+  const touchesAt=fraction=>kind==='pan'
+    ?[{x:first.x+26*direction*fraction,y:first.y-18*fraction},{x:second.x+26*direction*fraction,y:second.y-18*fraction}]
+    :[{x:first.x-16*direction*fraction,y:first.y-3*fraction},{x:second.x+16*direction*fraction,y:second.y+3*fraction}];
   try {
-    await dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
-    for(let step=1;step<=4;step++) {
-      const fraction=step/4;
-      const touches=kind==='pan'
-        ?[{x:first.x+26*direction*fraction,y:first.y-18*fraction},{x:second.x+26*direction*fraction,y:second.y-18*fraction}]
-        :[{x:first.x-16*direction*fraction,y:first.y-3*fraction},{x:second.x+16*direction*fraction,y:second.y+3*fraction}];
-      await dispatchTouch(cdp,'touchMove',touches,acknowledgements);
+    // Queue the initial movement in protocol order without waiting for a slow
+    // software-GPU visual-state acknowledgement after touchStart. Otherwise the
+    // harness itself turns an intended drag into a multi-second stationary hold.
+    // A separate stationary two-finger test below retains the long-press gate.
+    const started=dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
+    const moving=dispatchTouch(cdp,'touchMove',touchesAt(.6),acknowledgements);
+    await Promise.all([started,moving]);
+    await observe('start-and-first-move');
+    for(const fraction of [.73,.86,1]) {
+      await dispatchTouch(cdp,'touchMove',touchesAt(fraction),acknowledgements);
+      await observe('move-'+fraction);
       await delay(40);
     }
     // Ensure the gesture's render budget was actually exercised, even when the
     // software renderer completes fewer than one frame per second.
     await page.waitForFunction(()=>window.__mobilePerfQA.peek().drawnFrames>=1,null,{timeout:20000});
-    during=await readState(page);
+    during=await observe('rendered');
+  } catch(error) {
+    failure=error;
+    during=await readState(page).catch(()=>null);
   } finally {
-    await dispatchTouch(cdp,'touchEnd',[],acknowledgements);
+    try {await dispatchTouch(cdp,'touchEnd',[],acknowledgements);}
+    catch(error) {failure??=error;}
+    await delay(100);
+    after=await readState(page);
+    const raw=await page.evaluate(()=>window.__mobilePerfQA.end());
+    phase=summarizePhase(raw);
+    phase.dispatchAcknowledgementMs=stats(acknowledgements.map(sample=>sample.acknowledgementMs));
+    phase.dispatches=acknowledgements;
+    phase.before=before;phase.during=during;phase.after=after;phase.checkpoints=checkpoints;
+    phase.cameraChange={position:distance(before.camera.position,after.camera.position),target:distance(before.camera.target,after.camera.target),distance:after.camera.distance-before.camera.distance};
+    if(failure)phase.failure=String(failure);
+    version.phases.push(phase);
   }
-  await delay(100);
-  const after=await readState(page);
-  const raw=await page.evaluate(()=>window.__mobilePerfQA.end());
-  const phase=summarizePhase(raw);
-  phase.dispatchAcknowledgementMs=stats(acknowledgements.map(sample=>sample.acknowledgementMs));
-  phase.dispatches=acknowledgements;
-  phase.before=before;phase.during=during;phase.after=after;
-  phase.cameraChange={position:distance(before.camera.position,after.camera.position),target:distance(before.camera.target,after.camera.target),distance:after.camera.distance-before.camera.distance};
-  version.phases.push(phase);
+  if(failure)throw failure;
   check(version.name+' '+name+' moves camera',kind==='pan'?phase.cameraChange.target>.01:Math.abs(phase.cameraChange.distance)>.01,phase.cameraChange);
   check(version.name+' '+name+' handles native touch pointer events',(phase.inputEvents.pointermove?.count||0)>0,phase.inputEvents.pointermove);
   if(version.name==='v78') {
     check('v78 '+name+' selects gesture quality',during.quality==='gesture',during.quality);
     check('v78 '+name+' renders a bounded buffer',during.buffer.pixels<=Math.ceil(during.rect.width*during.rect.height*1.05*1.05),during.buffer);
   }
-  console.log('MEASURE '+version.name+' '+name+' '+JSON.stringify({frames:phase.frameIntervalsMs,input:phase.inputEvents.pointermove,pixels:phase.renderPixels,drawCalls:phase.drawCalls}));
+  console.log('MEASURE '+version.name+' '+name+' '+JSON.stringify({renderFrames:phase.renderedFrameIntervalsMs,input:phase.inputEvents.pointermove,pixels:phase.renderPixels,drawCalls:phase.drawCalls}));
+}
+async function runV78StationaryHold(page,cdp,version) {
+  version.lifecycle??={};
+  const before=await readState(page),first=point(before,'princess');
+  const direction=first.x+50>before.rect.x+before.rect.width?-1:1;
+  const second={x:first.x+34*direction,y:first.y+6},acknowledgements=[];
+  await page.evaluate(()=>window.__mobilePerfQA.begin('stationary-two-fingers-on-character'));
+  try {
+    await dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
+    await delay(900);
+    const held=await readState(page),input=await page.evaluate(()=>window.__mobilePerfQA.peek());
+    const downIds=[...new Set(input.nativeInput.filter(event=>event.type==='pointerdown').map(event=>event.pointerId))];
+    check('v78 stationary two-finger test has two real contacts',downIds.length===2&&input.activePointerIds.length===2,{downIds,active:input.activePointerIds});
+    check('v78 two fingers on character do not open a long-press modal',held.dialogs.length===0&&held.pause.active!=='false',held);
+    check('v78 stationary two-finger hold keeps gesture quality',held.quality==='gesture',held.quality);
+    version.lifecycle.stationaryHold={before,held,input};
+  } finally {
+    await dispatchTouch(cdp,'touchEnd',[],acknowledgements);
+    version.lifecycle.stationaryHoldMetrics=summarizePhase(await page.evaluate(()=>window.__mobilePerfQA.end()));
+    version.lifecycle.stationaryHoldDispatches=acknowledgements;
+  }
+}
+async function runV78PausedCamera(page,cdp,version) {
+  await page.locator('.tree-stage').focus();
+  await page.keyboard.press('Space');
+  await page.waitForFunction(()=>document.querySelector('.tree-stage')?.dataset.rotation==='paused',null,{timeout:10000});
+  const before=await readState(page),first=point(before,'empty'),second={x:first.x+34,y:first.y+6},acknowledgements=[];
+  await page.evaluate(()=>window.__mobilePerfQA.begin('user-paused-camera-pan'));
+  try {
+    const start=dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
+    const move=dispatchTouch(cdp,'touchMove',[{x:first.x+24,y:first.y-16},{x:second.x+24,y:second.y-16}],acknowledgements);
+    await Promise.all([start,move]);
+    const during=await readState(page);
+    check('v78 user pause still permits native camera pan',distance(before.camera.target,during.camera.target)>.01,{before:before.camera,after:during.camera});
+    check('v78 manual pan does not clear user pause',during.rotation==='paused'&&during.dialogs.length===0,during);
+    version.lifecycle.pausedCamera={before,during};
+  } finally {
+    await dispatchTouch(cdp,'touchEnd',[],acknowledgements);
+    version.lifecycle.pausedCameraMetrics=summarizePhase(await page.evaluate(()=>window.__mobilePerfQA.end()));
+  }
+  const settled=await readState(page);
+  await delay(800);
+  const after=await readState(page);
+  check('v78 paused camera does not resume automatic motion',after.rotation==='paused'&&distance(settled.camera.position,after.camera.position)<.01,{before:settled.camera,after:after.camera,rotation:after.rotation});
+  version.lifecycle.pausedCamera.after=after;
+  await page.locator('.tree-stage').focus();
+  await page.keyboard.press('Space');
+  await page.waitForFunction(()=>document.querySelector('.tree-stage')?.dataset.rotation==='playing',null,{timeout:10000});
+  const frozen=after.clock;
+  await page.waitForFunction(clock=>Number(document.documentElement.dataset.characterClock)>clock,frozen,{timeout:20000});
+  check('v78 Space resumes the scene after user pause',(await readState(page)).rotation==='playing');
 }
 async function runV78Lifecycle(page,cdp,version) {
-  version.lifecycle={};
+  version.lifecycle??={};
   const initial=await readState(page);
   const first=point(initial,'empty'),second={x:first.x+34,y:first.y+6};
   const acknowledgements=[];
@@ -259,10 +373,10 @@ async function runV78Lifecycle(page,cdp,version) {
     await dispatchTouch(cdp,'touchStart',[first,second],acknowledgements);
     const remaining={x:first.x+8,y:first.y-3};
     await dispatchTouch(cdp,'touchMove',[remaining,{x:second.x+8,y:second.y-3}],acknowledgements);
-    // CDP touchEnd and touchCancel require an empty list. A touchMove with the
-    // remaining active id causes Chromium to release the omitted id. Verify
-    // the resulting native pointerup rather than assuming the transition.
-    await dispatchTouch(cdp,'touchMove',[remaining],acknowledgements);
+    // Choose the native release operation proved by the same-runner blank-page
+    // probe, then verify that the app actually receives pointerup as well.
+    if(version.touchReleaseProtocol.mode==='active-list')await dispatchTouch(cdp,'touchMove',[remaining],acknowledgements);
+    else await dispatchTouch(cdp,'touchEnd',[{x:second.x+8,y:second.y-3,id:2}],acknowledgements);
     const partialEvents=await page.evaluate(()=>window.__mobilePerfQA.peek().eventCounts);
     check('v78 partial release produces a native pointerup',(partialEvents.pointerup||0)>=1,partialEvents);
     const partial=await readState(page);
@@ -295,6 +409,7 @@ async function runV78Lifecycle(page,cdp,version) {
   await page.waitForFunction(()=>document.documentElement.dataset.sceneQuality==='idle',null,{timeout:20000});
   check('v78 cancel restores idle quality',(await readState(page)).quality==='idle');
   version.lifecycle.dispatches=acknowledgements;
+  await runV78PausedCamera(page,cdp,version);
 
   await page.setViewportSize({width:844,height:390});
   await page.waitForFunction(()=>{
@@ -320,6 +435,7 @@ async function runVersion(browser,name,base) {
   report.versions.push(version);
   const context=await browser.newContext({viewport:report.setup.viewport,deviceScaleFactor:report.setup.deviceScaleFactor,isMobile:true,hasTouch:true,serviceWorkers:'block'});
   await context.addInitScript(installInstrumentation);
+  if(name==='v78')version.touchReleaseProtocol=await probePartialRelease(context);
   const page=await context.newPage();
   page.on('pageerror',error=>version.errors.push(error.message));
   page.on('console',message=>{
@@ -341,6 +457,7 @@ async function runVersion(browser,name,base) {
     const cdp=await context.newCDPSession(page);
     for(const [target,kind] of [['princess','pan'],['princess','pinch'],['empty','pan'],['empty','pinch']]) {
       await runGesture(page,cdp,version,target,kind);
+      if(name==='v78'&&target==='princess'&&kind==='pan')await runV78StationaryHold(page,cdp,version);
     }
     if(name==='v78') {
       await page.waitForFunction(()=>document.documentElement.dataset.sceneQuality==='idle',null,{timeout:20000});
@@ -378,7 +495,8 @@ function compare() {
       return {name:before.name,
         renderPixelRatio:ratio(before.renderPixels.p50,after.renderPixels.p50),
         pointermoveCpuRatio:ratio(before.inputEvents.pointermove?.mean,after.inputEvents.pointermove?.mean),
-        frameIntervalRatio:ratio(before.frameIntervalsMs.p50,after.frameIntervalsMs.p50),
+        renderedFrameIntervalRatio:ratio(before.renderedFrameIntervalsMs.p50,after.renderedFrameIntervalsMs.p50),
+        rafCallbackIntervalRatio:ratio(before.frameIntervalsMs.p50,after.frameIntervalsMs.p50),
         drawCallRatio:ratio(before.drawCalls.p50,after.drawCalls.p50),
         triangleRatio:ratio(before.triangles.p50,after.triangles.p50)};
     })

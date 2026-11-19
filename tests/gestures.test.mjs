@@ -110,7 +110,7 @@ for (const pointerType of ['mouse', 'touch']) {
     const catPress = point({ pointerType });
     // Stage capture runs first; the R3F cat hit then explicitly claims the press.
     controller.pointerDown(catPress);
-    controller.cancel();
+    controller.cancelIntent();
     advance(timing.longPressDelay + 100);
     // React's stage pointer-up capture can still run before the cat's handler.
     controller.pointerUp(catPress);
@@ -167,6 +167,30 @@ test('two-finger zoom cancels all secret actions until all contacts have ended',
   controller.pointerUp(next);
   advance(timing.tapDelay);
   assert.deepEqual(events, [{ type: 'tap' }]);
+});
+
+test('a character claiming the first finger does not turn a slow pinch into a share hold', () => {
+  const { controller, events, advance, point, tasks } = setup();
+  const first = point({ pointerType: 'touch', pointerId: 1 });
+  const second = point({ pointerType: 'touch', pointerId: 2, clientX: 134 });
+  controller.pointerDown(first);
+  controller.cancelIntent(); // Princess/kitten claims this press after capture.
+  controller.pointerDown(second); // The second finger lands outside the actor.
+  controller.pointerMove(point({ ...second, clientX: 138, clientY: 103 }));
+  advance(timing.longPressDelay + 500);
+  assert.deepEqual(events, [], 'A stationary or slow two-finger gesture must never open Share.');
+  controller.pointerUp(first);
+  advance(timing.longPressDelay + 100);
+  controller.pointerUp(second);
+  advance(timing.tapDelay + 100);
+  assert.deepEqual(events, []);
+  assert.equal(tasks.size, 0);
+  const next=point({ pointerType: 'touch', pointerId: 3 });
+  controller.pointerDown(next);
+  controller.pickPhoto(7);
+  controller.pointerUp(next);
+  advance(timing.tapDelay);
+  assert.deepEqual(events, [{type:'photo',photo:7}], 'The next independent tap still works.');
 });
 
 test('holding a photo opens that exact photo once and does not also tap on release', () => {

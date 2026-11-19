@@ -87,5 +87,5 @@ export function useSecretInteractions(options: SecretInteractionOptions) {
     if (latest.current.enabled) controller.pickPhoto(index);
   }, [controller]);
 
-  return { bind, onPhotoPress, cancel: controller.cancel };
+  return { bind, onPhotoPress, cancel: controller.cancelIntent };
 }

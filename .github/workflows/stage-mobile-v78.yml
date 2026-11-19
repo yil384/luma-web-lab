@@ -6,12 +6,15 @@ on:
     paths:
       - '.github/workflows/stage-mobile-v78.yml'
       - 'src/scene/princess-kitten/**'
+      - 'src/lib/scene-gestures.ts'
+      - 'src/hooks/useSecretInteractions.ts'
       - 'scripts/build-mobile-v78-release.mjs'
       - 'scripts/qa-mobile-performance-v78.cjs'
       - 'scripts/qa-princess-v77.cjs'
       - 'tests/mobile-*.test.mjs'
       - 'tests/character-hit-proxy-v78.test.mjs'
       - 'tests/princess-*.test.mjs'
+      - 'tests/gestures.test.mjs'
   workflow_dispatch:
 
 permissions:
@@ -39,7 +42,7 @@ jobs:
         working-directory: source
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
-          node --test tests/princess-kitten*.test.mjs tests/princess-rig*.test.mjs tests/mobile-performance-v78.test.mjs tests/character-hit-proxy-v78.test.mjs
+          node --test tests/princess-kitten*.test.mjs tests/princess-rig*.test.mjs tests/mobile-performance-v78.test.mjs tests/character-hit-proxy-v78.test.mjs tests/gestures.test.mjs
       - uses: actions/checkout@v4
         with:
           ref: gh-pages
@@ -87,7 +90,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html christmas/index.html assets/TreeScene-MobileGestures-V78.js assets/princess-kitten-v78 v78-release-status.json
+          git add index.html christmas/index.html assets/TreeScene-MobileGestures-V78.js assets/App-MobileGestures-V78.js assets/princess-kitten-v78 v78-release-status.json
           git commit -m 'Optimize mobile touch picking, rendering budget and character updates'
           git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
           git rev-parse HEAD > ../v78-performance-evidence/candidate-commit.txt

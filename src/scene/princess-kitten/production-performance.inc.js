@@ -4,7 +4,12 @@ function lm({paused = false, active = true}) {
   const mobile = window.matchMedia('(max-width: 1000px) and (pointer: coarse)').matches;
   const quality = U.useMemo(() => createMobilePerformanceV78({mobile, nativeDpr: window.devicePixelRatio}), [mobile]);
   const currentDpr = U.useRef(viewport.dpr);
+  const pendingDpr = U.useRef(null), qualityKey = U.useRef('');
   const apply = U.useCallback(state => {
+    const key = [state.quality, state.level, state.dpr.toFixed(3), state.budget].join(':');
+    pendingDpr.current = state.dpr;
+    if (qualityKey.current === key) { invalidate(); return; }
+    qualityKey.current = key;
     const data = document.documentElement.dataset;
     data.scenePerformance = 'v78';
     data.mobileSceneMode = mobile ? 'performance' : 'desktop';
@@ -13,12 +18,10 @@ function lm({paused = false, active = true}) {
     data.sceneQualityLevel = String(state.level);
     data.sceneDpr = state.dpr.toFixed(3);
     data.scenePixelBudget = String(state.budget);
-    if (Math.abs(currentDpr.current - state.dpr) > .005) {
-      currentDpr.current = state.dpr;
-      setDpr(state.dpr);
-      invalidate();
-    }
-  }, [mobile, setDpr, invalidate]);
+    // A framebuffer resize may wait for pending GPU work. Never perform it
+    // inside pointerdown: keep that event free to register the second finger.
+    invalidate();
+  }, [mobile, invalidate]);
   U.useLayoutEffect(() => {
     currentDpr.current = viewport.dpr;
     apply(quality.resize(size.width, size.height));
@@ -63,6 +66,12 @@ function lm({paused = false, active = true}) {
     };
   }, [gl, mobile, quality, apply]);
   zt((_, dt) => {
+    const desired = pendingDpr.current;
+    pendingDpr.current = null;
+    if (desired !== null && Math.abs(currentDpr.current - desired) > .005) {
+      currentDpr.current = desired;
+      setDpr(desired);
+    }
     if (paused || !active || document.hidden) return;
     const next = quality.sample(dt * 1000, performance.now());
     if (next) apply(next);

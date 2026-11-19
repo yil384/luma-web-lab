@@ -190,6 +190,10 @@ export function createSceneGestureController(callbacks: SceneGestureCallbacks, c
       if (press && !press.cancelled && !press.held && pointers.size === 1 && Number.isInteger(index) && index >= 0) press.photoIndex = index;
     },
 
+    // A character claims the press after the stage's capture handler. Cancel
+    // its click/hold intent without forgetting fingers still touching the
+    // screen; otherwise the next finger can become a new single-finger hold.
+    cancelIntent: cancelPress,
     cancel,
   };
 }
