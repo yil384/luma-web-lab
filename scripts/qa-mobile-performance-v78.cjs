@@ -25,6 +25,7 @@ const report = {
     'Headless Chromium with SwiftShader on one CI runner; not a physical phone, Safari, or WeChat performance test.',
     'CDP dispatch acknowledgement includes browser scheduling and transport; it is not a measured hardware touch-to-display latency.',
     'Input CPU is the sum of instrumented native event listener execution for each event; browser default actions and GPU work are excluded.',
+    'Combined movement CPU includes pointermove and pointerrawupdate listeners, normalized by ordinary pointermove count.',
     'Frame intervals include this runner\'s software rendering and scheduling. Their ratio is descriptive; no device FPS guarantee is made.',
     'Both versions load with the same rigqa pose diagnostics enabled. Instrumentation exists only in this test process.'
   ],
@@ -50,11 +51,11 @@ function installInstrumentation() {
   let frameDraws = {calls:0,triangles:0};
   const contexts = new Set();
   const originals = new WeakMap();
-  const inputTypes = new Set(['pointerdown','pointermove','pointerup','pointercancel','pointerover','pointerout','touchstart','touchmove','touchend','touchcancel']);
+  const inputTypes = new Set(['pointerdown','pointerrawupdate','pointermove','pointerup','pointercancel','pointerover','pointerout','touchstart','touchmove','touchend','touchcancel']);
   const nativeAdd = EventTarget.prototype.addEventListener;
   const nativeRemove = EventTarget.prototype.removeEventListener;
   const nativePointers=new Set();
-  for(const type of ['pointerdown','pointermove','pointerup','pointercancel']) {
+  for(const type of ['pointerdown','pointerrawupdate','pointermove','pointerup','pointercancel']) {
     nativeAdd.call(window,type,event=>{
       if(type==='pointerdown')nativePointers.add(event.pointerId);
       if(type==='pointerup'||type==='pointercancel')nativePointers.delete(event.pointerId);
@@ -510,12 +511,17 @@ function compare() {
     const gestures=version.phases.filter(phase=>phase.name!=='idle');
     const eventCount=gestures.reduce((sum,phase)=>sum+(phase.inputEvents.pointermove?.count||0),0);
     const cpuMs=gestures.reduce((sum,phase)=>sum+(phase.inputEvents.pointermove?.totalCpuMs||0),0);
-    return {pointermoveEvents:eventCount,totalPointermoveCpuMs:cpuMs,meanPointermoveCpuMs:eventCount?cpuMs/eventCount:null};
+    const rawCount=gestures.reduce((sum,phase)=>sum+(phase.inputEvents.pointerrawupdate?.count||0),0);
+    const rawCpuMs=gestures.reduce((sum,phase)=>sum+(phase.inputEvents.pointerrawupdate?.totalCpuMs||0),0);
+    return {pointermoveEvents:eventCount,totalPointermoveCpuMs:cpuMs,meanPointermoveCpuMs:eventCount?cpuMs/eventCount:null,
+      pointerrawupdateEvents:rawCount,totalRawPointerCpuMs:rawCpuMs,totalMovementCpuMs:cpuMs+rawCpuMs,
+      meanMovementCpuMsPerPointermoveEvent:eventCount?(cpuMs+rawCpuMs)/eventCount:null};
   };
   if(!old||!next)return;
   const oldInputs=aggregate(old),newInputs=aggregate(next);
   report.comparison={
-    input:{v77:oldInputs,v78:newInputs,ratio:ratio(oldInputs.meanPointermoveCpuMs,newInputs.meanPointermoveCpuMs)},
+    input:{v77:oldInputs,v78:newInputs,ratio:ratio(oldInputs.meanPointermoveCpuMs,newInputs.meanPointermoveCpuMs),
+      combinedMovementRatio:ratio(oldInputs.meanMovementCpuMsPerPointermoveEvent,newInputs.meanMovementCpuMsPerPointermoveEvent)},
     phases:old.phases.map(before=>{
       const after=next.phases.find(phase=>phase.name===before.name);
       if(!after)return {name:before.name,incomplete:true};

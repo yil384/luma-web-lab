@@ -7,6 +7,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
+import {getEventListeners} from 'node:events';
 
 const repo = fileURLToPath(new URL('..',import.meta.url));
 const baseline = process.env.LUMA_PAGES_BASELINE;
@@ -132,6 +133,67 @@ test('V78 patches the real V77 entry and preserves existing content', {skip:!bas
       controller.pointerDown(next);controller.pickPhoto(18);controller.pointerUp(next);deliverLate(330);
       assert.deepEqual(events,[...expected,'photo:18'],'A fresh tap works after all contacts are released');
     }
+  });
+  await t.test('the actual App hook cancels hold intent on raw movement, preserves contacts, and removes its native listener',async()=>{
+    const source=await readFile(path.join(dir,newApp),'utf8');
+    const start=source.indexOf('const D={tapDelay:'),end=source.indexOf('function he(',start);
+    assert.ok(start>=0&&end>start);
+    let now=0,sequence=0;
+    const timers=new Map(),events=[],effects=[],memoValues=[],registrations=[];
+    const windowTarget=new EventTarget(),documentTarget=new EventTarget();
+    documentTarget.hidden=false;
+    windowTarget.setTimeout=(callback,delay)=>{timers.set(++sequence,{callback,at:now+delay});return sequence;};
+    windowTarget.clearTimeout=id=>timers.delete(id);
+    windowTarget.addEventListener=function(type,callback,options){
+      registrations.push({type,callback,options});
+      EventTarget.prototype.addEventListener.call(this,type,callback,options);
+    };
+    const react={useRef:value=>({current:value}),useMemo:factory=>{const value=factory();memoValues.push(value);return value;},useEffect:effect=>effects.push(effect)};
+    const createHook=vm.runInContext(source.slice(start,end)+';de',vm.createContext({a:react,window:windowTarget,document:documentTarget,performance:{now:()=>now}}));
+    const options={enabled:true,onTap:()=>events.push('tap'),onPhotoTap:index=>events.push('photo:'+index),
+      onDoubleTap:()=>events.push('double'),onLongPress:index=>events.push('hold:'+index)};
+    const hook=createHook(options),cleanups=effects.map(effect=>effect()).filter(cleanup=>typeof cleanup==='function');
+    const raw=registrations.find(listener=>listener.type==='pointerrawupdate');
+    assert.ok(raw);assert.equal(raw.options.capture,true);assert.equal(raw.options.passive,true);
+    assert.equal(getEventListeners(windowTarget,'pointerrawupdate').length,1);
+    const controller=memoValues.find(value=>value&&typeof value.pointerMove==='function');
+    const move=controller.pointerMove;
+    let moveCalls=0;
+    controller.pointerMove=point=>{moveCalls++;return move(point);};
+    const advance=duration=>{
+      const until=now+duration;
+      while(true){
+        const next=[...timers].sort((a,b)=>a[1].at-b[1].at).find(([,timer])=>timer.at<=until);
+        if(!next)break;now=next[1].at;timers.delete(next[0]);next[1].callback();
+      }
+      now=until;
+    };
+    const first={pointerId:1,pointerType:'touch',clientX:100,clientY:100,button:0};
+    const sendRaw=point=>windowTarget.dispatchEvent(Object.assign(new Event('pointerrawupdate'),point));
+    options.enabled=false;sendRaw({...first,clientX:109});assert.equal(moveCalls,0,'Disabled input does not enter the controller');
+    options.enabled=true;
+    hook.bind.onPointerDownCapture(first);hook.onPhotoPress(7);advance(100);
+    sendRaw({...first,clientX:109}); // No ordinary pointermove has been delivered.
+    assert.equal(moveCalls,1);
+    advance(650);assert.deepEqual(events,[],'Raw movement beyond 8 px cancels an otherwise timely hold');
+    const second={...first,pointerId:2,clientX:140};
+    hook.bind.onPointerDownCapture(second);advance(650);
+    assert.deepEqual(events,[],'Raw movement must retain the first live contact');
+    hook.bind.onPointerUpCapture(first);hook.bind.onPointerUpCapture(second);advance(331);
+    assert.deepEqual(events,[]);
+    const next={...first,pointerId:3};
+    hook.bind.onPointerDownCapture(next);hook.onPhotoPress(18);hook.bind.onPointerUpCapture(next);advance(330);
+    assert.deepEqual(events,['photo:18'],'A new photo tap still works after release');
+    hook.bind.onPointerDownCapture(next);hook.bind.onPointerMoveCapture({...next,clientX:109});advance(650);hook.bind.onPointerUpCapture(next);advance(331);
+    assert.deepEqual(events,['photo:18'],'Ordinary pointermove remains the fallback without raw input');
+    hook.bind.onPointerDownCapture(next);assert.equal(timers.size,1);
+    for(const cleanup of cleanups)cleanup();
+    assert.equal(getEventListeners(windowTarget,'pointerrawupdate').length,0);
+    assert.equal(getEventListeners(windowTarget,'blur').length,0);
+    assert.equal(getEventListeners(documentTarget,'visibilitychange').length,0);
+    assert.equal(timers.size,0,'Unmount still fully cancels pending intent');
+    const before=moveCalls;sendRaw({...next,clientX:130});advance(1000);
+    assert.equal(moveCalls,before);assert.deepEqual(events,['photo:18']);
   });
   await t.test('rerun is idempotent, including rollback metadata',async()=>{
     const once=await digest(dir);success(build(dir));assert.deepEqual(await digest(dir),once);

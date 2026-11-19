@@ -104,11 +104,11 @@ async function checkV78PhotoInput(page,context,mode) {
     await page.evaluate(()=>{
       const events=[],start=performance.now();
       const listener=event=>events.push({type:event.type,pointerId:event.pointerId,pointerType:event.pointerType,
-        buttons:event.buttons,button:event.button,x:event.clientX,y:event.clientY,receivedMs:performance.now()-start,
+        buttons:event.buttons,button:event.button,x:event.clientX,y:event.clientY,receivedMs:performance.now()-start,receivedAt:performance.now(),
         eventTime: event.timeStamp,isTrusted:event.isTrusted,target:event.target?.tagName,
         inScene:!!event.target?.closest?.('.tree-stage')});
-      for(const type of ['pointerdown','pointermove','pointerup','pointercancel'])window.addEventListener(type,listener,{capture:true,passive:true});
-      window.__photoDragReceipt={events,stop:()=>{for(const type of ['pointerdown','pointermove','pointerup','pointercancel'])window.removeEventListener(type,listener,true);}};
+      for(const type of ['pointerdown','pointerrawupdate','pointermove','pointerup','pointercancel'])window.addEventListener(type,listener,{capture:true,passive:true});
+      window.__photoDragReceipt={events,startedAt:start,stop:()=>{for(const type of ['pointerdown','pointerrawupdate','pointermove','pointerup','pointercancel'])window.removeEventListener(type,listener,true);}};
     });
     await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:target.x,y:target.y,button:'none',buttons:0,pointerType:'mouse'});
     const pressed=cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',x:target.x,y:target.y,button:'left',buttons:1,clickCount:1,pointerType:'mouse'});
@@ -129,14 +129,17 @@ async function checkV78PhotoInput(page,context,mode) {
     } finally {
       await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:target.x+dx,y:target.y+dy,button:'left',buttons:0,clickCount:1,pointerType:'mouse'});
       await page.waitForFunction(()=>window.__photoDragReceipt.events.some(event=>event.type==='pointerup'),null,{timeout:20000}).catch(error=>{evidence.receiptFailure=String(error);});
-      evidence.events=await page.evaluate(()=>{window.__photoDragReceipt.stop();return window.__photoDragReceipt.events;});
+      Object.assign(evidence,await page.evaluate(()=>{
+        window.__photoDragReceipt.stop();
+        return {events:window.__photoDragReceipt.events,receiptStartedAt:window.__photoDragReceipt.startedAt,holdTimers:window.__holdTimerQA?.timers||[]};
+      }));
       evidence.after=await page.evaluate(()=>({camera:document.documentElement.dataset.cameraPosition,manual:document.documentElement.dataset.cameraManualHold,
         dialogs:[...document.querySelectorAll('dialog[open]')].map(dialog=>dialog.className)}));
       await cdp.detach();
     }
     const down=evidence.events.find(event=>event.type==='pointerdown');
     const moved=evidence.events.find(event=>event.type==='pointermove'&&(event.buttons&1)&&down&&Math.hypot(event.x-down.x,event.y-down.y)>8);
-    check('desktop V78 photo drag receives real held-button input',down?.buttons===1&&!!moved&&evidence.events.some(event=>event.type==='pointerup'&&event.buttons===0)&&evidence.events.every(event=>event.isTrusted),evidence);
+    check('desktop V78 photo drag receives real held-button input',down?.buttons===1&&down.inScene&&moved?.inScene&&evidence.events.some(event=>event.type==='pointerup'&&event.buttons===0)&&evidence.events.every(event=>event.isTrusted),evidence);
   }
   await delay(800);
   const cameraAfter=await page.evaluate(()=>document.documentElement.dataset.cameraPosition);
@@ -155,6 +158,28 @@ async function main() {
     ]) {
       const context=await browser.newContext({viewport:{width:mode.width,height:mode.height},
         deviceScaleFactor:1,isMobile:mode.mobile,hasTouch:mode.mobile,serviceWorkers:'block'});
+      if(!mode.mobile)await context.addInitScript(()=>{
+        const original=window.setTimeout,timers=[];
+        const dialogs=()=>[...document.querySelectorAll('dialog[open]')].map(dialog=>dialog.className);
+        window.__holdTimerQA={timers};
+        window.setTimeout=function(callback,delay,...args) {
+          // Observe only the existing numeric 650ms hold timers. Delegate every
+          // other call with its exact original receiver and argument list.
+          if(delay!==650||typeof callback!=='function')return Reflect.apply(original,this,arguments);
+          const scheduledAt=performance.now();
+          const entry={scheduledAt,dueAt:scheduledAt+delay,delay,timerId:null};
+          const observed=function(...callbackArgs) {
+            entry.actualFire=performance.now();
+            entry.lateBy=entry.actualFire-entry.dueAt;
+            entry.beforeDialogs=dialogs();
+            try {return Reflect.apply(callback,this,callbackArgs);}
+            finally {entry.afterDialogs=dialogs();}
+          };
+          entry.timerId=Reflect.apply(original,this,[observed,delay,...args]);
+          timers.push(entry);
+          return entry.timerId;
+        };
+      });
       const page=await context.newPage();
       page.on('pageerror',e=>report.errors.push({mode:mode.name,message:e.message}));
       page.on('console',message=>{

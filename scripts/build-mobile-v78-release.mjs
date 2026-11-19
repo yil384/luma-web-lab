@@ -53,6 +53,8 @@ for (const [from,to] of [
     'l=n.setTimeout(()=>{l=null;if(c!==u||u.cancelled||u.held||r.size!==1)return;if(n.now()-u.startedAt>D.longPressDelay+D.longPressMaxLateness){x();return}u.held=!0,u.previousTap=null,d(),o.onLongPress(u.photoIndex)},D.longPressDelay)'],
   ['cancel:f}}function de(o)', 'cancelIntent:x,cancel:f}}function de(o)'],
   ['return{bind:c,onPhotoPress:l,cancel:r.cancel}', 'return{bind:c,onPhotoPress:l,cancel:r.cancelIntent}'],
+  ['a.useEffect(()=>{const t=()=>r.cancel(),p=()=>{document.hidden&&t()};return window.addEventListener("blur",t),document.addEventListener("visibilitychange",p),()=>{window.removeEventListener("blur",t),document.removeEventListener("visibilitychange",p),t()}},[r])',
+    'a.useEffect(()=>{const t=()=>r.cancel(),p=()=>{document.hidden&&t()},raw=s=>{n.current.enabled&&r.pointerMove(s)};return window.addEventListener("pointerrawupdate",raw,{capture:!0,passive:!0}),window.addEventListener("blur",t),document.addEventListener("visibilitychange",p),()=>{window.removeEventListener("pointerrawupdate",raw,{capture:!0}),window.removeEventListener("blur",t),document.removeEventListener("visibilitychange",p),t()}},[r])'],
 ]) {
   if (patchedApp.split(from).length !== 2) throw new Error('The production gesture controller boundary changed.');
   patchedApp = patchedApp.replace(from,to);
@@ -160,6 +162,7 @@ const release = {
     'Renderer-owned final matrix updates; normal visitors do not serialize QA snapshots',
     'Character interactions retain active touch contacts so a slow pinch cannot become a share hold',
     'Stale long-press callbacks after a blocked frame cancel intent without losing live contacts',
+    'Passive raw pointer input cancels tap/hold intent before frame-coalesced move delivery where supported',
     'Paused automatic orbit uses demand rendering and keeps manual zoom/pan available'],
   verificationLimit:'CI compares the same software Chromium runner. Physical iPhone/Safari performance has not been measured.',
 };
