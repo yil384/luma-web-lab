@@ -1,0 +1,120 @@
+{
+  "file": "luma-princess-hug-v76.glb",
+  "sha256": "fad8b2e3b63a2c9866c8d12c64a94375a2cbf4a1f6d9591c73b10e948b187189",
+  "bytes": 15485864,
+  "glbValid": true,
+  "generator": "https://github.com/mikedh/trimesh",
+  "extensionsUsed": [
+    "EXT_texture_webp"
+  ],
+  "chunks": [
+    {
+      "type": "JSON",
+      "length": 6084
+    },
+    {
+      "type": "BIN",
+      "length": 15479752
+    }
+  ],
+  "meshCount": 4,
+  "meshDetails": [
+    {
+      "index": 0,
+      "name": "geometry_0",
+      "primitives": 1,
+      "vertices_estimate": 287940,
+      "triangles_estimate": 282648,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    },
+    {
+      "index": 1,
+      "name": "Eye insert 0",
+      "primitives": 1,
+      "vertices_estimate": 11400,
+      "triangles_estimate": 22372,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    },
+    {
+      "index": 2,
+      "name": "Eye insert 1",
+      "primitives": 1,
+      "vertices_estimate": 11400,
+      "triangles_estimate": 22372,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    },
+    {
+      "index": 3,
+      "name": "CradleArmsV75",
+      "primitives": 1,
+      "vertices_estimate": 2798,
+      "triangles_estimate": 5440,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    }
+  ],
+  "estimatedTriangles": 332832,
+  "estimatedVertices": 313538,
+  "nodeCount": 5,
+  "namedNodes": [
+    {
+      "index": 0,
+      "name": "world"
+    },
+    {
+      "index": 1,
+      "name": "geometry_0"
+    },
+    {
+      "index": 2,
+      "name": "Eye insert 0"
+    },
+    {
+      "index": 3,
+      "name": "Eye insert 1"
+    },
+    {
+      "index": 4,
+      "name": "CradleArmsV75"
+    }
+  ],
+  "interestingNodes": [
+    {
+      "index": 2,
+      "name": "Eye insert 0",
+      "isSkinJoint": false
+    },
+    {
+      "index": 3,
+      "name": "Eye insert 1",
+      "isSkinJoint": false
+    },
+    {
+      "index": 4,
+      "name": "CradleArmsV75",
+      "isSkinJoint": false
+    }
+  ],
+  "skinCount": 0,
+  "skinDetails": [],
+  "animationCount": 0,
+  "animations": [],
+  "morphMeshCount": 0,
+  "morphMeshes": [],
+  "materials": 4,
+  "textures": 5,
+  "images": 5,
+  "cameras": 0,
+  "scenes": 1,
+  "warnings": [
+    "NO_SKINS: no skeleton declared; a natural independent arm/hand gesture cannot be assumed",
+    "NO_ANIMATIONS: no authored animation clips declared",
+    "NO_MORPH_TARGETS: real blink/expression morph cannot be assumed",
+    "HIGH_TRIANGLES: consider real-device mobile LOD study",
+    "LARGE_ASSET: inspect mobile parse, download, texture upload"
+  ],
+  "scope": "STRUCTURAL_AUDIT_ONLY; not an animation/hand-support visual review"
+}

@@ -1,0 +1,9 @@
+View,Before path,After path,Hand-cat support,Clipping,Face/dress preserved,Kitten pose,Approved by human,Notes
+Front,reports/renders/before_front_0.png,reports/renders/after_front_0.png,Cupped palms support chest & belly,None (V73 forearm spikes & fake pad removed),Yes,"3/4 cradled, paws tucked",PENDING,Offline 3D raster render
+Left 45,reports/renders/before_left_45.png,reports/renders/after_left_45.png,Both forearms visibly cradle belly,None (tail curls outward clear of skirt),Yes,Natural cradled curve,PENDING,Offline 3D raster render
+Right 45,reports/renders/before_right_45.png,reports/renders/after_right_45.png,Left hand supports chest/front paws,None,Yes,Head angled toward camera,PENDING,Offline 3D raster render
+Side 90,reports/renders/before_side_90.png,reports/renders/after_side_90.png,Palms clear above overskirt flare,None (rear no longer impales waist),Yes,Balanced center of mass,PENDING,Offline 3D raster render
+Back 180,reports/renders/before_back_180.png,reports/renders/after_back_180.png,Clean silhouette,None (side spikes removed),Yes,Hidden cleanly in front,PENDING,Offline 3D raster render
+Phone portrait,reports/renders/before_phone_390x844.png,reports/renders/after_phone_390x844.png,Readable at 390x844,None,Yes,~1:7.6 kitten-to-princess ratio,PENDING,Physical iPhone not yet tested
+Idle 60s video,,princess_kitten_p0_p1_demo.mp4,Zero relative drift (unit tested 60s),None,Yes,Independent ear/tail/head idle,PENDING,12s 3D render + 60s unit test
+Interaction video,,princess_kitten_p0_p1_demo.mp4,Rigid HoldAnchor lock during nod,None,Yes,held.nuzzle + mutual_gaze + cuddle,PENDING,princess.pet_cat BLOCKED_BY_RIG

@@ -1,0 +1,143 @@
+{
+  "version": "v75-p0-cradle-studio",
+  "coordinateSpace": "PrincessPivotLocal",
+  "removeLegacyProxyGeometry": true,
+  "princessHeightPivot": 5.12,
+  "kittenHeightRatio": 0.13,
+  "supportPointsPivot": {
+    "leftHandPalm": [
+      0.125,
+      2.995,
+      0.785
+    ],
+    "rightHandPalm": [
+      -0.12,
+      2.985,
+      0.765
+    ],
+    "leftMidForearm": [
+      0.355,
+      2.98,
+      0.65
+    ],
+    "rightMidForearm": [
+      -0.35,
+      2.97,
+      0.64
+    ]
+  },
+  "holdAnchor": {
+    "position": [
+      0.0,
+      2.95,
+      0.77
+    ],
+    "rotation": [
+      0.04,
+      0.68,
+      -0.03
+    ],
+    "scale": [
+      0.46,
+      0.46,
+      0.46
+    ]
+  },
+  "heldKittenBaseBonePose": {
+    "body": [
+      0.05,
+      0.0,
+      0.0
+    ],
+    "chest": [
+      -0.03,
+      -0.06,
+      0.0
+    ],
+    "neck": [
+      0.0,
+      -0.22,
+      0.02
+    ],
+    "head": [
+      0.05,
+      -0.42,
+      0.04
+    ],
+    "ear_L": [
+      0.0,
+      0.0,
+      0.05
+    ],
+    "ear_R": [
+      0.0,
+      0.0,
+      -0.05
+    ],
+    "LF_upper": [
+      0.72,
+      0.1,
+      0.08
+    ],
+    "LF_lower": [
+      -0.88,
+      0.0,
+      0.0
+    ],
+    "RF_upper": [
+      0.75,
+      -0.1,
+      -0.08
+    ],
+    "RF_lower": [
+      -0.9,
+      0.0,
+      0.0
+    ],
+    "LH_upper": [
+      0.76,
+      0.08,
+      0.06
+    ],
+    "LH_lower": [
+      -0.86,
+      0.0,
+      0.0
+    ],
+    "RH_upper": [
+      0.78,
+      -0.08,
+      -0.06
+    ],
+    "RH_lower": [
+      -0.88,
+      0.0,
+      0.0
+    ],
+    "tail_0": [
+      -0.12,
+      0.34,
+      0.06
+    ],
+    "tail_1": [
+      -0.08,
+      0.38,
+      0.04
+    ],
+    "tail_2": [
+      -0.04,
+      0.4,
+      0.02
+    ],
+    "tail_3": [
+      0.0,
+      0.36,
+      0.0
+    ],
+    "tail_4": [
+      0.04,
+      0.3,
+      0.0
+    ]
+  }
+}

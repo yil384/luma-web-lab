@@ -1,0 +1,686 @@
+{
+  "file": "chonky-cat-trio-BEKpO2QH.glb",
+  "sha256": "cb5e0add4626689f82477cdf196be19ab5d0f3ac3487fed366e2909296493b4f",
+  "bytes": 2288908,
+  "glbValid": true,
+  "generator": "Khronos glTF Blender I/O v4.3.47",
+  "extensionsUsed": [
+    "KHR_materials_unlit"
+  ],
+  "chunks": [
+    {
+      "type": "JSON",
+      "length": 39744
+    },
+    {
+      "type": "BIN",
+      "length": 2249136
+    }
+  ],
+  "meshCount": 3,
+  "meshDetails": [
+    {
+      "index": 0,
+      "name": "black__original_neutral_mesh",
+      "primitives": 1,
+      "vertices_estimate": 3157,
+      "triangles_estimate": 5438,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    },
+    {
+      "index": 1,
+      "name": "cream__original_neutral_mesh",
+      "primitives": 1,
+      "vertices_estimate": 3157,
+      "triangles_estimate": 5438,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    },
+    {
+      "index": 2,
+      "name": "calico__original_neutral_mesh",
+      "primitives": 1,
+      "vertices_estimate": 3157,
+      "triangles_estimate": 5438,
+      "morph_target_sets": 0,
+      "morph_target_names": []
+    }
+  ],
+  "estimatedTriangles": 16314,
+  "estimatedVertices": 9471,
+  "nodeCount": 81,
+  "namedNodes": [
+    {
+      "index": 0,
+      "name": "black__ear_L"
+    },
+    {
+      "index": 1,
+      "name": "black__ear_R"
+    },
+    {
+      "index": 2,
+      "name": "black__head"
+    },
+    {
+      "index": 3,
+      "name": "black__neck"
+    },
+    {
+      "index": 4,
+      "name": "black__LF_paw"
+    },
+    {
+      "index": 5,
+      "name": "black__LF_lower"
+    },
+    {
+      "index": 6,
+      "name": "black__LF_upper"
+    },
+    {
+      "index": 7,
+      "name": "black__RF_paw"
+    },
+    {
+      "index": 8,
+      "name": "black__RF_lower"
+    },
+    {
+      "index": 9,
+      "name": "black__RF_upper"
+    },
+    {
+      "index": 10,
+      "name": "black__chest"
+    },
+    {
+      "index": 11,
+      "name": "black__tail_4"
+    },
+    {
+      "index": 12,
+      "name": "black__tail_3"
+    },
+    {
+      "index": 13,
+      "name": "black__tail_2"
+    },
+    {
+      "index": 14,
+      "name": "black__tail_1"
+    },
+    {
+      "index": 15,
+      "name": "black__tail_0"
+    },
+    {
+      "index": 16,
+      "name": "black__LH_paw"
+    },
+    {
+      "index": 17,
+      "name": "black__LH_lower"
+    },
+    {
+      "index": 18,
+      "name": "black__LH_upper"
+    },
+    {
+      "index": 19,
+      "name": "black__RH_paw"
+    },
+    {
+      "index": 20,
+      "name": "black__RH_lower"
+    },
+    {
+      "index": 21,
+      "name": "black__RH_upper"
+    },
+    {
+      "index": 22,
+      "name": "black__body"
+    },
+    {
+      "index": 23,
+      "name": "black__root"
+    },
+    {
+      "index": 24,
+      "name": "black__mesh"
+    },
+    {
+      "index": 25,
+      "name": "black__skeleton"
+    },
+    {
+      "index": 26,
+      "name": "chonky_black"
+    },
+    {
+      "index": 27,
+      "name": "cream__ear_L"
+    },
+    {
+      "index": 28,
+      "name": "cream__ear_R"
+    },
+    {
+      "index": 29,
+      "name": "cream__head"
+    },
+    {
+      "index": 30,
+      "name": "cream__neck"
+    },
+    {
+      "index": 31,
+      "name": "cream__LF_paw"
+    },
+    {
+      "index": 32,
+      "name": "cream__LF_lower"
+    },
+    {
+      "index": 33,
+      "name": "cream__LF_upper"
+    },
+    {
+      "index": 34,
+      "name": "cream__RF_paw"
+    },
+    {
+      "index": 35,
+      "name": "cream__RF_lower"
+    },
+    {
+      "index": 36,
+      "name": "cream__RF_upper"
+    },
+    {
+      "index": 37,
+      "name": "cream__chest"
+    },
+    {
+      "index": 38,
+      "name": "cream__tail_4"
+    },
+    {
+      "index": 39,
+      "name": "cream__tail_3"
+    },
+    {
+      "index": 40,
+      "name": "cream__tail_2"
+    },
+    {
+      "index": 41,
+      "name": "cream__tail_1"
+    },
+    {
+      "index": 42,
+      "name": "cream__tail_0"
+    },
+    {
+      "index": 43,
+      "name": "cream__LH_paw"
+    },
+    {
+      "index": 44,
+      "name": "cream__LH_lower"
+    },
+    {
+      "index": 45,
+      "name": "cream__LH_upper"
+    },
+    {
+      "index": 46,
+      "name": "cream__RH_paw"
+    },
+    {
+      "index": 47,
+      "name": "cream__RH_lower"
+    },
+    {
+      "index": 48,
+      "name": "cream__RH_upper"
+    },
+    {
+      "index": 49,
+      "name": "cream__body"
+    },
+    {
+      "index": 50,
+      "name": "cream__root"
+    },
+    {
+      "index": 51,
+      "name": "cream__mesh"
+    },
+    {
+      "index": 52,
+      "name": "cream__skeleton"
+    },
+    {
+      "index": 53,
+      "name": "chonky_cream"
+    },
+    {
+      "index": 54,
+      "name": "calico__ear_L"
+    },
+    {
+      "index": 55,
+      "name": "calico__ear_R"
+    },
+    {
+      "index": 56,
+      "name": "calico__head"
+    },
+    {
+      "index": 57,
+      "name": "calico__neck"
+    },
+    {
+      "index": 58,
+      "name": "calico__LF_paw"
+    },
+    {
+      "index": 59,
+      "name": "calico__LF_lower"
+    },
+    {
+      "index": 60,
+      "name": "calico__LF_upper"
+    },
+    {
+      "index": 61,
+      "name": "calico__RF_paw"
+    },
+    {
+      "index": 62,
+      "name": "calico__RF_lower"
+    },
+    {
+      "index": 63,
+      "name": "calico__RF_upper"
+    },
+    {
+      "index": 64,
+      "name": "calico__chest"
+    },
+    {
+      "index": 65,
+      "name": "calico__tail_4"
+    },
+    {
+      "index": 66,
+      "name": "calico__tail_3"
+    },
+    {
+      "index": 67,
+      "name": "calico__tail_2"
+    },
+    {
+      "index": 68,
+      "name": "calico__tail_1"
+    },
+    {
+      "index": 69,
+      "name": "calico__tail_0"
+    },
+    {
+      "index": 70,
+      "name": "calico__LH_paw"
+    },
+    {
+      "index": 71,
+      "name": "calico__LH_lower"
+    },
+    {
+      "index": 72,
+      "name": "calico__LH_upper"
+    },
+    {
+      "index": 73,
+      "name": "calico__RH_paw"
+    },
+    {
+      "index": 74,
+      "name": "calico__RH_lower"
+    },
+    {
+      "index": 75,
+      "name": "calico__RH_upper"
+    },
+    {
+      "index": 76,
+      "name": "calico__body"
+    },
+    {
+      "index": 77,
+      "name": "calico__root"
+    },
+    {
+      "index": 78,
+      "name": "calico__mesh"
+    },
+    {
+      "index": 79,
+      "name": "calico__skeleton"
+    },
+    {
+      "index": 80,
+      "name": "chonky_calico"
+    }
+  ],
+  "interestingNodes": [
+    {
+      "index": 0,
+      "name": "black__ear_L",
+      "isSkinJoint": true
+    },
+    {
+      "index": 1,
+      "name": "black__ear_R",
+      "isSkinJoint": true
+    },
+    {
+      "index": 2,
+      "name": "black__head",
+      "isSkinJoint": true
+    },
+    {
+      "index": 3,
+      "name": "black__neck",
+      "isSkinJoint": true
+    },
+    {
+      "index": 4,
+      "name": "black__LF_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 7,
+      "name": "black__RF_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 11,
+      "name": "black__tail_4",
+      "isSkinJoint": true
+    },
+    {
+      "index": 12,
+      "name": "black__tail_3",
+      "isSkinJoint": true
+    },
+    {
+      "index": 13,
+      "name": "black__tail_2",
+      "isSkinJoint": true
+    },
+    {
+      "index": 14,
+      "name": "black__tail_1",
+      "isSkinJoint": true
+    },
+    {
+      "index": 15,
+      "name": "black__tail_0",
+      "isSkinJoint": true
+    },
+    {
+      "index": 16,
+      "name": "black__LH_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 19,
+      "name": "black__RH_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 27,
+      "name": "cream__ear_L",
+      "isSkinJoint": true
+    },
+    {
+      "index": 28,
+      "name": "cream__ear_R",
+      "isSkinJoint": true
+    },
+    {
+      "index": 29,
+      "name": "cream__head",
+      "isSkinJoint": true
+    },
+    {
+      "index": 30,
+      "name": "cream__neck",
+      "isSkinJoint": true
+    },
+    {
+      "index": 31,
+      "name": "cream__LF_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 34,
+      "name": "cream__RF_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 38,
+      "name": "cream__tail_4",
+      "isSkinJoint": true
+    },
+    {
+      "index": 39,
+      "name": "cream__tail_3",
+      "isSkinJoint": true
+    },
+    {
+      "index": 40,
+      "name": "cream__tail_2",
+      "isSkinJoint": true
+    },
+    {
+      "index": 41,
+      "name": "cream__tail_1",
+      "isSkinJoint": true
+    },
+    {
+      "index": 42,
+      "name": "cream__tail_0",
+      "isSkinJoint": true
+    },
+    {
+      "index": 43,
+      "name": "cream__LH_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 46,
+      "name": "cream__RH_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 54,
+      "name": "calico__ear_L",
+      "isSkinJoint": true
+    },
+    {
+      "index": 55,
+      "name": "calico__ear_R",
+      "isSkinJoint": true
+    },
+    {
+      "index": 56,
+      "name": "calico__head",
+      "isSkinJoint": true
+    },
+    {
+      "index": 57,
+      "name": "calico__neck",
+      "isSkinJoint": true
+    },
+    {
+      "index": 58,
+      "name": "calico__LF_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 61,
+      "name": "calico__RF_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 65,
+      "name": "calico__tail_4",
+      "isSkinJoint": true
+    },
+    {
+      "index": 66,
+      "name": "calico__tail_3",
+      "isSkinJoint": true
+    },
+    {
+      "index": 67,
+      "name": "calico__tail_2",
+      "isSkinJoint": true
+    },
+    {
+      "index": 68,
+      "name": "calico__tail_1",
+      "isSkinJoint": true
+    },
+    {
+      "index": 69,
+      "name": "calico__tail_0",
+      "isSkinJoint": true
+    },
+    {
+      "index": 70,
+      "name": "calico__LH_paw",
+      "isSkinJoint": true
+    },
+    {
+      "index": 73,
+      "name": "calico__RH_paw",
+      "isSkinJoint": true
+    }
+  ],
+  "skinCount": 3,
+  "skinDetails": [
+    {
+      "index": 0,
+      "name": "black__skeleton",
+      "jointCount": 24,
+      "jointNames": [
+        "black__root",
+        "black__body",
+        "black__chest",
+        "black__neck",
+        "black__head",
+        "black__ear_L",
+        "black__ear_R",
+        "black__LF_upper",
+        "black__LF_lower",
+        "black__LF_paw",
+        "black__RF_upper",
+        "black__RF_lower",
+        "black__RF_paw",
+        "black__tail_0",
+        "black__tail_1",
+        "black__tail_2",
+        "black__tail_3",
+        "black__tail_4",
+        "black__LH_upper",
+        "black__LH_lower",
+        "black__LH_paw",
+        "black__RH_upper",
+        "black__RH_lower",
+        "black__RH_paw"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "cream__skeleton",
+      "jointCount": 24,
+      "jointNames": [
+        "cream__root",
+        "cream__body",
+        "cream__chest",
+        "cream__neck",
+        "cream__head",
+        "cream__ear_L",
+        "cream__ear_R",
+        "cream__LF_upper",
+        "cream__LF_lower",
+        "cream__LF_paw",
+        "cream__RF_upper",
+        "cream__RF_lower",
+        "cream__RF_paw",
+        "cream__tail_0",
+        "cream__tail_1",
+        "cream__tail_2",
+        "cream__tail_3",
+        "cream__tail_4",
+        "cream__LH_upper",
+        "cream__LH_lower",
+        "cream__LH_paw",
+        "cream__RH_upper",
+        "cream__RH_lower",
+        "cream__RH_paw"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "calico__skeleton",
+      "jointCount": 24,
+      "jointNames": [
+        "calico__root",
+        "calico__body",
+        "calico__chest",
+        "calico__neck",
+        "calico__head",
+        "calico__ear_L",
+        "calico__ear_R",
+        "calico__LF_upper",
+        "calico__LF_lower",
+        "calico__LF_paw",
+        "calico__RF_upper",
+        "calico__RF_lower",
+        "calico__RF_paw",
+        "calico__tail_0",
+        "calico__tail_1",
+        "calico__tail_2",
+        "calico__tail_3",
+        "calico__tail_4",
+        "calico__LH_upper",
+        "calico__LH_lower",
+        "calico__LH_paw",
+        "calico__RH_upper",
+        "calico__RH_lower",
+        "calico__RH_paw"
+      ]
+    }
+  ],
+  "animationCount": 0,
+  "animations": [],
+  "morphMeshCount": 0,
+  "morphMeshes": [],
+  "materials": 3,
+  "textures": 3,
+  "images": 3,
+  "cameras": 0,
+  "scenes": 1,
+  "warnings": [
+    "NO_ANIMATIONS: no authored animation clips declared",
+    "NO_MORPH_TARGETS: real blink/expression morph cannot be assumed"
+  ],
+  "scope": "STRUCTURAL_AUDIT_ONLY; not an animation/hand-support visual review"
+}
