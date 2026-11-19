@@ -53,10 +53,17 @@ jobs:
           node source/scripts/build-mobile-v78-release.mjs "$LUMA_PAGES_BASELINE"
           node --input-type=module --check < pages/assets/TreeScene-MobileGestures-V78.js
       - name: Install isolated real browser tests
+        timeout-minutes: 5
         run: |
           mkdir -p "$RUNNER_TEMP/v78-browser"
-          npm install --prefix "$RUNNER_TEMP/v78-browser" --no-audit --no-fund playwright@1.55.1
-          "$RUNNER_TEMP/v78-browser/node_modules/.bin/playwright" install --with-deps chromium
+          npm install --prefix "$RUNNER_TEMP/v78-browser" --no-audit --no-fund --fetch-timeout=45000 --fetch-retries=2 playwright@1.55.1
+          browser_path=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            "$browser_path" --version
+            printf 'V78_CHROMIUM_EXECUTABLE_PATH=%s\n' "$browser_path" >> "$GITHUB_ENV"
+          else
+            "$RUNNER_TEMP/v78-browser/node_modules/.bin/playwright" install --with-deps chromium
+          fi
       - name: Compare mobile gestures and retain all character interactions
         env:
           NODE_PATH: ${{ runner.temp }}/v78-browser/node_modules

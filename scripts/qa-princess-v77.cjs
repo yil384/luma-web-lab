@@ -102,7 +102,7 @@ async function checkV78PhotoInput(page,context,mode) {
   check(mode.name+' V78 photo drag does not open album',await dialog.count()===0);
 }
 async function main() {
-  const browser=await chromium.launch({headless:true,args:[
+  const browser=await chromium.launch({headless:true,executablePath:process.env.V78_CHROMIUM_EXECUTABLE_PATH||undefined,args:[
     '--enable-webgl','--use-gl=angle','--use-angle=swiftshader',
     '--enable-unsafe-swiftshader','--disable-dev-shm-usage'
   ]});

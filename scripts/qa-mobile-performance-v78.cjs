@@ -388,7 +388,7 @@ async function main() {
   // Use a fresh GPU/browser process and temporary profile for each version so
   // the candidate does not inherit the baseline's compiled shader caches.
   for(const [name,base] of [['v77',baseline],['v78',candidate]]) {
-    const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+    const browser=await chromium.launch({headless:true,executablePath:process.env.V78_CHROMIUM_EXECUTABLE_PATH||undefined,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
     report.browserVersion=browser.version();
     try {await runVersion(browser,name,base);}
     finally {await browser.close();}
