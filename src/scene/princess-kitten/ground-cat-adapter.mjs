@@ -2,7 +2,7 @@
  * Ground-cat secondary skeletal action adapter for the 3 ground cats (black, cream, calico).
  * Layers subtle, non-repeating additive ear/tail/head motions from interaction-scheduler.mjs
  * AFTER syncChonkyTrio runs, preserving ground foot IK and separation bounds.
- * Zero per-frame allocations; strictly single-useFrame compatible.
+ * Reuse createGroundCatPose() output for allocation-free useFrame integration.
  */
 
 import { smoothEnvelope } from './held-kitten-rig.mjs';
@@ -18,8 +18,8 @@ export function actorIdForGroundCat(catId) {
  * Never overrides leg/paw IK targets; only adds expressive head/ear/tail motion
  * or signals `behavior.focus` / `paw` / `pounce` intent cleanly.
  */
-export function evaluateGroundCatAdditivePose(catId, clock, activeAction, glanceYaw = 0, reducedMotion = false) {
-  const out = {
+export function createGroundCatPose() {
+  return {
     head: [0, 0, 0],
     ear_L: [0, 0, 0],
     ear_R: [0, 0, 0],
@@ -29,6 +29,12 @@ export function evaluateGroundCatAdditivePose(catId, clock, activeAction, glance
     tail_3: [0, 0, 0],
     tail_4: [0, 0, 0],
   };
+}
+
+const GROUND_POSE_BONES = Object.freeze(Object.keys(createGroundCatPose()));
+
+export function evaluateGroundCatAdditivePose(catId, clock, activeAction, glanceYaw = 0, reducedMotion = false, out = createGroundCatPose()) {
+  for (const key of GROUND_POSE_BONES) out[key].fill(0);
   if (reducedMotion) return out;
 
   // Subtle glance when a sibling ground cat was tapped (non-synchronized)

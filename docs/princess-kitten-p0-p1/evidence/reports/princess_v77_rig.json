@@ -1,0 +1,52 @@
+{
+  "file": "public/princess/luma-princess-rigged-v77.glb",
+  "sha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0",
+  "bytes": 15727656,
+  "sourceSha256": "fad8b2e3b63a2c9866c8d12c64a94375a2cbf4a1f6d9591c73b10e948b187189",
+  "bones": [
+    "root",
+    "chest",
+    "upperArm_L",
+    "forearm_L",
+    "hand_L",
+    "upperArm_R",
+    "forearm_R",
+    "hand_R",
+    "eyelid_upper_L",
+    "eyelid_lower_L",
+    "eyelid_upper_R",
+    "eyelid_lower_R"
+  ],
+  "skins": 1,
+  "animations": [
+    "hold_idle",
+    "pet_cat",
+    "adjust_hold",
+    "blink"
+  ],
+  "armVertices": 2798,
+  "eyelids": [
+    {
+      "name": "eyelid_upper_L",
+      "vertices": 533,
+      "triangles": 960
+    },
+    {
+      "name": "eyelid_lower_L",
+      "vertices": 533,
+      "triangles": 960
+    },
+    {
+      "name": "eyelid_upper_R",
+      "vertices": 533,
+      "triangles": 960
+    },
+    {
+      "name": "eyelid_lower_R",
+      "vertices": 533,
+      "triangles": 960
+    }
+  ],
+  "staticMainMeshAttributesUnchanged": true,
+  "originalEyeAttributesUnchanged": true
+}

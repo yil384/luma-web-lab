@@ -23,6 +23,7 @@ export const DEFAULT_CAPABILITIES = Object.freeze({
     bones: Object.freeze([]),
     morphTargets: Object.freeze([]),
     clips: Object.freeze([]),
+    supportedActions: Object.freeze([]),
     canUseArmPose: false, // Verified from luma-princess-hug-v73.glb & v74.glb: skinCount = 0
   }),
   'held-cat': Object.freeze({
@@ -62,12 +63,13 @@ export const ACTION_CATALOG = Object.freeze({
   // P1 Held Kitten independent skeletal actions (no ground IK)
   'held.nuzzle':          { duration: 1.5,  priority: 30, vigorous: false, channel: 'head',  requiresArmRig: false, requiresMorph: false },
   'held.adjust_posture':  { duration: 1.6,  priority: 12, vigorous: false, channel: 'body',  requiresArmRig: false, requiresMorph: false },
-  // P1.5 Coupled Princess + Held Kitten actions (conservative PrincessPivot nod + HeldKittenRig)
+  // Coupled reactions. The loaded princess rig explicitly declares supported actions.
   'pair.mutual_gaze':     { duration: 2.0,  priority: 35, vigorous: false, channel: 'head',  requiresArmRig: false, requiresMorph: false },
   'pair.cuddle_response': { duration: 1.9,  priority: 40, vigorous: false, channel: 'head',  requiresArmRig: false, requiresMorph: false },
-  // P2 Explicitly BLOCKED_BY_RIG until real arm/morph assets exist
+  // Require the actual loaded skin and its independently weighted arm/eyelid joints.
   'princess.pet_cat':     { duration: 2.4,  priority: 45, vigorous: false, channel: 'arms',  requiresArmRig: true,  requiresMorph: false },
   'princess.adjust_hold': { duration: 2.2,  priority: 45, vigorous: false, channel: 'arms',  requiresArmRig: true,  requiresMorph: false },
+  'princess.blink':       { duration: 0.22, priority: 5,  vigorous: false, channel: 'eyes',  requiresArmRig: false, requiresMorph: false, requiresEyelidRig: true },
   'cat.blink':            { duration: 0.18, priority: 5,  vigorous: false, channel: 'eyes',  requiresArmRig: false, requiresMorph: true  },
 });
 
@@ -84,15 +86,31 @@ function createPrng(seed = 20261118) {
 }
 
 export function canExecuteAction(actionId, capability) {
-  const spec = ACTION_CATALOG[actionId];
+  const spec = Object.hasOwn(ACTION_CATALOG, actionId) ? ACTION_CATALOG[actionId] : null;
   if (!spec) return { allowed: false, reason: 'UNKNOWN_ACTION' };
-  if (spec.requiresArmRig && !capability?.canUseArmPose) {
+  if (spec.requiresArmRig && (!capability?.canUseArmPose || !capability.skinned
+    || !['upperArm_L', 'upperArm_R', 'forearm_L', 'forearm_R', 'hand_L', 'hand_R'].every(name => capability.bones?.includes(name)))) {
     return { allowed: false, reason: 'BLOCKED_BY_RIG' };
   }
   if (spec.requiresMorph && (!capability?.morphTargets || capability.morphTargets.length === 0)) {
     return { allowed: false, reason: 'BLOCKED_BY_RIG' };
   }
+  if (spec.requiresEyelidRig && (!capability?.canBlink || !capability.skinned
+    || !['eyelid_upper_L', 'eyelid_upper_R', 'eyelid_lower_L', 'eyelid_lower_R'].every(name => capability.bones?.includes(name)))) {
+    return { allowed: false, reason: 'BLOCKED_BY_RIG' };
+  }
+  if (capability?.supportedActions && !capability.supportedActions.includes(actionId)) {
+    return { allowed: false, reason: 'BLOCKED_BY_RIG' };
+  }
   return { allowed: true, reason: 'OK' };
+}
+
+function actionMatchesActor(actor, id) {
+  if (id.startsWith('princess.')) return actor === 'princess';
+  if (id.startsWith('pair.')) return actor === 'princess' || actor === 'held-cat';
+  if (id.startsWith('held.')) return actor === 'held-cat';
+  if (id === 'cat.one_paw_reach' || id === 'cat.crouch_pounce') return actor.startsWith('ground-');
+  return id.startsWith('cat.') && actor !== 'princess';
 }
 
 /**
@@ -101,9 +119,9 @@ export function canExecuteAction(actionId, capability) {
  */
 export function createInteractionScheduler(options = {}) {
   const rand = createPrng(options.seed ?? 20261118);
-  const capabilities = options.capabilities ?? DEFAULT_CAPABILITIES;
+  const capabilities = { ...DEFAULT_CAPABILITIES, ...options.capabilities };
   const lowPower = Boolean(options.lowPower);
-  const tapCooldownSec = options.tapCooldownSec ?? 2.0;
+  const tapCooldownSec = Number.isFinite(options.tapCooldownSec) ? Math.max(0, options.tapCooldownSec) : 2.0;
   const maxDeltaSec = 0.05;
 
   let clock = 0;
@@ -145,16 +163,20 @@ export function createInteractionScheduler(options = {}) {
   }
 
   function startAction(actor, actionId, priorityOverride) {
+    if (!Object.hasOwn(actorState, actor)) return { started: false, reason: 'UNKNOWN_ACTOR' };
+    if (!Object.hasOwn(ACTION_CATALOG, actionId)) return { started: false, reason: 'UNKNOWN_ACTION' };
+    if (!actionMatchesActor(actor, actionId)) return { started: false, reason: 'WRONG_ACTOR' };
     const check = canExecuteAction(actionId, capabilities[actor]);
     if (!check.allowed) {
       actorState[actor].blockedLog.push({ actionId, reason: check.reason, at: clock });
+      if (actorState[actor].blockedLog.length > 24) actorState[actor].blockedLog.shift();
       return { started: false, reason: check.reason };
     }
     const spec = ACTION_CATALOG[actionId];
     if (spec.vigorous && hasVigorousActive(actor)) {
       return { started: false, reason: 'VIGOROUS_LIMIT' };
     }
-    const priority = priorityOverride ?? spec.priority;
+    const priority = Number.isFinite(priorityOverride) ? priorityOverride : spec.priority;
     const current = actorState[actor].active;
     if (current && current.priority > priority) {
       return { started: false, reason: 'LOWER_PRIORITY' };
@@ -178,18 +200,21 @@ export function createInteractionScheduler(options = {}) {
     switch (event.type) {
       case 'visibility':
         visible = Boolean(event.visible);
+        if (!visible) cameraDragging = false;
         return { handled: true };
       case 'dialog-open':
         dialogOpen = true;
+        cameraDragging = false;
         return { handled: true };
       case 'dialog-close':
         dialogOpen = false;
         return { handled: true };
       case 'pause':
         paused = Boolean(event.paused);
+        if (paused) cameraDragging = false;
         return { handled: true };
       case 'camera-drag-start':
-        cameraDragging = true;
+        cameraDragging = !isFrozen() && !reducedMotion;
         return { handled: true };
       case 'camera-drag-end':
         cameraDragging = false;
@@ -197,15 +222,16 @@ export function createInteractionScheduler(options = {}) {
       case 'reduced-motion':
         reducedMotion = Boolean(event.enabled);
         if (reducedMotion) {
+          cameraDragging = false;
           for (const a of ACTORS) actorState[a].active = null;
         }
         return { handled: true };
       case 'request-action':
-        if (isFrozen() || reducedMotion) return { handled: false, reason: 'FROZEN_OR_REDUCED' };
+        if (isFrozen() || reducedMotion || cameraDragging) return { handled: false, reason: 'FROZEN_OR_REDUCED' };
         return startAction(event.actor, event.actionId, event.priority);
       case 'tap': {
         const actor = event.actor;
-        if (!actorState[actor]) return { handled: false, reason: 'UNKNOWN_ACTOR' };
+        if (!Object.hasOwn(actorState, actor)) return { handled: false, reason: 'UNKNOWN_ACTOR' };
         if (isFrozen() || reducedMotion || cameraDragging) {
           return { handled: false, reason: 'SUPPRESSED' };
         }
@@ -213,17 +239,22 @@ export function createInteractionScheduler(options = {}) {
         if (clock - st.lastTapTime < tapCooldownSec) {
           return { handled: false, reason: 'COOLDOWN' };
         }
-        st.lastTapTime = clock;
         if (actor === 'princess') {
-          // Coupled mutual gaze: princess conservative nod + held-cat gazes/nuzzles
-          const r1 = startAction('princess', 'pair.mutual_gaze', 40);
-          const r2 = startAction('held-cat', 'pair.mutual_gaze', 40);
+          // Arm actions become available only when the loaded princess rig reports support.
+          const armId = st.lastActionId === 'princess.pet_cat' ? 'princess.adjust_hold' : 'princess.pet_cat';
+          const actionId = [armId, 'pair.cuddle_response', 'princess.blink']
+            .find(id => canExecuteAction(id, capabilities.princess).allowed);
+          const r1 = actionId ? startAction('princess', actionId, 45) : { started: false, reason: 'BLOCKED_BY_RIG' };
+          // The kitten can still respond while the princess asset is loading or unavailable.
+          const r2 = startAction('held-cat', actionId === 'princess.adjust_hold' ? 'held.adjust_posture' : 'held.nuzzle', 45);
+          if (r1.started || r2.started) st.lastTapTime = clock;
           return { handled: r1.started || r2.started, results: [r1, r2] };
         }
         if (actor === 'held-cat') {
           const nextId = st.lastActionId === 'held.nuzzle' ? 'pair.cuddle_response' : 'held.nuzzle';
           const r1 = startAction('held-cat', nextId, 45);
-          const r2 = startAction('princess', 'pair.cuddle_response', 38);
+          const r2 = r1.started ? startAction('princess', 'pair.cuddle_response', 38) : {started:false, reason:r1.reason};
+          if (r1.started) st.lastTapTime = clock;
           return { handled: r1.started, results: [r1, r2] };
         }
         // Ground cat tap: pick non-repeating expressive tap reaction
@@ -232,6 +263,7 @@ export function createInteractionScheduler(options = {}) {
           chosen = pickNonRepeating(['cat.head_tilt', 'cat.look_at_camera'], st.lastActionId);
         }
         const res = startAction(actor, chosen, 45);
+        if (res.started) st.lastTapTime = clock;
         return { handled: res.started, actionId: chosen, reason: res.reason };
       }
       default:
@@ -239,9 +271,9 @@ export function createInteractionScheduler(options = {}) {
     }
   }
 
-  function step(rawDelta) {
+  function advance(rawDelta) {
     if (isFrozen() || reducedMotion) {
-      return getSnapshot();
+      return;
     }
     const dt = Number.isFinite(rawDelta) ? Math.max(0, Math.min(maxDeltaSec, rawDelta)) : 0;
     clock += dt;
@@ -251,20 +283,50 @@ export function createInteractionScheduler(options = {}) {
 
     for (const actor of ACTORS) {
       const st = actorState[actor];
+      // Preserve the idle stagger across a long orbit gesture; do not release
+      // several overdue idle reactions together when the pointer lifts.
+      if (cameraDragging) st.nextIdleAt += dt;
       if (st.active) {
         st.active.elapsed += dt;
         if (st.active.elapsed >= st.active.duration) {
           st.active = null;
           st.nextIdleAt = clock + idleIntervalMin + rand() * idleIntervalSpan;
         }
-      } else if (actor !== 'princess' && clock >= st.nextIdleAt) {
+      } else if (!cameraDragging && actor !== 'princess' && clock >= st.nextIdleAt) {
         const pool = actor === 'held-cat' ? HELD_IDLE_POOL : GROUND_IDLE_POOL;
         const nextId = pickNonRepeating(pool, st.lastActionId);
         startAction(actor, nextId);
         st.nextIdleAt = clock + idleIntervalMin + rand() * idleIntervalSpan;
+      } else if (!cameraDragging && actor === 'princess' && clock >= st.nextIdleAt) {
+        // Rare, gentle adjustment. Eyelid blinks run on their own bone channel in the rig.
+        if (canExecuteAction('princess.adjust_hold', capabilities.princess).allowed) {
+          const started = startAction('princess', 'princess.adjust_hold');
+          if (started.started) startAction('held-cat', 'held.adjust_posture', 35);
+        }
+        st.nextIdleAt = clock + 15 + rand() * (lowPower ? 18 : 10);
       }
     }
-    return getSnapshot();
+  }
+
+  function step(rawDelta) { advance(rawDelta); return getSnapshot(); }
+
+  // Mutable, allocation-free view for the renderer. Call getSnapshot for retained diagnostics.
+  const frame = { clock: 0, frozen: false, reducedMotion, cameraDragging: false, actions: {} };
+  function peek() {
+    frame.clock = clock;
+    frame.frozen = isFrozen();
+    frame.reducedMotion = reducedMotion;
+    frame.cameraDragging = cameraDragging;
+    for (const actor of ACTORS) frame.actions[actor] = actorState[actor].active;
+    return frame;
+  }
+
+  function setCapabilities(actor, capability) {
+    if (!Object.hasOwn(actorState, actor)) return false;
+    capabilities[actor] = capability ?? DEFAULT_CAPABILITIES[actor];
+    const active = actorState[actor].active;
+    if (active && !canExecuteAction(active.id, capabilities[actor]).allowed) actorState[actor].active = null;
+    return true;
   }
 
   function getSnapshot() {
@@ -285,5 +347,5 @@ export function createInteractionScheduler(options = {}) {
     return [...(actorState[actor]?.blockedLog ?? [])];
   }
 
-  return { dispatch, step, getSnapshot, getBlockedLog };
+  return { dispatch, step, advance, peek, setCapabilities, getSnapshot, getBlockedLog };
 }

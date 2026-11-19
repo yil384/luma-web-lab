@@ -45,7 +45,7 @@ test('3. tap cooldown (2s), drag suppression, and 30 rapid taps never lock or dr
   const r1 = s.dispatch({ type: 'tap', actor: 'held-cat' });
   assert.equal(r1.handled, true);
   assert.equal(s.getSnapshot().actions['held-cat'].id, 'held.nuzzle');
-  assert.equal(s.getSnapshot().actions['princess'].id, 'pair.cuddle_response');
+  assert.equal(s.getSnapshot().actions['princess'], null, 'An unbound princess must not claim an animated response');
 
   for (let i = 0; i < 30; i++) {
     const r = s.dispatch({ type: 'tap', actor: 'held-cat' });
@@ -79,7 +79,7 @@ test('5. reduced-motion clears active actions and returns neutral zero-drift pos
   const s = createInteractionScheduler({ seed: 123 });
   s.step(0.05);
   s.dispatch({ type: 'tap', actor: 'princess' });
-  assert.ok(s.getSnapshot().actions['princess']);
+  assert.ok(s.getSnapshot().actions['held-cat']);
   s.dispatch({ type: 'reduced-motion', enabled: true });
   for (const a of ACTORS) assert.equal(s.getSnapshot().actions[a], null);
 

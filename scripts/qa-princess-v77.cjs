@@ -1,0 +1,133 @@
+/* CI-only real-browser checks. Run against the staged Pages tree, never a Vite rebuild. */
+const {chromium} = require('playwright');
+const {mkdirSync, writeFileSync} = require('node:fs');
+const path = require('node:path');
+const base = process.env.V77_BASE_URL;
+if (!base) throw new Error('Set V77_BASE_URL to the staged Pages URL.');
+const out = process.env.V77_QA_OUTPUT || path.resolve('v77-browser-evidence');
+mkdirSync(out,{recursive:true});
+const report = {base,checks:[],errors:[],requests:[],screenshots:[],limits:['Software-rendered Chromium; not a physical phone or Safari performance test.']};
+function check(name, pass, detail) {
+  report.checks.push({name,pass:!!pass,detail});
+  console.log(`${pass?'PASS':'FAIL'} ${name} ${JSON.stringify(detail??null)}`);
+  if (!pass) throw new Error(name);
+}
+const delay = ms => new Promise(resolve=>setTimeout(resolve,ms));
+const readState = page => page.evaluate(()=>({
+  version:document.documentElement.dataset.princessVersion,
+  model:document.documentElement.dataset.princessV77,
+  held:document.documentElement.dataset.princessHeldKitten,
+  arms:document.documentElement.dataset.princessArmRig,
+  eyelids:document.documentElement.dataset.princessEyelidRig,
+  ground:document.documentElement.dataset.groundCatCount,
+  runtime:document.documentElement.dataset.characterRuntime,
+  clock:Number(document.documentElement.dataset.characterClock),
+  pose:JSON.parse(document.documentElement.dataset.princessV77Pose||'null'),
+  actions:JSON.parse(document.documentElement.dataset.characterActions||'{}'),
+  points:JSON.parse(document.documentElement.dataset.characterHitPoints||'{}'),
+  lastTap:document.documentElement.dataset.characterLastTap,
+  canvas:document.querySelectorAll('.tree-stage canvas').length,
+  fallback:document.body.innerText.includes('当前浏览器无法显示'),
+  rotation:document.querySelector('.tree-stage')?.dataset.rotation
+}));
+async function tapActor(page, actor, mobile) {
+  for (const [dx,dy] of [[0,0],[0,-5],[5,0],[-5,0],[0,5]]) {
+    const p = (await readState(page)).points[actor];
+    if (!p || !Number.isFinite(p.x+p.y)) throw new Error('Missing projected actor '+actor);
+    if (mobile) await page.touchscreen.tap(p.x+dx,p.y+dy);
+    else await page.mouse.click(p.x+dx,p.y+dy);
+    await delay(150);
+    if ((await readState(page)).lastTap === actor) return;
+  }
+  throw new Error('Could not tap the rendered '+actor);
+}
+async function capture(page, name) {
+  try {
+    await page.screenshot({path:path.join(out,name+'.png'),timeout:20000,animations:'disabled'});
+    report.screenshots.push({name,captured:true});
+  } catch (error) {
+    report.screenshots.push({name,captured:false,detail:String(error)});
+  }
+}
+async function main() {
+  const browser=await chromium.launch({headless:true,args:[
+    '--enable-webgl','--use-gl=angle','--use-angle=swiftshader',
+    '--enable-unsafe-swiftshader','--disable-dev-shm-usage'
+  ]});
+  try {
+    for (const mode of [
+      {name:'desktop',width:1280,height:800,mobile:false,route:'/'},
+      {name:'mobile',width:390,height:844,mobile:true,route:'/christmas/'}
+    ]) {
+      const context=await browser.newContext({viewport:{width:mode.width,height:mode.height},
+        deviceScaleFactor:1,isMobile:mode.mobile,hasTouch:mode.mobile,serviceWorkers:'block'});
+      const page=await context.newPage();
+      page.on('pageerror',e=>report.errors.push({mode:mode.name,message:e.message}));
+      page.on('console',message=>{
+        if (message.type()==='error' && /THREE|WebGL|Shader|V77|cats could not load/.test(message.text())) {
+          report.errors.push({mode:mode.name,message:message.text()});
+        }
+      });
+      page.on('response',r=>{
+        if (/luma-princess-rigged-v77|chonky-cat-trio|TreeScene-PrincessRig-V77/.test(r.url())) {
+          report.requests.push({mode:mode.name,url:r.url(),status:r.status()});
+        }
+      });
+      try {
+        const response=await page.goto(new URL(mode.route+'?rigqa=1',base).href,{waitUntil:'domcontentloaded',timeout:90000});
+        check(mode.name+' HTTP',response.status()===200,response.status());
+        await page.waitForFunction(()=>document.documentElement.dataset.princessV77==='ready' &&
+          document.documentElement.dataset.princessV77Pose &&
+          document.documentElement.dataset.groundCatCount==='3',null,{timeout:120000});
+        let state=await readState(page);
+        check(mode.name+' actual V77 WebGL scene',state.canvas===1&&!state.fallback&&state.model==='ready'&&
+          state.held==='ready'&&state.arms==='true'&&state.eyelids==='true'&&state.runtime==='v77',state);
+        const lidY=state.pose.upperLidY;
+        await page.waitForFunction(y=>{
+          const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
+          return p&&Math.abs(p.upperLidY-y)>0.0001;
+        },lidY,{timeout:50000});
+        check(mode.name+' real eyelid bones animate',true,{from:lidY,to:(await readState(page)).pose.upperLidY});
+        await tapActor(page,'princess',mode.mobile);
+        await page.waitForFunction(()=>{
+          const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
+          return p&&p.leftArm.slice(0,3).some(v=>Math.abs(v)>0.002);
+        },null,{timeout:15000});
+        check(mode.name+' tap drives actual arm bones',true,(await readState(page)).pose);
+        await delay(2300);
+        await tapActor(page,'held-cat',mode.mobile);
+        check(mode.name+' held kitten owns its click', (await readState(page)).lastTap==='held-cat');
+        await capture(page,mode.name+'-v77-scene');
+        await page.locator('.greeting-gate').click({force:true,timeout:15000});
+        await page.locator('dialog.film-dialog[open]').waitFor({timeout:20000});
+        await page.waitForFunction(()=>document.documentElement.dataset.characterPaused==='true',null,{timeout:10000});
+        await delay(350);
+        const frozen=(await readState(page)).clock;
+        await delay(900);
+        check(mode.name+' film pauses interaction clock',(await readState(page)).clock===frozen,{clock:frozen});
+        await page.locator('dialog.film-dialog .dialog-close').click({force:true,timeout:15000});
+        await page.waitForFunction(c=>Number(document.documentElement.dataset.characterClock)>c,frozen,{timeout:20000});
+        check(mode.name+' returns from film',!(await page.locator('dialog.film-dialog[open]').count()));
+        await page.emulateMedia({reducedMotion:'reduce'});
+        await page.waitForFunction(()=>{
+          const p=JSON.parse(document.documentElement.dataset.princessV77Pose||'null');
+          return p&&p.leftArm.slice(0,3).every(v=>Math.abs(v)<1e-7)&&p.rightArm.slice(0,3).every(v=>Math.abs(v)<1e-7);
+        },null,{timeout:15000});
+        check(mode.name+' reduced motion restores arm pose',true,(await readState(page)).pose);
+        check(mode.name+' no JavaScript errors',report.errors.filter(e=>e.mode===mode.name).length===0,report.errors);
+      } catch(error) {
+        report.checks.push({name:mode.name+' complete scene flow',pass:false,detail:String(error),state:await readState(page).catch(()=>null)});
+        await capture(page,mode.name+'-failure');
+      } finally { await context.close(); }
+    }
+  } finally { await browser.close(); }
+  for(const route of ['/','/christmas/','/letter/','/album-preview/']) {
+    const response=await fetch(new URL(route,base));
+    check('route preserved '+route,response.status===200,response.status);
+  }
+}
+main().catch(error=>report.errors.push({mode:'fatal',message:String(error)})).finally(()=>{
+  writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
+  console.log(JSON.stringify(report,null,2));
+  if(report.errors.length||report.checks.some(c=>!c.pass))process.exitCode=1;
+});
