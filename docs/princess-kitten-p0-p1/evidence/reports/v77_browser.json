@@ -1,0 +1,326 @@
+{
+  "base": "http://127.0.0.1:4173/",
+  "checks": [
+    {
+      "name": "desktop HTTP",
+      "pass": true,
+      "detail": 200
+    },
+    {
+      "name": "desktop actual V77 WebGL scene",
+      "pass": true,
+      "detail": {
+        "version": "v77-skeletal",
+        "model": "ready",
+        "held": "ready",
+        "arms": "true",
+        "eyelids": "true",
+        "ground": "3",
+        "runtime": "v77",
+        "clock": 0.30909999999999127,
+        "pose": {
+          "leftArm": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "rightArm": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "upperLidY": 0.4
+        },
+        "actions": {
+          "princess": null,
+          "held-cat": null,
+          "ground-black": null,
+          "ground-cream": null,
+          "ground-calico": null
+        },
+        "points": {
+          "princess": {
+            "x": 751.5609773038266,
+            "y": 655.7482936058142
+          },
+          "held-cat": {
+            "x": 748.2277433447348,
+            "y": 674.0949729651337
+          }
+        },
+        "canvas": 1,
+        "fallback": false,
+        "rotation": "playing"
+      }
+    },
+    {
+      "name": "desktop held kitten owns its click",
+      "pass": true
+    },
+    {
+      "name": "desktop real eyelid bones animate",
+      "pass": true,
+      "detail": {
+        "from": 0.4,
+        "to": 0.3913909903645443
+      }
+    },
+    {
+      "name": "desktop tap drives actual arm bones",
+      "pass": true,
+      "detail": {
+        "leftArm": [
+          -0.0006814808895163931,
+          -1.857676458095712e-06,
+          -0.002725929887947937,
+          0.9999960524355046
+        ],
+        "rightArm": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "upperLidY": 0.4
+      }
+    },
+    {
+      "name": "desktop film pauses interaction clock",
+      "pass": true,
+      "detail": {
+        "clock": 1.2741999999999978
+      }
+    },
+    {
+      "name": "desktop returns from film",
+      "pass": true
+    },
+    {
+      "name": "desktop reduced motion restores arm pose",
+      "pass": true,
+      "detail": {
+        "leftArm": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "rightArm": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "upperLidY": 0.4
+      }
+    },
+    {
+      "name": "desktop no JavaScript errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "mobile HTTP",
+      "pass": true,
+      "detail": 200
+    },
+    {
+      "name": "mobile actual V77 WebGL scene",
+      "pass": true,
+      "detail": {
+        "version": "v77-skeletal",
+        "model": "ready",
+        "held": "ready",
+        "arms": "true",
+        "eyelids": "true",
+        "ground": "3",
+        "runtime": "v77",
+        "clock": 0.7047999999999884,
+        "pose": {
+          "leftArm": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "rightArm": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "upperLidY": 0.4
+        },
+        "actions": {
+          "princess": null,
+          "held-cat": null,
+          "ground-black": null,
+          "ground-cream": null,
+          "ground-calico": null
+        },
+        "points": {
+          "princess": {
+            "x": 278.4966951762689,
+            "y": 605.5475467227997
+          },
+          "held-cat": {
+            "x": 276.07336309399676,
+            "y": 618.2770684596458
+          }
+        },
+        "canvas": 1,
+        "fallback": false,
+        "rotation": "playing"
+      }
+    },
+    {
+      "name": "mobile held kitten owns its click",
+      "pass": true
+    },
+    {
+      "name": "mobile real eyelid bones animate",
+      "pass": true,
+      "detail": {
+        "from": 0.4,
+        "to": 0.3913909903645443
+      }
+    },
+    {
+      "name": "mobile tap drives actual arm bones",
+      "pass": true,
+      "detail": {
+        "leftArm": [
+          -0.0006814808895163931,
+          -1.857676458095712e-06,
+          -0.002725929887947937,
+          0.9999960524355046
+        ],
+        "rightArm": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "upperLidY": 0.4
+      }
+    },
+    {
+      "name": "mobile film pauses interaction clock",
+      "pass": true,
+      "detail": {
+        "clock": 2.4762999999999877
+      }
+    },
+    {
+      "name": "mobile returns from film",
+      "pass": true
+    },
+    {
+      "name": "mobile reduced motion restores arm pose",
+      "pass": true,
+      "detail": {
+        "leftArm": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "rightArm": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "upperLidY": 0.4
+      }
+    },
+    {
+      "name": "mobile no JavaScript errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "route preserved /",
+      "pass": true,
+      "detail": 200
+    },
+    {
+      "name": "route preserved /christmas/",
+      "pass": true,
+      "detail": 200
+    },
+    {
+      "name": "route preserved /letter/",
+      "pass": true,
+      "detail": 200
+    },
+    {
+      "name": "route preserved /album-preview/",
+      "pass": true,
+      "detail": 200
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "mode": "desktop",
+      "url": "http://127.0.0.1:4173/assets/TreeScene-PrincessRig-V77.js",
+      "status": 200
+    },
+    {
+      "mode": "desktop",
+      "url": "http://127.0.0.1:4173/assets/chonky-cat-trio-BEKpO2QH.glb",
+      "status": 200
+    },
+    {
+      "mode": "desktop",
+      "url": "http://127.0.0.1:4173/princess/luma-princess-rigged-v77.glb.gz",
+      "status": 200
+    },
+    {
+      "mode": "desktop",
+      "url": "http://127.0.0.1:4173/assets/chonky-cat-trio-BEKpO2QH.glb",
+      "status": 200
+    },
+    {
+      "mode": "mobile",
+      "url": "http://127.0.0.1:4173/assets/TreeScene-PrincessRig-V77.js",
+      "status": 200
+    },
+    {
+      "mode": "mobile",
+      "url": "http://127.0.0.1:4173/princess/luma-princess-rigged-v77.glb.gz",
+      "status": 200
+    },
+    {
+      "mode": "mobile",
+      "url": "http://127.0.0.1:4173/assets/chonky-cat-trio-BEKpO2QH.glb",
+      "status": 200
+    },
+    {
+      "mode": "mobile",
+      "url": "http://127.0.0.1:4173/assets/chonky-cat-trio-BEKpO2QH.glb",
+      "status": 200
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "desktop-v77-scene",
+      "captured": true
+    },
+    {
+      "name": "mobile-v77-scene",
+      "captured": true
+    }
+  ],
+  "limits": [
+    "Software-rendered Chromium; not a physical phone or Safari performance test."
+  ],
+  "provenance": {
+    "workflowRun": "https://github.com/yil384/luma-web-lab/actions/runs/44457195425",
+    "sourceCommit": "a487b65961778f75588772c14eb56c7f0cc9128d",
+    "verifiedCandidateAndProductionCommit": "d7fb0d3524841207d8620ac21e8f9510761d80ec"
+  }
+}

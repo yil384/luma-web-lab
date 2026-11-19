@@ -4,6 +4,25 @@ The live site is served from this repository's `gh-pages` branch at
 <https://tanchensiyi.com/>. This release applies a focused change to the reviewed
 production tree. It does not publish a full build from the older `main` or Sites source.
 
+## Published revision and verification record
+
+- Production Pages commit: `d7fb0d3524841207d8620ac21e8f9510761d80ec`.
+- Previous production commit: `214558b1304bb1388e3914d5b84855734518b86f`.
+- Verified source commit: `a487b65961778f75588772c14eb56c7f0cc9128d`.
+- [Successful staging and real-browser run](https://github.com/yil384/luma-web-lab/actions/runs/44457195425):
+  28 rig/runtime tests, 9 real-release checks, and 22 desktop/mobile browser checks passed.
+  Both scene screenshots were captured; no application JavaScript errors were reported.
+- Browser evidence is also recorded in
+  `docs/princess-kitten-p0-p1/evidence/reports/v77_browser.json`.
+- The complete tree comparison preserved all 629 other existing files, with no deletions.
+- Exact rollback HTML blobs: home `b37c1d9c42a7a50cfc6582868329874dab060107`,
+  Christmas `a015608e06aa54a1ac92df79c22d18abf8931846`.
+
+The browser checks observed the actual loaded model and its changing arm/eyelid
+bones after real mouse/touch input, film pause/resume, and reduced-motion reset.
+The software renderer runs slowly, so the blink check uses the kitten's actual
+input-triggered cuddle response rather than assuming a wall-clock frame rate.
+
 ## Character behavior
 
 - V76's original face, hair, dress, eye meshes, textures and UV data are retained.
