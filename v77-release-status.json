@@ -1,0 +1,26 @@
+{
+  "version": "v77-skeletal",
+  "baselineScene": {
+    "path": "assets/TreeScene-MobileSmooth-20261117-v2.js",
+    "sha256": "6ef16549971ed52999aacd08a753ba36c6da3f99443a4ebeed6205308717c12a"
+  },
+  "scene": {
+    "path": "assets/TreeScene-PrincessRig-V77.js",
+    "sha256": "24ed90b603768a274d0425ed04c4cca0bee422651ed1c6206a48c50f2e753c99"
+  },
+  "model": {
+    "path": "princess/luma-princess-rigged-v77.glb",
+    "bytes": 15727656,
+    "sha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0"
+  },
+  "previousEntrySha256": {
+    "index.html": "e18405ffe97bd937ce21bcc08d81562128d47b0567dc003bc141bcd77ee9071f",
+    "christmas/index.html": "2d64effabfc913b2cd76659afded2b99e95be35b6e411dc326f21d6d89f07f60"
+  },
+  "changes": [
+    "Independent shoulder/elbow/wrist skinning",
+    "Independent upper/lower eyelid joints",
+    "Shared runtime for princess, held kitten and three ground cats"
+  ],
+  "verificationLimit": "Desktop/mobile viewport checks are not a physical iPhone/Safari performance test."
+}
