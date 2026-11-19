@@ -1,0 +1,38 @@
+{
+  "version": "v78-mobile-gestures",
+  "baselineScene": {
+    "path": "assets/TreeScene-PrincessRig-V77.js",
+    "sha256": "24ed90b603768a274d0425ed04c4cca0bee422651ed1c6206a48c50f2e753c99"
+  },
+  "scene": {
+    "path": "assets/TreeScene-MobileGestures-V78.js",
+    "sha256": "4ca2839130432bd78b3b057e2dfd469dfb9f6a1f7c696dded914cafbb76cf179"
+  },
+  "app": {
+    "path": "assets/App-MobileGestures-V78.js",
+    "sha256": "80fb0468e23593a4617f247dfa4cab9e619e3dadd8025e25866a9f4c3ded92a2",
+    "baselineSha256": "f391a954f192283e227e76831f09b249ba8d11504e47073ec9b636feb6f9f432"
+  },
+  "model": {
+    "path": "princess/luma-princess-rigged-v77.glb",
+    "bytes": 15727656,
+    "sha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0",
+    "unchanged": true
+  },
+  "previousEntrySha256": {
+    "index.html": "cc5b991f3d0264ea56bcab119b488d098da468c77561bfabeba83ff38b17fe48",
+    "christmas/index.html": "c0b6e641d6398fdfce68d5eeb3088739abe28220075532fa7264ec856702b8dd"
+  },
+  "changes": [
+    "Invisible 12-triangle boxes replace high-poly character picking",
+    "No mobile hover raycasts; existing photo gesture recognition preserved",
+    "Adaptive render pixel budget with immediate gesture quality and delayed idle recovery",
+    "No mobile MSAA; same original models and textures",
+    "Renderer-owned final matrix updates; normal visitors do not serialize QA snapshots",
+    "Character interactions retain active touch contacts so a slow pinch cannot become a share hold",
+    "Stale long-press callbacks after a blocked frame cancel intent without losing live contacts",
+    "Passive raw pointer input cancels tap/hold intent before frame-coalesced move delivery where supported",
+    "Paused automatic orbit uses demand rendering and keeps manual zoom/pan available"
+  ],
+  "verificationLimit": "CI compares the same software Chromium runner. Physical iPhone/Safari performance has not been measured."
+}
