@@ -98,14 +98,45 @@ async function checkV78PhotoInput(page,context,mode) {
     }
     await cdp.detach();
   } else {
-    await page.mouse.move(target.x,target.y);
-    const pressed=page.mouse.down();
+    const cdp=await context.newCDPSession(page);
+    const evidence={mode:mode.name,target,cameraBefore,events:[]};
+    (report.photoDrags??=[]).push(evidence);
+    await page.evaluate(()=>{
+      const events=[],start=performance.now();
+      const listener=event=>events.push({type:event.type,pointerId:event.pointerId,pointerType:event.pointerType,
+        buttons:event.buttons,button:event.button,x:event.clientX,y:event.clientY,receivedMs:performance.now()-start,
+        eventTime: event.timeStamp,isTrusted:event.isTrusted,target:event.target?.tagName,
+        inScene:!!event.target?.closest?.('.tree-stage')});
+      for(const type of ['pointerdown','pointermove','pointerup','pointercancel'])window.addEventListener(type,listener,{capture:true,passive:true});
+      window.__photoDragReceipt={events,stop:()=>{for(const type of ['pointerdown','pointermove','pointerup','pointercancel'])window.removeEventListener(type,listener,true);}};
+    });
+    await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:target.x,y:target.y,button:'none',buttons:0,pointerType:'mouse'});
+    const pressed=cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',x:target.x,y:target.y,button:'left',buttons:1,clickCount:1,pointerType:'mouse'});
     try {
-      const moving=page.mouse.move(target.x+dx,target.y+dy);
+      // Use one native CDP session with explicit held-button state. Independent
+      // Playwright mouse calls can otherwise be acknowledged between software
+      // rendered frames and leave the intended drag looking like a long press.
+      const moving=cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:target.x+dx,y:target.y+dy,button:'none',buttons:1,pointerType:'mouse'});
       await Promise.all([pressed,moving]);
-      await page.waitForFunction(before=>document.documentElement.dataset.cameraPosition&&document.documentElement.dataset.cameraPosition!==before,cameraBefore,{timeout:20000});
+      await page.waitForFunction(before=>{
+        const current=(document.documentElement.dataset.cameraPosition||'').split(',').map(Number);
+        const prior=before.split(',').map(Number);
+        return document.documentElement.dataset.cameraManualHold==='true'&&current.length===3&&Math.hypot(...current.map((v,i)=>v-prior[i]))>.5;
+      },cameraBefore,{timeout:20000});
+    } catch(error) {
+      evidence.failure=String(error);
+      throw error;
+    } finally {
+      await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:target.x+dx,y:target.y+dy,button:'left',buttons:0,clickCount:1,pointerType:'mouse'});
+      await page.waitForFunction(()=>window.__photoDragReceipt.events.some(event=>event.type==='pointerup'),null,{timeout:20000}).catch(error=>{evidence.receiptFailure=String(error);});
+      evidence.events=await page.evaluate(()=>{window.__photoDragReceipt.stop();return window.__photoDragReceipt.events;});
+      evidence.after=await page.evaluate(()=>({camera:document.documentElement.dataset.cameraPosition,manual:document.documentElement.dataset.cameraManualHold,
+        dialogs:[...document.querySelectorAll('dialog[open]')].map(dialog=>dialog.className)}));
+      await cdp.detach();
     }
-    finally {await page.mouse.up();}
+    const down=evidence.events.find(event=>event.type==='pointerdown');
+    const moved=evidence.events.find(event=>event.type==='pointermove'&&(event.buttons&1)&&down&&Math.hypot(event.x-down.x,event.y-down.y)>8);
+    check('desktop V78 photo drag receives real held-button input',down?.buttons===1&&!!moved&&evidence.events.some(event=>event.type==='pointerup'&&event.buttons===0)&&evidence.events.every(event=>event.isTrusted),evidence);
   }
   await delay(800);
   const cameraAfter=await page.evaluate(()=>document.documentElement.dataset.cameraPosition);
