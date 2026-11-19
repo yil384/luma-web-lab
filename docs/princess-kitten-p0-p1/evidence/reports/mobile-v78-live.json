@@ -1,0 +1,183 @@
+{
+  "verifiedAt": "2026-11-19T10:00:46.634168+00:00",
+  "site": "https://tanchensiyi.com/",
+  "release": "v78-mobile-gestures",
+  "publishedCommit": "e082e0d2f953f922f03efcccea15a21b2ffa882b",
+  "sourceCommit": "764a42aafbc3b264a702063e63389a099a9a8fff",
+  "files": [
+    {
+      "path": "index.html",
+      "url": "https://tanchensiyi.com/",
+      "http": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 2349,
+      "sha256": "40b4797a89fee465ff30be123a67a6d6af511721bfaccb00a21d0989f61561a2",
+      "expectedSha256": "40b4797a89fee465ff30be123a67a6d6af511721bfaccb00a21d0989f61561a2",
+      "matchesPublishedCandidate": true
+    },
+    {
+      "path": "christmas/index.html",
+      "url": "https://tanchensiyi.com/christmas/",
+      "http": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 2359,
+      "sha256": "6c7e3443e955027426ac63f42db3d31352bac0c0321e9b5bd5b9c86869472fcb",
+      "expectedSha256": "6c7e3443e955027426ac63f42db3d31352bac0c0321e9b5bd5b9c86869472fcb",
+      "matchesPublishedCandidate": true
+    },
+    {
+      "path": "assets/TreeScene-MobileGestures-V78.js",
+      "url": "https://tanchensiyi.com/assets/TreeScene-MobileGestures-V78.js",
+      "http": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "bytes": 292870,
+      "sha256": "4ca2839130432bd78b3b057e2dfd469dfb9f6a1f7c696dded914cafbb76cf179",
+      "expectedSha256": "4ca2839130432bd78b3b057e2dfd469dfb9f6a1f7c696dded914cafbb76cf179",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "assets/App-MobileGestures-V78.js",
+      "url": "https://tanchensiyi.com/assets/App-MobileGestures-V78.js",
+      "http": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "bytes": 23701,
+      "sha256": "80fb0468e23593a4617f247dfa4cab9e619e3dadd8025e25866a9f4c3ded92a2",
+      "expectedSha256": "80fb0468e23593a4617f247dfa4cab9e619e3dadd8025e25866a9f4c3ded92a2",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "v78-release-status.json",
+      "url": "https://tanchensiyi.com/v78-release-status.json",
+      "http": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1934,
+      "sha256": "830beb420099bc8da01972b192c056c916104f009ed6ad01f6952f0a46a4a81b",
+      "expectedSha256": "830beb420099bc8da01972b192c056c916104f009ed6ad01f6952f0a46a4a81b",
+      "matchesPublishedCandidate": true
+    },
+    {
+      "path": "assets/princess-kitten-v78/ground-cat-adapter.mjs",
+      "url": "https://tanchensiyi.com/assets/princess-kitten-v78/ground-cat-adapter.mjs",
+      "http": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "bytes": 3315,
+      "sha256": "0e3045be087d19d8f8ed435c20e91aee867b2e13f65b5212cfe1ee898de7dc42",
+      "expectedSha256": "0e3045be087d19d8f8ed435c20e91aee867b2e13f65b5212cfe1ee898de7dc42",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "assets/princess-kitten-v78/held-kitten-rig.mjs",
+      "url": "https://tanchensiyi.com/assets/princess-kitten-v78/held-kitten-rig.mjs",
+      "http": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "bytes": 6434,
+      "sha256": "20992761cdae9b55d9b8252344912aee751874614e5fa2c889a72aa2cf6a3c0c",
+      "expectedSha256": "20992761cdae9b55d9b8252344912aee751874614e5fa2c889a72aa2cf6a3c0c",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "assets/princess-kitten-v78/interaction-scheduler.mjs",
+      "url": "https://tanchensiyi.com/assets/princess-kitten-v78/interaction-scheduler.mjs",
+      "http": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "bytes": 15569,
+      "sha256": "c03acd75fff0cc1187f0067550a7cfc7b54f21fe7e667ae8a15897245143437e",
+      "expectedSha256": "c03acd75fff0cc1187f0067550a7cfc7b54f21fe7e667ae8a15897245143437e",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "assets/princess-kitten-v78/mobile-performance.mjs",
+      "url": "https://tanchensiyi.com/assets/princess-kitten-v78/mobile-performance.mjs",
+      "http": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "bytes": 2675,
+      "sha256": "9a4de8095d372633657c3ddd46cab3981266572662f40e44f79754d4f0c83296",
+      "expectedSha256": "9a4de8095d372633657c3ddd46cab3981266572662f40e44f79754d4f0c83296",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "assets/princess-kitten-v78/princess-rig.mjs",
+      "url": "https://tanchensiyi.com/assets/princess-kitten-v78/princess-rig.mjs",
+      "http": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "bytes": 8381,
+      "sha256": "55b6cb9a5a4010adcba60a3afdefcb73d79e361e5156ee6dd826c58cca9b89df",
+      "expectedSha256": "55b6cb9a5a4010adcba60a3afdefcb73d79e361e5156ee6dd826c58cca9b89df",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "assets/princess-kitten-v78/runtime.mjs",
+      "url": "https://tanchensiyi.com/assets/princess-kitten-v78/runtime.mjs",
+      "http": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "bytes": 10429,
+      "sha256": "69d741d61bae66f09da77a6c5c08a5f91c6a99ebe8bb7eafc564d7e1d12f81e2",
+      "expectedSha256": "69d741d61bae66f09da77a6c5c08a5f91c6a99ebe8bb7eafc564d7e1d12f81e2",
+      "matchesPublishedCandidate": true,
+      "javascriptMime": true
+    },
+    {
+      "path": "princess/luma-princess-rigged-v77.glb",
+      "url": "https://tanchensiyi.com/princess/luma-princess-rigged-v77.glb",
+      "http": 200,
+      "contentType": "model/gltf-binary",
+      "bytes": 15727656,
+      "sha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0",
+      "expectedSha256": "9b1cd945157dc1dc8645758bcf33d41ce54e4993cb7e299e5e9fe3bf780994e0",
+      "matchesPublishedCandidate": true
+    },
+    {
+      "path": "princess/luma-princess-rigged-v77.glb.gz",
+      "url": "https://tanchensiyi.com/princess/luma-princess-rigged-v77.glb.gz",
+      "http": 200,
+      "contentType": "application/gzip",
+      "bytes": 10007499,
+      "sha256": "3394744eb739263c550691bb87e8132d6809006455456e24b0f35a3cecc3c42e",
+      "expectedSha256": "3394744eb739263c550691bb87e8132d6809006455456e24b0f35a3cecc3c42e",
+      "matchesPublishedCandidate": true
+    },
+    {
+      "path": "letter/index.html",
+      "url": "https://tanchensiyi.com/letter/",
+      "http": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 1706,
+      "sha256": "3428e767a9266276a19451b206f8e6ed9634dfdd04c35269bdba80d678814b7f",
+      "expectedSha256": "3428e767a9266276a19451b206f8e6ed9634dfdd04c35269bdba80d678814b7f",
+      "matchesPublishedCandidate": true
+    },
+    {
+      "path": "album-preview/index.html",
+      "url": "https://tanchensiyi.com/album-preview/",
+      "http": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 4049,
+      "sha256": "2f8fa59dcb42f7906a81e90943873365ee0f2caf72d29160ec49f4a3b8ec0c56",
+      "expectedSha256": "2f8fa59dcb42f7906a81e90943873365ee0f2caf72d29160ec49f4a3b8ec0c56",
+      "matchesPublishedCandidate": true
+    }
+  ],
+  "freshEntry": {
+    "url": "https://tanchensiyi.com/?v=78",
+    "http": 200,
+    "sha256": "40b4797a89fee465ff30be123a67a6d6af511721bfaccb00a21d0989f61561a2",
+    "matchesPublishedCandidate": true
+  },
+  "pass": true,
+  "deploymentRun": "https://github.com/yil384/luma-web-lab/actions/runs/44501412232",
+  "deploymentConclusion": "success",
+  "browserEntryCheck": {
+    "url": "https://tanchensiyi.com/?v=78",
+    "title": "集美小喵的圣诞魔法",
+    "app": "/assets/App-MobileGestures-V78.js",
+    "scene": "/assets/TreeScene-MobileGestures-V78.js",
+    "limitation": "The cloud review browser has WebGL disabled; actual 3D and input checks ran against these exact deployed bytes in CI Chromium."
+  }
+}
