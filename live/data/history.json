@@ -204,6 +204,12 @@
       "display_heat": "16.3万",
       "followers_display": "3.1万",
       "status": "live"
+    },
+    {
+      "observed_at": "2026-11-26T21:45:36+00:00",
+      "display_heat": "30.6万",
+      "followers_display": "3.1万",
+      "status": "offline"
     }
   ]
 }
